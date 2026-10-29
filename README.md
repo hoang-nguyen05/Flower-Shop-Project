@@ -1,6 +1,12 @@
 # 🌸 FlowerShop - Website Thương Mại Điện Tử Hoa Tươi (Cloudflare Serverless Stack)
 
+> 📌 **BÁO CÁO TOÀN DIỆN VỀ KIẾN TRÚC & HẠ TẦNG CLOUDFLARE:**  
+> Xem chi tiết tại: 👉 **[BAO_CAO_DU_AN_CLOUDFLARE.md](./BAO_CAO_DU_AN_CLOUDFLARE.md)** (Trình bày chi tiết toàn bộ cơ chế Cloudflare Workers, D1 SQL, KV Cart, R2 Storage và Gemini AI).
+
 Dự án website thương mại điện tử bán hoa tươi chuyên nghiệp được xây dựng trên nền tảng **Cloudflare Serverless**, đáp ứng đầy đủ yêu cầu tách biệt Frontend & Backend, cơ sở dữ liệu D1, lưu trữ phiên KV, kho lưu trữ đối tượng R2 và trợ lý AI Google Gemini.
+
+- **Đường dẫn Website trực tiếp (Live Demo):** [https://flower-shop-cloudflare.dtc235200306.workers.dev](https://flower-shop-cloudflare.dtc235200306.workers.dev)
+- **Mã nguồn GitHub:** [https://github.com/hoang-nguyen05/Flower-Shop-Project.git](https://github.com/hoang-nguyen05/Flower-Shop-Project.git)
 
 ---
 
