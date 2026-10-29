@@ -1,69 +1,53 @@
-# FlowerShop - Website Bán Hoa Tươi
+# 🌸 FlowerShop - Website Thương Mại Điện Tử Hoa Tươi (Cloudflare Serverless Stack)
 
-## 1. Mục tiêu dự án
-Dự án nhằm xây dựng một ứng dụng web bán hoa tươi hoàn chỉnh, cho phép người dùng xem sản phẩm, quản lý giỏ hàng, đặt hàng và quản trị viên quản lý toàn bộ hệ thống.
+Dự án website thương mại điện tử bán hoa tươi chuyên nghiệp được xây dựng trên nền tảng **Cloudflare Serverless**, đáp ứng đầy đủ yêu cầu tách biệt Frontend & Backend, cơ sở dữ liệu D1, lưu trữ phiên KV, kho lưu trữ đối tượng R2 và trợ lý AI Google Gemini.
 
-## 2. Kiến trúc & Công nghệ
-- **Ngôn ngữ**: Python 3.x
-- **Framework**: Django 6.0.1
-- **Cơ sở dữ liệu**: SQLite (Mặc định) - có thể chuyển sang PostgreSQL/MySQL
-- **Frontend**: Bootstrap 5, Font Awesome 6, Chart.js
-- **Xử lý hình ảnh**: Pillow
-- **Form handling**: Django Crispy Forms (với Bootstrap 5 pack)
+---
 
-## 3. Các tính năng chính
-- **Xác thực & Phân quyền**: Đăng ký, đăng nhập, quản lý hồ sơ người dùng.
-- **Quản lý Sản phẩm**: CRUD danh mục và sản phẩm, tìm kiếm, lọc theo danh mục, sắp xếp theo giá và ngày tạo.
-- **Nghiệp vụ Đặt hàng**: Giỏ hàng (session-based), quy trình thanh toán, theo dõi lịch sử đơn hàng và trạng thái đơn hàng.
-- **Quản trị & Thống kê**: Dashboard dành cho admin với biểu đồ thống kê doanh thu, trạng thái đơn hàng và sản phẩm bán chạy.
-- **Trợ lý chat (AI cục bộ)**: Ollama + Llama 3.2; Django nhận tin nhắn tại `/chatbot/` và gọi API Ollama trên máy (không dùng Gemini/API cloud).
-- **An toàn dữ liệu**: Kiểm tra định dạng và kích thước tệp tải lên, bảo vệ CSRF, phân quyền truy cập theo vai trò.
+## 🚀 Công Nghệ Sử Dụng
 
-## 4. Hướng dẫn cài đặt & Chạy
-### Yêu cầu:
-- Python 3.10+
-- pip (trình quản lý gói của Python)
+- **Hạ tầng triển khai**: Cloudflare Workers (Toàn bộ ứng dụng chạy trên mạng lưới Edge toàn cầu)
+- **Cơ sở dữ liệu (Database)**: Cloudflare D1 (Serverless SQLite-compatible relational database)
+- **Bộ nhớ đệm & Phiên làm việc (Cache & Sessions)**: Cloudflare Key-Value (KV) lưu trữ giỏ hàng Backend
+- **Lưu trữ đối tượng (Object Storage)**: Cloudflare R2 lưu trữ hình ảnh sản phẩm & tài liệu
+- **Backend API**: Hono Framework (TypeScript) trên Cloudflare Workers
+- **Frontend**: HTML5, CSS3 Mobile-First, Bootstrap 5.3, Font Awesome 6, JavaScript Modules
+- **Trí tuệ nhân tạo (AI)**: Google Gemini API (Gemini 1.5 Flash) tư vấn hoa tươi thông minh
+- **Thanh toán**: VietQR động (Quét mã thanh toán ngân hàng tự động điền tiền và nội dung)
 
-### Các bước cài đặt:
-1. Giải nén hoặc clone mã nguồn.
-2. Cài đặt các thư viện cần thiết (khuyến nghị dùng file cố định phiên bản):
+---
+
+## 🎯 Các Tính Năng Nổi Bật
+
+1. **Giao diện Responsive**: Tối ưu hiển thị hoàn hảo trên Điện thoại (Bottom Nav, Cart Drawer) và Máy tính (Desktop).
+2. **Backend xử lý Giỏ hàng**: Giỏ hàng được quản lý và tính toán 100% tại máy chủ Cloudflare Workers, lưu trạng thái trong Cloudflare KV.
+3. **Thanh toán VietQR**: Tự động sinh mã VietQR với số tiền và mã đơn hàng tương ứng.
+4. **Trợ lý Florist AI**: Kết nối Google Gemini API với dữ liệu sản phẩm thực tế từ Cloudflare D1.
+5. **Quản trị Admin & R2**: Thống kê doanh thu, quản lý đơn hàng, upload ảnh lên Cloudflare R2.
+
+---
+
+## 💻 Cách Cài Đặt & Chạy Thử Local
+
+1. Cài đặt thư viện:
    ```bash
-   pip install -r requirements.txt
+   npm install
    ```
-   Hoặc cài thủ công: `pip install django pillow django-crispy-forms crispy-bootstrap5 python-dotenv`
-3.4. Chạy migration để khởi tạo cơ sở dữ liệu:
-   ```bash
-   python manage.py migrate
-   ```
-5. Chatbot dùng **Ollama** (Llama 3.2 chạy cục bộ):
-   - Cài [Ollama](https://ollama.com/), mở terminal và chạy: `ollama pull llama3.2`
-   - Đảm bảo Ollama đang chạy (mặc định lắng nghe `http://127.0.0.1:11434`).
-   - Tuỳ chọn trong `.env`:
-   ```env
-   OLLAMA_BASE_URL=http://127.0.0.1:11434
-   OLLAMA_MODEL=llama3.2
-   ```
-6. Nạp dữ liệu mẫu (Sample Data):
-   ```bash
-   python manage.py seed
-   ```
-5. Chạy server phát triển (Cổng 800):
-   ```bash
-   python manage.py runserver 800
-   ```
-6. Truy cập ứng dụng tại: `http://127.0.0.1:800/`
 
-## 5. Tài khoản mẫu
-- **Admin**: 
-  - Tài khoản: `admin`
-  - Mật khẩu: `admin123`
-- **Khách hàng mẫu**:
-  - Tài khoản: `user`
-  - Mật khẩu: `user123`
+2. Khởi tạo cơ sở dữ liệu D1 local:
+   ```bash
+   npm run d1:init:local
+   ```
 
-## 6. Cấu trúc thư mục chính
-- `flower_shop/`: Cấu hình dự án (settings, urls, wsgi).
-- `shop/`: Ứng dụng chính (models, views, forms, urls, signals, management).
-- `templates/`: Giao diện HTML của toàn bộ website.
-- `static/`: Chứa các tệp CSS, JS, hình ảnh tĩnh.
-- `media/`: Chứa các tệp hình ảnh tải lên (sản phẩm, avatar).
+3. Chạy server phát triển:
+   ```bash
+   npm run dev
+   ```
+   Truy cập tại: `http://localhost:8787`
+
+---
+
+## 🌐 Triển Khai Lên Cloudflare Workers
+
+Xem hướng dẫn chi tiết từng bước tạo D1, KV, R2 và đẩy dự án lên Cloudflare tại:
+👉 **[HUONG_DAN_TRIEN_KHAI_CLOUDFLARE.md](./HUONG_DAN_TRIEN_KHAI_CLOUDFLARE.md)**

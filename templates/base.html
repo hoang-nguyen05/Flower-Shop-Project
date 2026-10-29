@@ -8,9 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/floral-theme.css' %}">
     {% block extra_css %}{% endblock %}
@@ -26,30 +24,57 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Trang chủ</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'product_list' %}">Cửa hàng</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'product_list' %}?on_sale=1"><i class="fas fa-tag text-danger me-1 small"></i>Khuyến mãi</a></li>
                 </ul>
                 <form class="d-flex me-3" action="{% url 'product_list' %}" method="get">
-                    <input class="form-control me-2" type="search" name="q" placeholder="Tìm kiếm hoa..." aria-label="Search">
+                    <input class="form-control me-2" type="search" name="q" placeholder="Tìm kiếm hoa..." value="{{ request.GET.q }}" aria-label="Search">
                     <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
                 </form>
-                <ul class="navbar-nav">
+                <ul class="navbar-nav align-items-center">
+                    {% if user.is_authenticated %}
+                        <!-- Wishlist icon -->
+                        <li class="nav-item me-2">
+                            <a class="nav-link position-relative" href="{% url 'wishlist_list' %}" title="Hoa yêu thích">
+                                <i class="fas fa-heart text-danger fs-5"></i>
+                                {% if wishlist_count > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="wishlist-badge">{{ wishlist_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% endif %}
+                    <!-- Giỏ hàng icon -->
+                    <li class="nav-item me-2">
+                        <a class="nav-link position-relative" href="{% url 'cart_detail' %}" title="Giỏ hàng">
+                            <i class="fas fa-shopping-cart fs-5"></i>
+                            {% if cart_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" id="cart-badge">{{ cart_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i> {{ user.username }}
+                                {% if user.profile.avatar %}
+                                    <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" width="30" height="30" class="rounded-circle me-1 object-fit-cover">
+                                {% else %}
+                                    <i class="fas fa-user me-1"></i>
+                                {% endif %}
+                                {{ user.first_name|default:user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'profile' %}">Hồ sơ</a></li>
-                                <li><a class="dropdown-item" href="{% url 'order_list' %}">Đơn hàng của tôi</a></li>
+                                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user-edit me-2 text-primary"></i>Hồ sơ cá nhân</a></li>
+                                <li><a class="dropdown-item" href="{% url 'order_list' %}"><i class="fas fa-box me-2 text-primary"></i>Đơn hàng của tôi</a></li>
+                                <li><a class="dropdown-item" href="{% url 'wishlist_list' %}"><i class="fas fa-heart me-2 text-danger"></i>Hoa yêu thích <span class="badge bg-danger ms-1">{{ wishlist_count }}</span></a></li>
                                 {% if user.is_staff %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item font-weight-bold text-primary" href="{% url 'admin_dashboard' %}">Dashboard Thống kê</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Quản trị hệ thống</a></li>
+                                    <li><a class="dropdown-item fw-bold text-primary" href="{% url 'admin_dashboard' %}"><i class="fas fa-chart-bar me-2"></i>Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fas fa-cog me-2"></i>Quản trị hệ thống</a></li>
                                 {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{% url 'logout' %}" method="post">
                                         {% csrf_token %}
-                                        <button type="submit" class="dropdown-item">Đăng xuất</button>
+                                        <button type="submit" class="dropdown-item text-danger"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</button>
                                     </form>
                                 </li>
                             </ul>
@@ -67,6 +92,7 @@
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {% if message.tags == 'success' %}<i class="fas fa-check-circle me-2"></i>{% elif message.tags == 'error' or message.tags == 'danger' %}<i class="fas fa-exclamation-triangle me-2"></i>{% elif message.tags == 'warning' %}<i class="fas fa-exclamation-circle me-2"></i>{% else %}<i class="fas fa-info-circle me-2"></i>{% endif %}
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -76,24 +102,28 @@
         {% block content %}{% endblock %}
     </div>
 
-    <footer class="site-footer">
+    <footer class="site-footer mt-5">
         <div class="container text-center">
             <div class="row">
                 <div class="col-md-4 mb-4">
-                    <h5>Về chúng tôi</h5>
-                    <p>FlowerShop cung cấp những bó hoa tươi thắm nhất cho mọi dịp đặc biệt.</p>
+                    <h5><i class="fas fa-seedling me-2"></i>Về FlowerShop</h5>
+                    <p>Chúng tôi mang đến những bó hoa tươi thắm, sang trọng nhất cho mọi dịp đặc biệt.</p>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <h5>Liên hệ</h5>
+                    <h5>Liên hệ & Hỗ trợ</h5>
                     <p><i class="fas fa-map-marker-alt me-2"></i> 123 Đường Láng, Hà Nội</p>
                     <p><i class="fas fa-phone me-2"></i> +84 123 456 789</p>
+                    <p><i class="fas fa-clock me-2"></i> Giao hoa nội thành trong 2 giờ</p>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <h5>Theo dõi</h5>
+                    <h5>Theo dõi chúng tôi</h5>
                     <div class="fs-4">
                         <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
                         <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
                         <a href="#" class="text-white"><i class="fab fa-twitter"></i></a>
+                    </div>
+                    <div class="mt-3 small opacity-75">
+                        <i class="fas fa-shield-alt me-1"></i> Thanh toán an toàn qua VietQR & COD
                     </div>
                 </div>
             </div>
@@ -103,68 +133,208 @@
     </footer>
 
     <!-- Chatbot Widget -->
+    <style>
+        #chatbot-status-bar {
+            display: none;
+            padding: 5px 12px;
+            background: linear-gradient(90deg, #f8f0ff, #e8f0ff);
+            border-top: 1px solid #e0d4f0;
+            font-size: 0.72rem;
+            color: #6c4a9e;
+            align-items: center;
+            gap: 7px;
+            min-height: 28px;
+        }
+        #chatbot-status-bar.active { display: flex; }
+        .typing-dots span {
+            display: inline-block;
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: #9b59b6;
+            margin: 0 1px;
+            animation: typingBounce 1.2s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-5px); opacity: 1; }
+        }
+        #chatbot-send:disabled { opacity: 0.5; cursor: not-allowed; }
+        #chatbot-input:disabled { background: #f5f5f5; }
+    </style>
     <div id="chatbot-widget">
         <div id="chatbot-window">
             <div id="chatbot-header">
-                <span>Trợ lý FlowerShop (Llama 3.2 cục bộ)</span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <i class="fas fa-robot"></i>
+                    <span>Trợ lý FlowerShop</span>
+                    <span id="chatbot-online-dot" style="width:7px;height:7px;border-radius:50%;background:#2ecc71;display:inline-block;" title="Llama 3.2 cục bộ"></span>
+                </div>
                 <i class="fas fa-times" style="cursor: pointer;" onclick="toggleChat()"></i>
             </div>
             <div id="chatbot-messages" class="d-flex flex-column">
-                <div class="chat-msg bot-msg">Xin chào! Tôi có thể giúp gì cho bạn?</div>
+                <div class="chat-msg bot-msg">Xin chào! Tôi có thể giúp bạn tìm hoa đẹp, tư vấn quà tặng hoặc hỗ trợ đặt hàng. Bạn cần gì ạ? 🌸</div>
+                <div class="chat-msg bot-msg" style="background:#fff8e1;border-left:3px solid #f39c12;font-size:0.78rem;color:#7d6608;">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <strong>Lưu ý:</strong> Bot dùng AI Llama 3.2 chạy trực tiếp trên máy của bạn (qua Ollama), không qua cloud. Thời gian phản hồi <strong>20-90 giây</strong> tùy cấu hình máy — hoàn toàn bình thường! ☕
+                </div>
+            </div>
+            <!-- Status bar hiển thị trạng thái xử lý -->
+            <div id="chatbot-status-bar">
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+                <span id="chatbot-status-text">Đang khởi động mô hình AI...</span>
+                <span id="chatbot-timer" style="margin-left:auto;font-weight:600;color:#9b59b6;">0s</span>
             </div>
             <div id="chatbot-input-area">
-                <input type="text" id="chatbot-input" placeholder="Nhập tin nhắn..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key === 'Enter') sendMessage()">
                 <button id="chatbot-send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
-        <button id="chatbot-btn" onclick="toggleChat()">
+        <button id="chatbot-btn" onclick="toggleChat()" title="Chat với trợ lý AI">
             <i class="fas fa-comment-dots"></i>
         </button>
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // === CHATBOT ===
+        let _chatTimerInterval = null;
+        let _chatStartTime = null;
+
+        const STATUS_STEPS = [
+            { at: 0,   text: '⚙️ Tải mô hình Llama 3.2 vào bộ nhớ...' },
+            { at: 5,   text: '📖 Đọc danh sách sản phẩm trong cửa hàng...' },
+            { at: 10,  text: '🧠 AI đang phân tích câu hỏi của bạn...' },
+            { at: 20,  text: '✍️ Đang soạn câu trả lời (mô hình chạy cục bộ, cần thêm chút thời gian)...' },
+            { at: 40,  text: '🔄 Vẫn đang xử lý — CPU/GPU đang hoạt động hết công suất...' },
+            { at: 70,  text: '⏳ Sắp xong rồi! Llama 3.2 đang viết phần cuối câu trả lời...' },
+            { at: 100, text: '🌸 Hoàn thiện và kiểm tra câu trả lời...' },
+        ];
+
+        function startStatusTimer() {
+            const statusBar = document.getElementById('chatbot-status-bar');
+            const statusText = document.getElementById('chatbot-status-text');
+            const timerEl = document.getElementById('chatbot-timer');
+            _chatStartTime = Date.now();
+            statusBar.classList.add('active');
+            timerEl.textContent = '0s';
+            statusText.textContent = STATUS_STEPS[0].text;
+
+            _chatTimerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - _chatStartTime) / 1000);
+                timerEl.textContent = elapsed + 's';
+                // Cập nhật trạng thái theo thời gian
+                let currentStep = STATUS_STEPS[0];
+                for (const step of STATUS_STEPS) {
+                    if (elapsed >= step.at) currentStep = step;
+                    else break;
+                }
+                statusText.textContent = currentStep.text;
+            }, 500);
+        }
+
+        function stopStatusTimer() {
+            if (_chatTimerInterval) {
+                clearInterval(_chatTimerInterval);
+                _chatTimerInterval = null;
+            }
+            const elapsed = _chatStartTime ? Math.floor((Date.now() - _chatStartTime) / 1000) : 0;
+            const statusBar = document.getElementById('chatbot-status-bar');
+            const statusText = document.getElementById('chatbot-status-text');
+            const timerEl = document.getElementById('chatbot-timer');
+            statusText.textContent = `✅ Trả lời xong sau ${elapsed} giây`;
+            timerEl.textContent = '';
+            setTimeout(() => { statusBar.classList.remove('active'); }, 2500);
+        }
+
+        function setBotBusy(busy) {
+            const input = document.getElementById('chatbot-input');
+            const sendBtn = document.getElementById('chatbot-send');
+            const dot = document.getElementById('chatbot-online-dot');
+            input.disabled = busy;
+            sendBtn.disabled = busy;
+            if (busy) {
+                dot.style.background = '#f39c12';
+                dot.title = 'Đang xử lý...';
+                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            } else {
+                dot.style.background = '#2ecc71';
+                dot.title = 'Llama 3.2 cục bộ - Sẵn sàng';
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        }
+
         function toggleChat() {
-            const window = document.getElementById('chatbot-window');
-            window.style.display = window.style.display === 'flex' ? 'none' : 'flex';
+            const win = document.getElementById('chatbot-window');
+            win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
         }
 
         function sendMessage() {
             const input = document.getElementById('chatbot-input');
             const message = input.value.trim();
-            if (!message) return;
-
-            // Add user message to UI
+            if (!message || input.disabled) return;
             addMessage(message, 'user-msg');
             input.value = '';
-
-            // Send to server
+            setBotBusy(true);
+            startStatusTimer();
             fetch(`/chatbot/?message=${encodeURIComponent(message)}`)
-                .then(response => response.json())
+                .then(r => r.json())
                 .then(data => {
+                    stopStatusTimer();
+                    setBotBusy(false);
                     addMessage(data.response, 'bot-msg');
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    addMessage('Xin lỗi, đã có lỗi xảy ra!', 'bot-msg');
+                .catch(() => {
+                    stopStatusTimer();
+                    setBotBusy(false);
+                    addMessage('⚠️ Không kết nối được Ollama. Hãy chắc chắn Ollama đang chạy trên máy bạn và đã tải model llama3.2 (`ollama pull llama3.2`).', 'bot-msg');
                 });
         }
 
-        function addMessage(text, className) {
-            const messagesDiv = document.getElementById('chatbot-messages');
+        function addMessage(text, className, id) {
+            const div = document.getElementById('chatbot-messages');
             const msgDiv = document.createElement('div');
             msgDiv.className = `chat-msg ${className}`;
-            
-            // Simple markdown formatter (Bold and Newlines)
-            let formattedText = text
+            if (id) msgDiv.id = id;
+            let formatted = text
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\n/g, '<br>');
-            
-            msgDiv.innerHTML = formattedText;
-            messagesDiv.appendChild(msgDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            msgDiv.innerHTML = formatted;
+            div.appendChild(msgDiv);
+            div.scrollTop = div.scrollHeight;
+        }
+
+        // === WISHLIST AJAX TOGGLE ===
+        function toggleWishlist(productId, btn) {
+            fetch(`/wishlist/toggle/${productId}/?format=json`, {
+                method: 'GET',
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                credentials: 'same-origin'
+            })
+            .then(r => r.json())
+            .then(data => {
+                const icon = btn.querySelector('i');
+                if (data.favorited) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas', 'text-danger');
+                    btn.title = 'Bỏ yêu thích';
+                } else {
+                    icon.classList.remove('fas', 'text-danger');
+                    icon.classList.add('far');
+                    btn.title = 'Thêm vào yêu thích';
+                }
+                const badge = document.getElementById('wishlist-badge');
+                if (badge && data.total_wishlist !== undefined) {
+                    badge.textContent = data.total_wishlist;
+                    badge.style.display = data.total_wishlist > 0 ? 'inline' : 'none';
+                }
+            })
+            .catch(err => {
+                window.location.href = `/wishlist/toggle/${productId}/`;
+            });
         }
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

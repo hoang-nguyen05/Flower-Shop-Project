@@ -1,55 +1,177 @@
 {% extends "base.html" %}
 
-{% block title %}Lịch sử đơn hàng - FlowerShop{% endblock %}
+{% block title %}Đơn hàng của tôi - FlowerShop{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-timeline { border-left: 3px solid #e9ecef; padding-left: 1rem; margin-left: 0.5rem; }
+    .order-timeline .step { position: relative; margin-bottom: 0.5rem; }
+    .order-timeline .step::before {
+        content: ''; position: absolute; left: -1.42rem; top: 4px;
+        width: 12px; height: 12px; border-radius: 50%;
+        background: #dee2e6; border: 2px solid #fff; box-shadow: 0 0 0 2px #dee2e6;
+    }
+    .order-timeline .step.done::before { background: #28a745; box-shadow: 0 0 0 2px #28a745; }
+    .order-timeline .step.active::before { background: #7c4dba; box-shadow: 0 0 0 2px #7c4dba; animation: pulse-dot 1.5s infinite; }
+    @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 2px #7c4dba} 50%{box-shadow:0 0 0 4px rgba(124,77,186,0.3)} }
+    .order-card { border-left: 4px solid transparent; transition: border-color 0.2s, box-shadow 0.2s; }
+    .order-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; border-left-color: #7c4dba; }
+    .status-pending { border-left-color: #ffc107 !important; }
+    .status-approved, .status-shipped { border-left-color: #0dcaf0 !important; }
+    .status-completed { border-left-color: #198754 !important; }
+    .status-cancelled, .status-rejected { border-left-color: #dc3545 !important; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2 class="mb-5 font-weight-bold text-center"><i class="fas fa-history me-2 text-primary"></i>Lịch sử đơn hàng của bạn</h2>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="fw-bold mb-0"><i class="fas fa-box me-2 text-primary"></i>Đơn hàng của tôi</h2>
+    <a href="{% url 'product_list' %}" class="btn btn-primary btn-sm px-3">
+        <i class="fas fa-store me-1"></i>Tiếp tục mua sắm
+    </a>
+</div>
 
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card shadow-sm border-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="py-3 px-4">Mã đơn hàng</th>
-                            <th class="py-3">Ngày đặt</th>
-                            <th class="py-3">Địa chỉ</th>
-                            <th class="py-3">Trạng thái</th>
-                            <th class="py-3">Tổng tiền</th>
-                            <th class="py-3">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in orders %}
-                            <tr>
-                                <td class="py-3 px-4 font-weight-bold text-primary">#{{ order.id }}</td>
-                                <td class="py-3">{{ order.created|date:"d/m/Y H:i" }}</td>
-                                <td class="py-3">{{ order.address|truncatewords:5 }}</td>
-                                <td class="py-3">
-                                    <span class="badge {% if order.status == 'pending' %}bg-warning text-dark{% elif order.status == 'approved' %}bg-info{% elif order.status == 'rejected' %}bg-danger{% elif order.status == 'shipped' %}bg-primary{% elif order.status == 'completed' %}bg-success{% endif %} py-2 px-3">
-                                        {{ order.get_status_display }}
-                                    </span>
-                                </td>
-                                <td class="py-3 font-weight-bold">{{ order.get_total_cost|floatformat:0 }} VNĐ</td>
-                                <td class="py-3">
-                                    <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye me-1"></i> Chi tiết</a>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center py-5">
-                                    <i class="fas fa-file-invoice fa-4x text-muted mb-4"></i>
-                                    <h3>Chưa có đơn hàng nào</h3>
-                                    <p class="text-muted mb-4">Hãy đặt hàng ngay để được thưởng thức những bó hoa tuyệt đẹp nhé!</p>
-                                    <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg px-5">Đến cửa hàng</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+{% if orders %}
+    <div class="row g-3">
+        {% for order in orders %}
+        {% with status=order.status %}
+        <div class="col-12">
+            <div class="card shadow-sm border-0 order-card status-{{ status }} p-4">
+                <div class="row align-items-center">
+                    <!-- Thông tin đơn hàng -->
+                    <div class="col-md-5">
+                        <div class="d-flex align-items-start gap-3">
+                            <!-- Ảnh sản phẩm đầu tiên -->
+                            {% with first_item=order.items.first %}
+                            {% if first_item and first_item.product.image %}
+                                <img src="{{ first_item.product.image.url }}" alt="{{ first_item.product.name }}"
+                                    class="rounded-3 shadow-sm object-fit-cover flex-shrink-0" width="65" height="65">
+                            {% else %}
+                                <div class="bg-light rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width:65px;height:65px;">
+                                    <i class="fas fa-seedling text-muted fs-4"></i>
+                                </div>
+                            {% endif %}
+                            {% endwith %}
+                            <div>
+                                <div class="fw-bold text-primary mb-1">Đơn hàng #{{ order.id }}</div>
+                                <div class="small text-muted mb-1">
+                                    <i class="fas fa-clock me-1"></i>{{ order.created|date:"d/m/Y H:i" }}
+                                </div>
+                                <div class="small text-muted">
+                                    {% for item in order.items.all %}
+                                        {{ item.product.name }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                    {% if order.items.count > 2 %}
+                                        <span class="text-muted"> (+{{ order.items.count|add:"-2" }} mặt hàng)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trạng thái & Thanh toán -->
+                    <div class="col-md-3 mt-3 mt-md-0">
+                        <div class="mb-2">
+                            <span class="badge py-2 px-3
+                                {% if status == 'pending' %}bg-warning text-dark
+                                {% elif status == 'approved' %}bg-info
+                                {% elif status == 'shipped' %}bg-primary
+                                {% elif status == 'completed' %}bg-success
+                                {% elif status == 'rejected' or status == 'cancelled' %}bg-danger
+                                {% endif %}">
+                                {% if status == 'pending' %}<i class="fas fa-hourglass-half me-1"></i>
+                                {% elif status == 'approved' %}<i class="fas fa-check me-1"></i>
+                                {% elif status == 'shipped' %}<i class="fas fa-truck me-1"></i>
+                                {% elif status == 'completed' %}<i class="fas fa-check-double me-1"></i>
+                                {% else %}<i class="fas fa-times me-1"></i>{% endif %}
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="badge {% if order.paid %}bg-success{% else %}bg-secondary{% endif %} py-1 px-2 small">
+                                {% if order.paid %}<i class="fas fa-check-circle me-1"></i>Đã TT{% else %}<i class="fas fa-clock me-1"></i>Chưa TT{% endif %}
+                            </span>
+                            <span class="badge bg-light text-dark border small ms-1 py-1 px-2">
+                                {% if order.payment_method == 'cod' %}<i class="fas fa-money-bill-wave text-success me-1"></i>COD
+                                {% elif order.payment_method == 'bank_transfer' %}<i class="fas fa-qrcode text-primary me-1"></i>VietQR
+                                {% elif order.payment_method == 'momo' %}<i class="fas fa-mobile-alt me-1" style="color:#ae2070"></i>MoMo
+                                {% else %}<i class="fas fa-university me-1 text-primary"></i>VNPAY{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Tổng tiền -->
+                    <div class="col-md-2 mt-3 mt-md-0 text-md-center">
+                        <div class="fw-bold fs-5 text-primary">{{ order.get_total_cost|floatformat:0 }} ₫</div>
+                        <div class="small text-muted">{{ order.items.count }} sản phẩm</div>
+                    </div>
+
+                    <!-- Hành động -->
+                    <div class="col-md-2 mt-3 mt-md-0 d-flex flex-column gap-2 align-items-md-end">
+                        <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-primary btn-sm px-3">
+                            <i class="fas fa-eye me-1"></i>Chi tiết
+                        </a>
+                        {% if status == 'pending' %}
+                            {% if order.payment_method == 'bank_transfer' and not order.paid %}
+                                <a href="{% url 'order_detail' order.id %}" class="btn btn-success btn-sm px-3">
+                                    <i class="fas fa-qrcode me-1"></i>Thanh toán
+                                </a>
+                            {% endif %}
+                            <form method="post" action="{% url 'order_cancel' order.id %}" onsubmit="return confirm('Hủy đơn #{{ order.id }}?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm px-3 w-100">
+                                    <i class="fas fa-times me-1"></i>Hủy đơn
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+
+    <!-- Tóm tắt thống kê -->
+    <div class="row g-3 mt-3">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div class="fw-bold fs-4 text-primary">{{ orders|length }}</div>
+                <div class="text-muted small">Tổng đơn hàng</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div class="fw-bold fs-4 text-warning">{{ orders|length }}</div>
+                <div class="text-muted small">Chờ xử lý</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div class="fw-bold fs-4 text-success">
+                    {% for o in orders %}{% if o.status == 'completed' %}✓{% endif %}{% endfor %}
+                </div>
+                <div class="text-muted small">Hoàn thành</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div class="fw-bold fs-4 text-danger">
+                    {% for o in orders %}{% if o.status == 'cancelled' %}✗{% endif %}{% endfor %}
+                </div>
+                <div class="text-muted small">Đã hủy</div>
             </div>
         </div>
     </div>
-</div>
+
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-box-open fa-5x text-muted mb-4 d-block"></i>
+        <h3>Bạn chưa có đơn hàng nào</h3>
+        <p class="text-muted mb-4">Hãy chọn những bó hoa yêu thích và đặt hàng ngay! 🌸</p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg px-5">
+            <i class="fas fa-store me-2"></i>Đến cửa hàng
+        </a>
+    </div>
+{% endif %}
 {% endblock %}

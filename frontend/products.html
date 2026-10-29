@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cửa Hàng Hoa Tươi - FlowerShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <nav class="navbar navbar-expand-lg navbar-floral sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-seedling"></i>
+        <span>FlowerShop</span>
+      </a>
+
+      <!-- Search on desktop -->
+      <form class="d-none d-lg-flex ms-4 me-auto" id="global-search-form" style="max-width: 380px; width: 100%;">
+        <div class="input-group">
+          <input type="text" class="form-control rounded-pill-start border-end-0 ps-3 bg-light" id="global-search-input" placeholder="Tìm kiếm hoa tươi...">
+          <button class="btn btn-light rounded-pill-end border-start-0 text-muted px-3" type="submit">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </form>
+
+      <div class="collapse navbar-collapse flex-grow-0" id="mainNav">
+        <ul class="navbar-nav me-3 align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/products.html"><i class="fas fa-store me-1"></i>Cửa hàng</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-th-large me-1"></i>Danh mục</a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" id="nav-categories-dropdown"></ul>
+          </li>
+          <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/products.html?on_sale=1"><i class="fas fa-fire me-1"></i>Khuyến mãi</a></li>
+          <li class="nav-item"><a class="nav-link" href="/orders.html"><i class="fas fa-receipt me-1"></i>Tra cứu đơn</a></li>
+          <li class="nav-item"><a class="nav-link text-primary" href="/admin.html"><i class="fas fa-shield-alt me-1"></i>Admin</a></li>
+        </ul>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button class="nav-icon-btn border-0" onclick="window.location.href='/products.html'" title="Yêu thích">
+          <i class="fas fa-heart text-danger"></i>
+          <span class="badge-count wishlist-badge-count" style="display: none;">0</span>
+        </button>
+
+        <button class="nav-icon-btn border-0 position-relative" onclick="openCartDrawer()" title="Giỏ hàng">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="badge-count cart-badge-count" style="display: none;">0</span>
+        </button>
+
+        <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <i class="fas fa-bars fs-4"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <div class="container my-4">
+    <!-- Breadcrumb & Title -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item"><a href="/" class="text-muted">Trang chủ</a></li>
+            <li class="breadcrumb-item active text-danger" aria-current="page">Cửa hàng</li>
+          </ol>
+        </nav>
+        <h2 class="mb-0 font-serif" id="shop-title">Bộ Sưu Tập Hoa Tươi</h2>
+      </div>
+
+      <!-- Sorting -->
+      <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small d-none d-sm-inline">Sắp xếp:</span>
+        <select class="form-select form-select-sm rounded-pill" id="sort-select" style="min-width: 170px;">
+          <option value="newest">Mới nhất</option>
+          <option value="price_asc">Giá: Thấp đến cao</option>
+          <option value="price_desc">Giá: Cao đến thấp</option>
+          <option value="rating">Được đánh giá cao</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Category filter chips -->
+    <div class="d-flex gap-2 overflow-auto pb-3 mb-4" id="category-filter-chips">
+      <!-- Loaded via JS -->
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4" id="products-grid">
+      <div class="col-12 text-center py-5">
+        <div class="spinner-border text-danger" role="status"></div>
+        <div class="mt-2 text-muted">Đang tải sản phẩm hoa tươi...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-white border-top mt-5 py-4">
+    <div class="container text-center text-muted small">
+      © 2026 FlowerShop. Chạy trên Cloudflare Workers, Cloudflare D1 SQL, Cloudflare KV & R2.
+    </div>
+  </footer>
+
+  <!-- ==================== CART DRAWER ==================== -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="cartDrawer" style="max-width: 420px; width: 100%;">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title font-weight-700">
+        <i class="fas fa-shopping-bag text-danger me-2"></i>Giỏ hàng (<span id="cart-drawer-count">0</span>)
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="cart-drawer-items"></div>
+    <div class="p-3 border-top bg-light">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted">Tổng cộng:</span>
+        <span class="fs-5 fw-bold text-danger" id="cart-drawer-total">0₫</span>
+      </div>
+      <div class="d-grid gap-2">
+        <a href="/cart.html" class="btn btn-outline-danger rounded-pill fw-bold">Xem Chi Tiết Giỏ Hàng</a>
+        <a href="/checkout.html" class="btn btn-danger rounded-pill fw-bold">Tiến Hành Đặt Hàng</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GEMINI AI CHATBOT ==================== -->
+  <div class="chatbot-bubble">
+    <button class="chatbot-btn" onclick="toggleChatbot()" title="Trợ lý AI Gemini tư vấn hoa tươi">
+      <div class="chatbot-pulse"></div>
+      <i class="fas fa-robot"></i>
+    </button>
+  </div>
+
+  <div class="chatbot-window" id="chatbot-window">
+    <div class="chatbot-header">
+      <div class="chatbot-title">
+        <i class="fas fa-robot fs-5"></i>
+        <div>
+          <div>Florist AI</div>
+          <div style="font-size: 0.72rem; opacity: 0.9; font-weight: 400;">Powered by Google Gemini 1.5</div>
+        </div>
+      </div>
+      <button class="btn btn-sm text-white" onclick="toggleChatbot()"><i class="fas fa-times fs-5"></i></button>
+    </div>
+    <div class="chatbot-messages" id="chatbot-messages">
+      <div class="chat-msg bot">
+        Chào bạn! Mình có thể tư vấn bạn chọn mẫu hoa nào phù hợp với sự kiện hoặc mức giá mong muốn không? 🌸
+      </div>
+    </div>
+    <div class="chat-chips">
+      <button class="chat-chip" onclick="sendQuickPrompt('Tư vấn hoa sinh nhật giá dưới 500k')">🎂 Dưới 500k</button>
+      <button class="chat-chip" onclick="sendQuickPrompt('Các mẫu hoa lan hồ điệp')">🌺 Lan Hồ Điệp</button>
+      <button class="chat-chip" onclick="sendQuickPrompt('Mã giảm giá hôm nay')">🎟️ Mã coupon</button>
+    </div>
+    <div class="chatbot-input-bar">
+      <input type="text" id="chatbot-input" placeholder="Hỏi AI về chọn hoa, giá cả...">
+      <button class="chatbot-send-btn" id="chatbot-send" onclick="sendChatMessage()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MOBILE BOTTOM NAV ==================== -->
+  <div class="mobile-nav-bar">
+    <a href="/" class="mobile-nav-item">
+      <i class="fas fa-home"></i>
+      <span>Trang chủ</span>
+    </a>
+    <a href="/products.html" class="mobile-nav-item active">
+      <i class="fas fa-th-large"></i>
+      <span>Sản phẩm</span>
+    </a>
+    <a href="javascript:void(0)" onclick="openCartDrawer()" class="mobile-nav-item">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="badge-count cart-badge-count" style="display: none;">0</span>
+      <span>Giỏ hàng</span>
+    </a>
+    <a href="/orders.html" class="mobile-nav-item">
+      <i class="fas fa-receipt"></i>
+      <span>Đơn hàng</span>
+    </a>
+    <a href="javascript:void(0)" onclick="toggleChatbot()" class="mobile-nav-item text-danger">
+      <i class="fas fa-robot"></i>
+      <span>AI Chat</span>
+    </a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/chatbot.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    // Phân tích query string
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentCategory = urlParams.get('category') || '';
+    let currentSearch = urlParams.get('q') || '';
+    let currentOnSale = urlParams.get('on_sale') || '';
+    let currentSort = urlParams.get('sort') || 'newest';
+
+    async function loadProducts() {
+      const grid = document.getElementById('products-grid');
+      grid.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-danger" role="status"></div></div>';
+
+      let queryStr = `?sort=${currentSort}`;
+      if (currentCategory) queryStr += `&category=${currentCategory}`;
+      if (currentSearch) queryStr += `&q=${encodeURIComponent(currentSearch)}`;
+      if (currentOnSale) queryStr += `&on_sale=1`;
+
+      const res = await apiRequest(`/products${queryStr}`);
+
+      if (!res.success || !res.products || res.products.length === 0) {
+        grid.innerHTML = `
+          <div class="col-12 text-center py-5">
+            <i class="fas fa-search text-muted mb-3" style="font-size: 3rem;"></i>
+            <h5>Không tìm thấy mẫu hoa nào phù hợp</h5>
+            <p class="text-muted small">Hãy thử tìm kiếm với từ khóa khác hoặc bỏ chọn bộ lọc.</p>
+            <a href="/products.html" class="btn btn-danger btn-sm rounded-pill mt-2">Xem tất cả hoa</a>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = res.products.map(p => {
+        const discountBadge = (p.original_price && p.original_price > p.price)
+          ? `<span class="badge-sale">-${Math.round(((p.original_price - p.price) / p.original_price) * 100)}%</span>`
+          : '';
+        const originalPriceHtml = (p.original_price && p.original_price > p.price)
+          ? `<span class="price-original">${formatVND(p.original_price)}</span>`
+          : '';
+
+        return `
+          <div class="col">
+            <div class="product-card">
+              <div class="product-img-box">
+                <a href="/product-detail.html?id=${p.id}">
+                  <img src="${p.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600'}" alt="${p.name}" loading="lazy">
+                </a>
+                ${discountBadge}
+                <button class="nav-icon-btn border-0 position-absolute top-0 end-0 m-2 bg-white" onclick="toggleWishlist(${p.id}, this)" title="Yêu thích">
+                  <i class="far fa-heart"></i>
+                </button>
+              </div>
+              <div class="product-body">
+                <div class="product-category">${p.category_name || 'Hoa tươi'}</div>
+                <a href="/product-detail.html?id=${p.id}" class="product-title" title="${p.name}">${p.name}</a>
+                <div class="product-prices">
+                  <span class="price-current">${formatVND(p.price)}</span>
+                  ${originalPriceHtml}
+                </div>
+                <button class="btn-add-cart" onclick="addToCart(${p.id}, 1)">
+                  <i class="fas fa-cart-plus me-1"></i>Thêm Vào Giỏ
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadCategoryChips() {
+      const catRes = await apiRequest('/categories');
+      const container = document.getElementById('category-filter-chips');
+      if (catRes.success && catRes.categories) {
+        container.innerHTML = `
+          <a href="/products.html" class="category-chip ${!currentCategory && !currentOnSale ? 'active' : ''}">Tất cả</a>
+          <a href="/products.html?on_sale=1" class="category-chip ${currentOnSale ? 'active' : ''}"><i class="fas fa-tag text-danger"></i> Khuyến Mãi</a>
+        ` + catRes.categories.map(c => `
+          <a href="/products.html?category=${c.slug}" class="category-chip ${currentCategory === c.slug ? 'active' : ''}">${c.name}</a>
+        `).join('');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Thiết lập giá trị sort hiện tại
+      const sortSelect = document.getElementById('sort-select');
+      if (sortSelect) {
+        sortSelect.value = currentSort;
+        sortSelect.addEventListener('change', (e) => {
+          currentSort = e.target.value;
+          loadProducts();
+        });
+      }
+
+      loadCategoryChips();
+      loadProducts();
+    });
+  </script>
+</body>
+</html>
+

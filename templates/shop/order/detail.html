@@ -2,63 +2,247 @@
 
 {% block title %}Chi tiết đơn hàng #{{ order.id }} - FlowerShop{% endblock %}
 
+{% block extra_css %}
+<style>
+    .payment-method-badge { font-size: 0.85rem; }
+    .qr-section { background: linear-gradient(135deg, #f8f0ff 0%, #e8f4ff 100%); border-radius: 16px; }
+    .bank-info-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px dashed #dee2e6; }
+    .bank-info-row:last-child { border-bottom: none; }
+    .copy-btn { cursor: pointer; font-size: 0.8rem; }
+    .status-timeline .step { position: relative; }
+    .status-timeline .step .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2 class="mb-5 font-weight-bold text-center"><i class="fas fa-file-invoice me-2 text-primary"></i>Chi tiết đơn hàng #{{ order.id }}</h2>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="fw-bold mb-0"><i class="fas fa-file-invoice me-2 text-primary"></i>Chi tiết đơn hàng #{{ order.id }}</h2>
+    <a href="{% url 'order_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i>Lịch sử đơn
+    </a>
+</div>
 
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card shadow-sm border-0 p-5 bg-white">
-            <div class="row mb-5">
-                <div class="col-md-6 border-end">
-                    <h5 class="mb-3 font-weight-bold text-primary"><i class="fas fa-user me-2"></i>Thông tin khách hàng</h5>
-                    <p class="mb-1"><strong>Khách hàng:</strong> {{ order.first_name }} {{ order.last_name }}</p>
-                    <p class="mb-1"><strong>Email:</strong> {{ order.email }}</p>
-                    <p class="mb-1"><strong>Số điện thoại:</strong> {{ order.user.profile.phone|default:"Chưa cung cấp" }}</p>
-                    <p class="mb-0"><strong>Địa chỉ:</strong> {{ order.address }}, {{ order.city }}</p>
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Thông tin khách hàng & đơn hàng -->
+        <div class="card shadow-sm border-0 p-4 mb-4">
+            <div class="row">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user me-2"></i>Người nhận</h6>
+                    <p class="mb-1"><strong>{{ order.first_name }} {{ order.last_name }}</strong></p>
+                    {% if order.phone %}<p class="mb-1 text-muted"><i class="fas fa-phone me-2"></i>{{ order.phone }}</p>{% endif %}
+                    <p class="mb-1 text-muted"><i class="fas fa-envelope me-2"></i>{{ order.email }}</p>
+                    <p class="mb-1 text-muted"><i class="fas fa-map-marker-alt me-2"></i>{{ order.address }}, {{ order.city }}</p>
+                    {% if order.notes %}
+                        <div class="alert alert-light py-2 px-3 mt-2 mb-0 small border-start border-primary border-3">
+                            <i class="fas fa-sticky-note me-2 text-primary"></i><em>{{ order.notes }}</em>
+                        </div>
+                    {% endif %}
                 </div>
-                <div class="col-md-6 ps-md-5">
-                    <h5 class="mb-3 font-weight-bold text-primary"><i class="fas fa-info-circle me-2"></i>Thông tin đơn hàng</h5>
-                    <p class="mb-1"><strong>Ngày đặt:</strong> {{ order.created|date:"d/m/Y H:i" }}</p>
-                    <p class="mb-1"><strong>Trạng thái:</strong> <span class="badge {% if order.status == 'pending' %}bg-warning text-dark{% elif order.status == 'approved' %}bg-info{% elif order.status == 'rejected' %}bg-danger{% elif order.status == 'shipped' %}bg-primary{% elif order.status == 'completed' %}bg-success{% endif %} py-2 px-3">{{ order.get_status_display }}</span></p>
-                    <p class="mb-0"><strong>Thanh toán:</strong> <span class="badge {% if order.paid %}bg-success{% else %}bg-danger{% endif %} py-2 px-3">{% if order.paid %}Đã thanh toán{% else %}Chưa thanh toán{% endif %}</span></p>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Thông tin đơn hàng</h6>
+                    <p class="mb-2"><strong>Ngày đặt:</strong> {{ order.created|date:"d/m/Y H:i" }}</p>
+                    <p class="mb-2">
+                        <strong>Trạng thái:</strong>
+                        <span class="badge payment-method-badge ms-1
+                            {% if order.status == 'pending' %}bg-warning text-dark
+                            {% elif order.status == 'approved' %}bg-info
+                            {% elif order.status == 'rejected' %}bg-danger
+                            {% elif order.status == 'shipped' %}bg-primary
+                            {% elif order.status == 'completed' %}bg-success
+                            {% elif order.status == 'cancelled' %}bg-secondary
+                            {% endif %} py-2 px-3">{{ order.get_status_display }}</span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>Thanh toán:</strong>
+                        <span class="badge payment-method-badge ms-1 {% if order.paid %}bg-success{% else %}bg-danger{% endif %} py-2 px-3">
+                            {% if order.paid %}Đã thanh toán{% else %}Chưa thanh toán{% endif %}
+                        </span>
+                    </p>
+                    <p class="mb-2">
+                        <strong>Phương thức:</strong>
+                        {% if order.payment_method == 'cod' %}
+                            <span class="badge bg-secondary ms-1 py-1 px-2"><i class="fas fa-money-bill-wave me-1 text-success"></i>COD</span>
+                        {% elif order.payment_method == 'bank_transfer' %}
+                            <span class="badge bg-secondary ms-1 py-1 px-2"><i class="fas fa-qrcode me-1 text-primary"></i>Chuyển khoản VietQR</span>
+                        {% elif order.payment_method == 'momo' %}
+                            <span class="badge bg-secondary ms-1 py-1 px-2"><i class="fas fa-mobile-alt me-1" style="color:#ae2070"></i>MoMo</span>
+                        {% elif order.payment_method == 'vnpay' %}
+                            <span class="badge bg-secondary ms-1 py-1 px-2"><i class="fas fa-university me-1" style="color:#005599"></i>VNPAY</span>
+                        {% endif %}
+                    </p>
+                    {% if order.payment_reference %}
+                        <p class="mb-0 small text-muted"><i class="fas fa-receipt me-1"></i>Ghi chú TT: {{ order.payment_reference }}</p>
+                    {% endif %}
                 </div>
-            </div>
-
-            <div class="card bg-light border-0 p-4 shadow-sm mb-5">
-                <h5 class="mb-3 font-weight-bold text-primary"><i class="fas fa-shopping-basket me-2"></i>Sản phẩm đã mua</h5>
-                <div class="table-responsive">
-                    <table class="table table-borderless align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="py-3 px-4">Sản phẩm</th>
-                                <th class="py-3">Đơn giá</th>
-                                <th class="py-3">Số lượng</th>
-                                <th class="py-3 text-end">Thành tiền</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in order.items.all %}
-                                <tr>
-                                    <td class="py-3 px-4 font-weight-bold text-dark">{{ item.product.name }}</td>
-                                    <td class="py-3">{{ item.price|floatformat:0 }} VNĐ</td>
-                                    <td class="py-3">{{ item.quantity }}</td>
-                                    <td class="py-3 text-end font-weight-bold">{{ item.get_cost|floatformat:0 }} VNĐ</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr class="border-top">
-                                <td colspan="3" class="py-4 text-end fs-5 font-weight-bold">Tổng tiền:</td>
-                                <td class="py-4 text-end fs-4 font-weight-bold text-primary">{{ order.get_total_cost|floatformat:0 }} VNĐ</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-            <div class="d-grid gap-2">
-                <a href="{% url 'order_list' %}" class="btn btn-outline-secondary">Trở về lịch sử đơn hàng</a>
             </div>
         </div>
+
+        <!-- Sản phẩm đã mua -->
+        <div class="card shadow-sm border-0 p-4 mb-4">
+            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-shopping-basket me-2"></i>Sản phẩm đã đặt</h6>
+            <div class="table-responsive">
+                <table class="table table-borderless align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-2 px-3">Sản phẩm</th>
+                            <th class="py-2">Đơn giá</th>
+                            <th class="py-2">SL</th>
+                            <th class="py-2 text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td class="py-3 px-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" width="45" class="rounded-2 object-fit-cover" alt="">
+                                    {% endif %}
+                                    <div>
+                                        <a href="{{ item.product.get_absolute_url }}" class="text-decoration-none text-dark fw-semibold">{{ item.product.name }}</a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3">{{ item.price|floatformat:0 }} ₫</td>
+                            <td class="py-3">{{ item.quantity }}</td>
+                            <td class="py-3 text-end fw-bold text-primary">{{ item.get_cost|floatformat:0 }} ₫</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="border-top">
+                            <td colspan="3" class="pt-3 text-muted text-end">Tạm tính:</td>
+                            <td class="pt-3 text-end fw-semibold">{{ order.get_subtotal|floatformat:0 }} ₫</td>
+                        </tr>
+                        {% if order.discount > 0 %}
+                        <tr>
+                            <td colspan="3" class="py-1 text-success text-end"><i class="fas fa-tag me-1"></i>Giảm giá{% if order.coupon %} ({{ order.coupon.code }}){% endif %}:</td>
+                            <td class="py-1 text-end text-success fw-semibold">-{{ order.discount|floatformat:0 }} ₫</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td colspan="3" class="py-1 text-success text-end"><i class="fas fa-truck me-1"></i>Phí ship:</td>
+                            <td class="py-1 text-end text-success fw-semibold">Miễn phí</td>
+                        </tr>
+                        <tr class="fw-bold fs-5">
+                            <td colspan="3" class="py-3 text-end">Tổng thanh toán:</td>
+                            <td class="py-3 text-end text-primary fw-bold fs-4">{{ order.get_total_cost|floatformat:0 }} ₫</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Nút hành động -->
+        <div class="d-flex gap-2 flex-wrap">
+            {% if order.status == 'pending' %}
+                <form method="post" action="{% url 'order_cancel' order.id %}" onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-times-circle me-2"></i>Hủy đơn hàng
+                    </button>
+                </form>
+            {% endif %}
+            <a href="{% url 'order_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-list me-2"></i>Xem tất cả đơn hàng
+            </a>
+        </div>
+    </div>
+
+    <!-- Cột phải: Thanh toán VietQR / MoMo / Hướng dẫn -->
+    <div class="col-lg-4 mt-4 mt-lg-0">
+        {% if not order.paid and order.status == 'pending' %}
+            {% if order.payment_method == 'bank_transfer' %}
+            <div class="qr-section p-4 mb-4">
+                <h6 class="fw-bold mb-3 text-center"><i class="fas fa-qrcode me-2 text-primary"></i>Quét mã VietQR để thanh toán</h6>
+                <div class="text-center mb-3">
+                    <img src="{{ vietqr_url }}" alt="VietQR Code" class="img-fluid rounded-3 shadow" style="max-width: 220px;">
+                </div>
+                <div class="bg-white rounded-3 p-3 mb-3 shadow-sm">
+                    <div class="bank-info-row">
+                        <span class="text-muted small">Ngân hàng</span>
+                        <span class="fw-bold">{{ bank_id }}</span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="text-muted small">Số tài khoản</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold" id="account-no">{{ account_no }}</span>
+                            <button class="btn btn-sm btn-outline-secondary copy-btn py-0 px-1" onclick="copyText('{{ account_no }}', this)"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="text-muted small">Chủ tài khoản</span>
+                        <span class="fw-semibold">{{ account_name }}</span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="text-muted small">Số tiền</span>
+                        <span class="fw-bold text-primary fs-5">{{ order.get_total_cost|floatformat:0 }} ₫</span>
+                    </div>
+                    <div class="bank-info-row">
+                        <span class="text-muted small">Nội dung CK</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold text-danger" id="memo-text">{{ memo }}</span>
+                            <button class="btn btn-sm btn-outline-secondary copy-btn py-0 px-1" onclick="copyText('{{ memo }}', this)"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-warning py-2 px-3 small mb-3">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Lưu ý:</strong> Nhập đúng nội dung <strong>{{ memo }}</strong> để shop xác nhận tự động.
+                </div>
+                <!-- Xác nhận đã chuyển khoản -->
+                <form method="post" action="{% url 'order_confirm_payment' order.id %}">
+                    {% csrf_token %}
+                    <input type="text" name="payment_reference" class="form-control form-control-sm mb-2" placeholder="Mã giao dịch / Ghi chú (tùy chọn)">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-check-circle me-2"></i>Tôi đã chuyển khoản xong!
+                    </button>
+                </form>
+            </div>
+            {% elif order.payment_method == 'momo' %}
+            <div class="qr-section p-4 mb-4">
+                <h6 class="fw-bold mb-3 text-center" style="color:#ae2070"><i class="fas fa-mobile-alt me-2"></i>Thanh toán qua MoMo</h6>
+                <p class="text-center text-muted small mb-3">Mở app MoMo và chuyển đến số:</p>
+                <div class="bg-white rounded-3 p-3 mb-3 text-center">
+                    <div class="fw-bold fs-4 mb-1" style="color:#ae2070">0898287030</div>
+                    <div class="text-muted small">FLOWER SHOP OFFICIAL</div>
+                    <div class="fw-bold text-primary fs-5 mt-2">{{ order.get_total_cost|floatformat:0 }} ₫</div>
+                    <div class="badge bg-danger mt-1">Nội dung: {{ memo }}</div>
+                </div>
+                <form method="post" action="{% url 'order_confirm_payment' order.id %}">
+                    {% csrf_token %}
+                    <input type="text" name="payment_reference" class="form-control form-control-sm mb-2" placeholder="Mã giao dịch MoMo (tùy chọn)">
+                    <button type="submit" class="btn btn-success w-100"><i class="fas fa-check-circle me-2"></i>Tôi đã thanh toán!</button>
+                </form>
+            </div>
+            {% elif order.payment_method == 'cod' %}
+            <div class="qr-section p-4 mb-4 text-center">
+                <i class="fas fa-money-bill-wave fa-3x text-success mb-3"></i>
+                <h6 class="fw-bold">Thanh toán tiền mặt (COD)</h6>
+                <p class="text-muted small">Bạn sẽ thanh toán <strong class="text-primary">{{ order.get_total_cost|floatformat:0 }} ₫</strong> khi nhận hoa tại nhà. Shop sẽ liên hệ xác nhận trước khi giao.</p>
+                <div class="badge bg-success px-3 py-2">Không cần chuyển khoản trước</div>
+            </div>
+            {% endif %}
+        {% elif order.paid %}
+            <div class="card border-0 bg-success text-white text-center p-4 mb-4 shadow-sm rounded-4">
+                <i class="fas fa-check-circle fa-3x mb-3"></i>
+                <h6 class="fw-bold">Đã thanh toán thành công!</h6>
+                <p class="small mb-0 opacity-90">Cảm ơn bạn đã tin tưởng FlowerShop ❤️</p>
+            </div>
+        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check text-success"></i>';
+        setTimeout(() => { btn.innerHTML = original; }, 2000);
+    });
+}
+</script>
 {% endblock %}

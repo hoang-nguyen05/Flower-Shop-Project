@@ -24,7 +24,7 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1xv9(-wgy@h3=y*#+sbz4nbxzig=6*@b+qwmxafver@2afmdo#'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-1xv9(-wgy@h3=y*#+sbz4nbxzig=6*@b+qwmxafver@2afmdo#')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -75,10 +75,17 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
+                'shop.context_processors.cart_and_wishlist',
             ],
         },
     },
 ]
+
+# Cấu hình thanh toán VietQR ngân hàng (Napas247)
+VIETQR_BANK_ID = os.getenv('VIETQR_BANK_ID', 'MB') # Ví dụ: MB, VCB, TCB, ACB, TPB, VPB, etc.
+VIETQR_ACCOUNT_NO = os.getenv('VIETQR_ACCOUNT_NO', '0898287030')
+VIETQR_ACCOUNT_NAME = os.getenv('VIETQR_ACCOUNT_NAME', 'FLOWER SHOP OFFICIAL')
+
 
 WSGI_APPLICATION = 'flower_shop.wsgi.application'
 
@@ -138,5 +145,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+LOGIN_URL = '/login/'
 
 CART_SESSION_ID = 'cart'
+WISHLIST_SESSION_KEY = 'wishlist_ids'
+
+# Email Configuration
+# Development: inấn email ra console
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'FlowerShop <noreply@flowershop.vn>')

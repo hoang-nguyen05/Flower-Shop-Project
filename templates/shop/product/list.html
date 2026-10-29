@@ -1,70 +1,241 @@
 {% extends "base.html" %}
 
-{% block title %}
-    {% if category %}{{ category.name }}{% else %}Cửa hàng hoa tươi{% endif %} - FlowerShop
+{% block title %}{% if category %}{{ category.name }}{% elif query %}Tìm: "{{ query }}"{% else %}Cửa hàng hoa tươi{% endif %} - FlowerShop{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-pill { display: inline-flex; align-items: center; gap: 5px; background: #f0e8ff; color: #7c4dba; border: 1.5px solid #d0b8f0; border-radius: 20px; padding: 2px 12px; font-size: 0.82rem; font-weight: 600; }
+    .filter-pill a { color: #7c4dba; text-decoration: none; }
+    .quick-add-form { display: none; position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); border-top: 1px solid #f0e8ff; z-index: 2; }
+    .product-card:hover .quick-add-form { display: block; }
+    .product-card { overflow: hidden; }
+    .page-link { color: #7c4dba; }
+    .page-item.active .page-link { background: #7c4dba; border-color: #7c4dba; }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
+    <!-- Sidebar lọc -->
     <div class="col-md-3">
-        <div class="card shadow-sm border-0 p-4 mb-4">
-            <h5 class="mb-3 font-weight-bold"><i class="fas fa-list me-2 text-primary"></i>Danh mục</h5>
+        <!-- Danh mục -->
+        <div class="card shadow-sm border-0 p-4 mb-3">
+            <h6 class="fw-bold mb-3"><i class="fas fa-list me-2 text-primary"></i>Danh mục</h6>
             <div class="list-group list-group-flush">
-                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action {% if not category %}active{% endif %}">Tất cả</a>
+                <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action border-0 rounded-2 py-2 {% if not category and not on_sale %}active{% endif %}">
+                    <i class="fas fa-store me-2"></i>Tất cả
+                </a>
+                <a href="{% url 'product_list' %}?on_sale=1" class="list-group-item list-group-item-action border-0 rounded-2 py-2 text-danger fw-semibold {% if on_sale %}active{% endif %}">
+                    <i class="fas fa-tag me-2"></i>Khuyến mãi 🔥
+                </a>
                 {% for c in categories %}
-                    <a href="{{ c.get_absolute_url }}" class="list-group-item list-group-item-action {% if category.slug == c.slug %}active{% endif %}">{{ c.name }}</a>
+                    <a href="{{ c.get_absolute_url }}" class="list-group-item list-group-item-action border-0 rounded-2 py-2 {% if category.slug == c.slug %}active{% endif %}">
+                        {{ c.name }}
+                    </a>
                 {% endfor %}
             </div>
         </div>
 
+        <!-- Khoảng giá -->
+        <div class="card shadow-sm border-0 p-4 mb-3">
+            <h6 class="fw-bold mb-3"><i class="fas fa-dollar-sign me-2 text-primary"></i>Khoảng giá (₫)</h6>
+            <form method="get" action="{% url 'product_list' %}">
+                {% if category %}<input type="hidden" name="category" value="{{ category.slug }}">{% endif %}
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                {% if on_sale %}<input type="hidden" name="on_sale" value="1">{% endif %}
+                <input type="hidden" name="sort" value="{{ current_sort }}">
+                <div class="mb-2">
+                    <label class="small text-muted mb-1">Từ</label>
+                    <div class="input-group input-group-sm">
+                        <input type="number" name="min_price" class="form-control" placeholder="0" value="{{ min_price|default:'' }}" min="0" step="10000">
+                        <span class="input-group-text">₫</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-muted mb-1">Đến</label>
+                    <div class="input-group input-group-sm">
+                        <input type="number" name="max_price" class="form-control" placeholder="∞" value="{{ max_price|default:'' }}" min="0" step="10000">
+                        <span class="input-group-text">₫</span>
+                    </div>
+                </div>
+                <div class="d-grid gap-1">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter me-1"></i>Lọc giá</button>
+                    {% if min_price or max_price %}
+                        <a href="{% url 'product_list' %}" class="btn btn-outline-secondary btn-sm">Xóa bộ lọc</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Sắp xếp -->
         <div class="card shadow-sm border-0 p-4">
-            <h5 class="mb-3 font-weight-bold"><i class="fas fa-sort-amount-down me-2 text-primary"></i>Sắp xếp theo</h5>
-            <form action="." method="get">
-                <select name="sort" class="form-select mb-3" onchange="this.form.submit()">
-                    <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Mới nhất</option>
-                    <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Giá: Thấp đến Cao</option>
-                    <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Giá: Cao đến Thấp</option>
+            <h6 class="fw-bold mb-3"><i class="fas fa-sort-amount-down me-2 text-primary"></i>Sắp xếp</h6>
+            <form method="get" action=".">
+                {% if category %}<input type="hidden" name="category" value="{{ category.slug }}">{% endif %}
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                {% if on_sale %}<input type="hidden" name="on_sale" value="1">{% endif %}
+                {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+                {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+                <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Mới nhất</option>
+                    <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Giá: Thấp → Cao</option>
+                    <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Giá: Cao → Thấp</option>
+                    <option value="name_asc" {% if current_sort == 'name_asc' %}selected{% endif %}>Tên A-Z</option>
+                    <option value="discount_desc" {% if current_sort == 'discount_desc' %}selected{% endif %}>Khuyến mãi hot</option>
                 </select>
-                {% if request.GET.q %}
-                    <input type="hidden" name="q" value="{{ request.GET.q }}">
-                {% endif %}
             </form>
         </div>
     </div>
 
+    <!-- Danh sách sản phẩm -->
     <div class="col-md-9">
-        <h2 class="mb-4 font-weight-bold">
-            {% if category %}{{ category.name }}{% else %}Cửa hàng hoa tươi{% endif %}
-            {% if request.GET.q %}<span class="text-muted small fs-5"> - Kết quả tìm kiếm cho "{{ request.GET.q }}"</span>{% endif %}
-        </h2>
-        
-        <div class="row g-4">
+        <!-- Header -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    {% if category %}{{ category.name }}
+                    {% elif on_sale %}<span class="text-danger">Khuyến mãi đặc biệt 🔥</span>
+                    {% elif query %}Kết quả: "<em>{{ query }}</em>"
+                    {% else %}Tất cả hoa tươi{% endif %}
+                </h2>
+                <div class="d-flex gap-2 flex-wrap">
+                    {% if on_sale %}<span class="filter-pill"><i class="fas fa-tag"></i>Đang giảm giá <a href="{% url 'product_list' %}">✕</a></span>{% endif %}
+                    {% if min_price or max_price %}
+                        <span class="filter-pill"><i class="fas fa-dollar-sign"></i>
+                            {{ min_price|default:"0" }} - {{ max_price|default:"∞" }} ₫
+                            <a href="?{% if category %}category={{ category.slug }}&{% endif %}{% if query %}q={{ query }}&{% endif %}sort={{ current_sort }}">✕</a>
+                        </span>
+                    {% endif %}
+                    {% if products %}<span class="text-muted small">Tìm thấy {{ products.paginator.count }} sản phẩm</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid sản phẩm -->
+        {% if products %}
+        <div class="row g-3">
             {% for product in products %}
-                <div class="col-md-4">
-                    <div class="card product-card h-100">
-                        <a href="{{ product.get_absolute_url }}">
-                            {% if product.image %}
-                                <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
-                            {% else %}
-                                <img src="https://via.placeholder.com/300x400?text=Flower" class="card-img-top product-img" alt="{{ product.name }}">
+            <div class="col-6 col-md-4">
+                <div class="card product-card border-0 shadow-sm h-100 position-relative">
+                    <!-- Badges -->
+                    <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1" style="z-index:1">
+                        {% if product.has_discount %}
+                            <span class="badge bg-danger shadow-sm py-1 px-2">-{{ product.discount_percent }}%</span>
+                        {% endif %}
+                        {% if product.is_featured %}
+                            <span class="badge bg-warning text-dark shadow-sm py-1 px-2"><i class="fas fa-star me-1" style="font-size:0.6rem"></i>Nổi bật</span>
+                        {% endif %}
+                        {% if product.stock == 0 %}
+                            <span class="badge bg-secondary py-1 px-2">Hết hàng</span>
+                        {% elif product.stock <= 5 %}
+                            <span class="badge bg-warning text-dark py-1 px-2">Còn {{ product.stock }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Nút yêu thích -->
+                    {% if user.is_authenticated %}
+                    <button class="btn btn-sm btn-light rounded-circle position-absolute top-0 end-0 m-2 shadow-sm wish-btn {% if product.id in favorite_product_ids %}active{% endif %}"
+                        onclick="toggleWishlist({{ product.id }}, this)" style="width:32px;height:32px;padding:0;z-index:1;"
+                        title="{% if product.id in favorite_product_ids %}Bỏ yêu thích{% else %}Yêu thích{% endif %}">
+                        <i class="{% if product.id in favorite_product_ids %}fas text-danger{% else %}far{% endif %} fa-heart small"></i>
+                    </button>
+                    {% endif %}
+
+                    <!-- Hình ảnh -->
+                    <a href="{{ product.get_absolute_url }}">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top object-fit-cover" style="height:190px;" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height:190px;">
+                                <i class="fas fa-seedling fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </a>
+
+                    <div class="card-body p-3 d-flex flex-column">
+                        <p class="text-muted small mb-1">{{ product.category.name }}</p>
+                        <h6 class="card-title fw-semibold mb-2 lh-sm">
+                            <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-dark">{{ product.name }}</a>
+                        </h6>
+                        <div class="d-flex align-items-baseline gap-2 mb-2">
+                            <span class="text-primary fw-bold">{{ product.price|floatformat:0 }} ₫</span>
+                            {% if product.has_discount %}
+                                <del class="text-muted" style="font-size:0.78rem;">{{ product.original_price|floatformat:0 }} ₫</del>
                             {% endif %}
-                        </a>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title font-weight-bold">{{ product.name }}</h5>
-                            <p class="text-muted small mb-2">{{ product.category.name }}</p>
-                            <p class="card-text text-primary fs-5 mb-3">{{ product.price|floatformat:0 }} VNĐ</p>
-                            <a href="{{ product.get_absolute_url }}" class="btn btn-outline-dark mt-auto w-100">Xem chi tiết</a>
+                        </div>
+                        <!-- Nút hành động -->
+                        <div class="mt-auto d-flex gap-1">
+                            {% if product.stock > 0 %}
+                                <form action="{% url 'cart_add' product.id %}" method="post" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                                        <i class="fas fa-cart-plus me-1"></i>Thêm giỏ
+                                    </button>
+                                </form>
+                                <form action="{% url 'cart_add' product.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="1">
+                                    <input type="hidden" name="buy_now" value="1">
+                                    <button type="submit" class="btn btn-primary btn-sm px-2" title="Mua ngay">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                </form>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                    <i class="fas fa-times-circle me-1"></i>Hết hàng
+                                </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-            {% empty %}
-                <div class="col-12 text-center py-5">
-                    <i class="fas fa-search fa-4x text-muted mb-4"></i>
-                    <h3>Không tìm thấy sản phẩm nào</h3>
-                    <p class="text-muted">Vui lòng thử tìm kiếm với từ khóa khác hoặc chọn danh mục khác.</p>
-                </div>
+            </div>
             {% endfor %}
         </div>
+
+        <!-- Phân trang -->
+        {% if products.has_other_pages %}
+        <nav class="mt-5 d-flex justify-content-center" aria-label="Phân trang sản phẩm">
+            <ul class="pagination pagination-md gap-1">
+                {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link rounded-3 px-3" href="?page={{ products.previous_page_number }}&sort={{ current_sort }}{% if category %}&category={{ category.slug }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if on_sale %}&on_sale=1{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for i in products.paginator.page_range %}
+                    {% if products.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link rounded-3 px-3">{{ i }}</span>
+                        </li>
+                    {% elif i > products.number|add:"-3" and i < products.number|add:"3" %}
+                        <li class="page-item">
+                            <a class="page-link rounded-3 px-3" href="?page={{ i }}&sort={{ current_sort }}{% if category %}&category={{ category.slug }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if on_sale %}&on_sale=1{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}">{{ i }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link rounded-3 px-3" href="?page={{ products.next_page_number }}&sort={{ current_sort }}{% if category %}&category={{ category.slug }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if on_sale %}&on_sale=1{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-4 d-block"></i>
+                <h3>Không tìm thấy sản phẩm nào</h3>
+                <p class="text-muted mb-4">Thử tìm với từ khóa khác hoặc xóa bộ lọc.</p>
+                <a href="{% url 'product_list' %}" class="btn btn-primary px-5">Xem tất cả hoa</a>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giỏ Hàng Của Bạn - FlowerShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <nav class="navbar navbar-expand-lg navbar-floral sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-seedling"></i>
+        <span>FlowerShop</span>
+      </a>
+
+      <div class="collapse navbar-collapse flex-grow-0" id="mainNav">
+        <ul class="navbar-nav me-3 align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="/products.html"><i class="fas fa-store me-1"></i>Cửa hàng</a></li>
+          <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/products.html?on_sale=1"><i class="fas fa-fire me-1"></i>Khuyến mãi</a></li>
+          <li class="nav-item"><a class="nav-link" href="/orders.html"><i class="fas fa-receipt me-1"></i>Tra cứu đơn</a></li>
+          <li class="nav-item"><a class="nav-link text-primary" href="/admin.html"><i class="fas fa-shield-alt me-1"></i>Admin</a></li>
+        </ul>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <a href="/cart.html" class="nav-icon-btn border-0 position-relative active" title="Giỏ hàng">
+          <i class="fas fa-shopping-bag text-danger"></i>
+          <span class="badge-count cart-badge-count" style="display: none;">0</span>
+        </a>
+        <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <i class="fas fa-bars fs-4"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== CART PAGE CONTENT ==================== -->
+  <div class="container my-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-2 small">
+        <li class="breadcrumb-item"><a href="/" class="text-muted">Trang chủ</a></li>
+        <li class="breadcrumb-item active text-danger" aria-current="page">Giỏ hàng</li>
+      </ol>
+    </nav>
+    <h2 class="font-serif mb-4">Giỏ Hàng Của Bạn</h2>
+
+    <div class="row g-4" id="cart-main-row">
+      <!-- Cột danh sách sản phẩm (Bên trái) -->
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="ps-4 py-3">Sản phẩm</th>
+                    <th scope="col" class="py-3 text-center">Đơn giá</th>
+                    <th scope="col" class="py-3 text-center">Số lượng</th>
+                    <th scope="col" class="py-3 text-end">Tạm tính</th>
+                    <th scope="col" class="pe-4 py-3 text-center">Xóa</th>
+                  </tr>
+                </thead>
+                <tbody id="cart-page-table-body">
+                  <tr>
+                    <td colspan="5" class="text-center py-5">
+                      <div class="spinner-border text-danger" role="status"></div>
+                      <div class="mt-2 text-muted">Đang tải giỏ hàng từ máy chủ Cloudflare...</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-white d-flex justify-content-between p-3 border-top">
+            <a href="/products.html" class="btn btn-outline-dark btn-sm rounded-pill">
+              <i class="fas fa-arrow-left me-1"></i>Tiếp tục chọn hoa
+            </a>
+            <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="clearCart()">
+              <i class="fas fa-trash-alt me-1"></i>Dọn sạch giỏ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cột tóm tắt & Mã giảm giá (Bên phải) -->
+      <div class="col-lg-4">
+        <!-- Áp dụng mã giảm giá -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-3">
+          <h6 class="fw-bold mb-3"><i class="fas fa-ticket-alt text-danger me-2"></i>Mã Giảm Giá / Ưu Đãi</h6>
+          <div id="coupon-box">
+            <div class="input-group mb-2">
+              <input type="text" id="coupon-input" class="form-control rounded-pill-start text-uppercase" placeholder="Nhập mã (VD: FLOWER10)">
+              <button class="btn btn-danger rounded-pill-end fw-bold px-3" onclick="handleApplyCoupon()">Áp Dụng</button>
+            </div>
+            <div class="small text-muted">
+              💡 Gợi ý mã: <span class="badge bg-light text-dark border">FLOWER10</span>, <span class="badge bg-light text-dark border">GIAM50K</span>, <span class="badge bg-light text-dark border">FREESHIP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tóm tắt đơn hàng -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <h5 class="fw-bold mb-3 font-serif">Tóm Tắt Đơn Hàng</h5>
+          
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Tạm tính:</span>
+            <span class="fw-bold" id="cart-summary-subtotal">0₫</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-2 text-success" id="cart-summary-discount-row" style="display: none !important;">
+            <span>Giảm giá coupon:</span>
+            <span class="fw-bold" id="cart-summary-discount">-0₫</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted">Phí vận chuyển:</span>
+            <span class="fw-bold text-primary" id="cart-summary-shipping">30.000₫</span>
+          </div>
+
+          <hr>
+
+          <div class="d-flex justify-content-between align-items-baseline mb-4">
+            <span class="fw-bold fs-5">Tổng thanh toán:</span>
+            <span class="display-6 fw-bold text-danger" id="cart-summary-total">0₫</span>
+          </div>
+
+          <a href="/checkout.html" class="btn btn-danger btn-lg rounded-pill fw-bold w-100 shadow-sm" id="btn-proceed-checkout">
+            <i class="fas fa-lock me-2"></i>Tiến Hành Đặt Hàng
+          </a>
+
+          <div class="mt-3 text-center text-muted small">
+            <i class="fas fa-shield-alt text-success me-1"></i>Thanh toán bảo mật qua VietQR / COD
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-white border-top mt-5 py-4">
+    <div class="container text-center text-muted small">
+      © 2026 FlowerShop. Chạy trên Cloudflare Workers, Cloudflare D1 SQL, Cloudflare KV & R2.
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    function renderCartPage() {
+      const tbody = document.getElementById('cart-page-table-body');
+      const subtotalEl = document.getElementById('cart-summary-subtotal');
+      const discountEl = document.getElementById('cart-summary-discount');
+      const discountRow = document.getElementById('cart-summary-discount-row');
+      const shippingEl = document.getElementById('cart-summary-shipping');
+      const totalEl = document.getElementById('cart-summary-total');
+      const couponBox = document.getElementById('coupon-box');
+      const checkoutBtn = document.getElementById('btn-proceed-checkout');
+
+      if (!tbody) return;
+
+      if (!currentCart.items || currentCart.items.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-5">
+              <i class="fas fa-shopping-basket text-muted mb-3" style="font-size: 3.5rem;"></i>
+              <h5 class="text-secondary">Giỏ hàng của bạn đang trống</h5>
+              <p class="text-muted small">Bạn chưa chọn bó hoa tươi nào vào giỏ.</p>
+              <a href="/products.html" class="btn btn-danger btn-sm rounded-pill mt-2 px-4">Khám phá cửa hàng</a>
+            </td>
+          </tr>
+        `;
+        subtotalEl.textContent = '0₫';
+        shippingEl.textContent = '0₫';
+        totalEl.textContent = '0₫';
+        if (checkoutBtn) checkoutBtn.classList.add('disabled');
+        return;
+      }
+
+      if (checkoutBtn) checkoutBtn.classList.remove('disabled');
+
+      // Render danh sách món hàng
+      tbody.innerHTML = currentCart.items.map(item => `
+        <tr>
+          <td class="ps-4">
+            <div class="d-flex align-items-center gap-3">
+              <img src="${item.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200'}" class="cart-item-img rounded-3" alt="${item.name}">
+              <div>
+                <a href="/product-detail.html?id=${item.productId}" class="fw-bold text-dark text-decoration-none">${item.name}</a>
+                <div class="small text-muted">Kho: ${item.stock} bó</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-center fw-bold text-danger">${formatVND(item.price)}</td>
+          <td class="text-center">
+            <div class="qty-control d-inline-flex">
+              <button class="qty-btn" onclick="updateCartQty(${item.productId}, ${item.quantity - 1})">-</button>
+              <span class="qty-value">${item.quantity}</span>
+              <button class="qty-btn" onclick="updateCartQty(${item.productId}, ${item.quantity + 1})">+</button>
+            </div>
+          </td>
+          <td class="text-end fw-bold text-danger">${formatVND(item.subtotal)}</td>
+          <td class="pe-4 text-center">
+            <button class="btn btn-sm text-danger hover-danger border-0" onclick="removeFromCart(${item.productId})" title="Xóa món này">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      // Cập nhật giá tóm tắt
+      subtotalEl.textContent = formatVND(currentCart.subtotal);
+      shippingEl.textContent = currentCart.shippingFee === 0 ? 'Miễn phí' : formatVND(currentCart.shippingFee);
+      totalEl.textContent = formatVND(currentCart.total);
+
+      // Hiển thị coupon nếu có
+      if (currentCart.coupon) {
+        discountRow.style.setProperty('display', 'flex', 'important');
+        discountEl.textContent = `-${formatVND(currentCart.coupon.discountAmount)}`;
+        couponBox.innerHTML = `
+          <div class="alert alert-success d-flex justify-content-between align-items-center mb-0 p-2">
+            <div>
+              <span class="badge bg-success me-1">${currentCart.coupon.code}</span>
+              <small>${currentCart.coupon.description || 'Đã áp dụng mã'}</small>
+            </div>
+            <button class="btn btn-sm btn-link text-danger p-0" onclick="removeCoupon()">Hủy</button>
+          </div>
+        `;
+      } else {
+        discountRow.style.setProperty('display', 'none', 'important');
+        couponBox.innerHTML = `
+          <div class="input-group mb-2">
+            <input type="text" id="coupon-input" class="form-control rounded-pill-start text-uppercase" placeholder="Nhập mã (VD: FLOWER10)">
+            <button class="btn btn-danger rounded-pill-end fw-bold px-3" onclick="handleApplyCoupon()">Áp Dụng</button>
+          </div>
+          <div class="small text-muted">
+            💡 Gợi ý mã: <span class="badge bg-light text-dark border">FLOWER10</span>, <span class="badge bg-light text-dark border">GIAM50K</span>, <span class="badge bg-light text-dark border">FREESHIP</span>
+          </div>
+        `;
+      }
+    }
+
+    function handleApplyCoupon() {
+      const input = document.getElementById('coupon-input');
+      if (input) {
+        applyCoupon(input.value.trim());
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCart();
+    });
+  </script>
+</body>
+</html>
+

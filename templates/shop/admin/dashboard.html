@@ -81,14 +81,15 @@
         <div class="card shadow-sm border-0 p-4 h-100">
             <h5 class="mb-4 fw-bold text-muted">Đơn hàng mới nhất</h5>
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle small">
                     <tbody>
                         {% for order in recent_orders %}
                             <tr>
-                                <td class="small fw-bold">#{{ order.id }}</td>
-                                <td class="small">{{ order.first_name }}</td>
-                                <td class="text-end">
-                                    <span class="badge {% if order.status == 'pending' %}bg-warning text-dark{% elif order.status == 'approved' %}bg-info{% elif order.status == 'rejected' %}bg-danger{% elif order.status == 'shipped' %}bg-primary{% elif order.status == 'completed' %}bg-success{% endif %}">
+                                <td class="fw-bold"><a href="{% url 'order_detail' order.id %}" class="text-decoration-none">#{{ order.id }}</a></td>
+                                <td>{{ order.first_name }} {{ order.last_name }}</td>
+                                <td class="text-muted">{{ order.get_total_cost|floatformat:0 }} ₫</td>
+                                <td>
+                                    <span class="badge {% if order.status == 'pending' %}bg-warning text-dark{% elif order.status == 'approved' %}bg-info{% elif order.status == 'rejected' or order.status == 'cancelled' %}bg-danger{% elif order.status == 'shipped' %}bg-primary{% elif order.status == 'completed' %}bg-success{% else %}bg-secondary{% endif %}">
                                         {{ order.get_status_display }}
                                     </span>
                                 </td>
@@ -100,6 +101,145 @@
         </div>
     </div>
 </div>
+
+<!-- Đơn hàng chờ xử lý - Duyệt nhanh -->
+{% if pending_orders %}
+<div class="card shadow-sm border-0 p-4 mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h5 class="fw-bold mb-0">
+            <i class="fas fa-clock text-warning me-2"></i>Đơn hàng chờ xử lý
+            <span class="badge bg-warning text-dark ms-2">{{ pending_orders|length }}</span>
+        </h5>
+        <a href="{% url 'admin:shop_order_changelist' %}" class="btn btn-outline-secondary btn-sm">Xem tất cả</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Đơn #</th>
+                    <th>Khách hàng</th>
+                    <th>Sản phẩm</th>
+                    <th>Tổng tiền</th>
+                    <th>Thanh toán</th>
+                    <th>Ngày đặt</th>
+                    <th class="text-center">Hành động nhanh</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in pending_orders %}
+                <tr>
+                    <td class="fw-bold">
+                        <a href="{% url 'order_detail' order.id %}" class="text-decoration-none text-primary">#{{ order.id }}</a>
+                    </td>
+                    <td>
+                        <div class="fw-semibold small">{{ order.first_name }} {{ order.last_name }}</div>
+                        <div class="text-muted" style="font-size:0.75rem;">{{ order.phone }}</div>
+                    </td>
+                    <td class="small text-muted">{{ order.items.count }} mặt hàng</td>
+                    <td class="fw-bold text-primary">{{ order.get_total_cost|floatformat:0 }} ₫</td>
+                    <td>
+                        <span class="badge {% if order.paid %}bg-success{% else %}bg-secondary{% endif %} me-1">
+                            {% if order.paid %}Đã TT{% else %}Chưa TT{% endif %}
+                        </span>
+                        <span class="badge bg-light text-dark border small">
+                            {% if order.payment_method == 'cod' %}COD
+                            {% elif order.payment_method == 'bank_transfer' %}VietQR
+                            {% elif order.payment_method == 'momo' %}MoMo
+                            {% else %}VNPAY{% endif %}
+                        </span>
+                    </td>
+                    <td class="small text-muted">{{ order.created|date:"d/m H:i" }}</td>
+                    <td>
+                        <div class="d-flex gap-1 justify-content-center flex-wrap">
+                            <!-- Duyệt đơn -->
+                            <form method="post" action="{% url 'admin_order_update_status' order.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="approved">
+                                <input type="hidden" name="next" value="{% url 'admin_dashboard' %}">
+                                <button type="submit" class="btn btn-success btn-sm px-2" title="Duyệt đơn">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            <!-- Đang giao -->
+                            <form method="post" action="{% url 'admin_order_update_status' order.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="shipped">
+                                <input type="hidden" name="next" value="{% url 'admin_dashboard' %}">
+                                <button type="submit" class="btn btn-primary btn-sm px-2" title="Đang giao hàng">
+                                    <i class="fas fa-truck"></i>
+                                </button>
+                            </form>
+                            <!-- Đánh dấu đã TT -->
+                            <form method="post" action="{% url 'admin_order_mark_paid' order.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'admin_dashboard' %}">
+                                <button type="submit" class="btn {% if order.paid %}btn-outline-secondary{% else %}btn-warning{% endif %} btn-sm px-2"
+                                    title="{% if order.paid %}Bỏ đánh dấu đã TT{% else %}Đánh dấu đã thanh toán{% endif %}">
+                                    <i class="fas fa-{% if order.paid %}times{% else %}check-circle{% endif %}"></i>
+                                </button>
+                            </form>
+                            <!-- Từ chối -->
+                            <form method="post" action="{% url 'admin_order_update_status' order.id %}" class="d-inline"
+                                onsubmit="return confirm('Từ chối đơn #{{ order.id }}?')">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="rejected">
+                                <input type="hidden" name="next" value="{% url 'admin_dashboard' %}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm px-2" title="Từ chối đơn">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Cảnh báo tồn kho thấp -->
+{% if low_stock_products %}
+<div class="card shadow-sm border-0 p-4 mb-4 border-start border-warning border-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-bold mb-0 text-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>Cảnh báo tồn kho thấp
+            {% if out_of_stock_count > 0 %}
+                <span class="badge bg-danger ms-2">{{ out_of_stock_count }} hết hàng!</span>
+            {% endif %}
+        </h5>
+        <a href="{% url 'admin:shop_product_changelist' %}" class="btn btn-outline-warning btn-sm">Quản lý sản phẩm</a>
+    </div>
+    <div class="row g-2">
+        {% for product in low_stock_products %}
+        <div class="col-md-6 col-lg-4">
+            <div class="d-flex align-items-center gap-2 p-2 rounded-2 {% if product.stock == 0 %}bg-danger bg-opacity-10 border border-danger{% else %}bg-warning bg-opacity-10 border border-warning{% endif %}">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" width="40" class="rounded-2 object-fit-cover flex-shrink-0" alt="">
+                {% else %}
+                    <div class="bg-light rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;">
+                        <i class="fas fa-seedling text-muted small"></i>
+                    </div>
+                {% endif %}
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="fw-semibold small text-truncate">{{ product.name }}</div>
+                    <div class="small {% if product.stock == 0 %}text-danger fw-bold{% else %}text-warning fw-semibold{% endif %}">
+                        {% if product.stock == 0 %}
+                            <i class="fas fa-times-circle me-1"></i>Hết hàng!
+                        {% else %}
+                            <i class="fas fa-exclamation-circle me-1"></i>Còn {{ product.stock }} cái
+                        {% endif %}
+                    </div>
+                </div>
+                <a href="{% url 'admin:shop_product_change' product.id %}" class="btn btn-sm btn-outline-secondary py-0 px-2 flex-shrink-0" title="Chỉnh sửa">
+                    <i class="fas fa-edit small"></i>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -134,7 +274,7 @@
             labels: {{ status_labels|safe }},
             datasets: [{
                 data: {{ status_counts|safe }},
-                backgroundColor: ['#ffc107', '#0dcaf0', '#dc3545', '#0d6efd', '#198754'],
+                backgroundColor: ['#ffc107', '#0dcaf0', '#dc3545', '#0d6efd', '#198754', '#6c757d'],
             }]
         },
         options: {
@@ -146,3 +286,4 @@
 </script>
 {% endblock %}
 {% endblock %}
+

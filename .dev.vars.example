@@ -1,0 +1,9 @@
+# Cloudflare Worker Local Environment Variables (.dev.vars)
+# Lấy API Key miễn phí tại https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+
+# Cấu hình thanh toán VietQR
+VIETQR_BANK_ID=MB
+VIETQR_ACCOUNT_NO=0362843621
+VIETQR_ACCOUNT_NAME=NGUYEN DAC HOANG
+

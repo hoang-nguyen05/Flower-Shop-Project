@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tra Cứu Đơn Hàng - FlowerShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <nav class="navbar navbar-expand-lg navbar-floral sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-seedling"></i>
+        <span>FlowerShop</span>
+      </a>
+
+      <div class="collapse navbar-collapse flex-grow-0" id="mainNav">
+        <ul class="navbar-nav me-3 align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="/products.html"><i class="fas fa-store me-1"></i>Cửa hàng</a></li>
+          <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/products.html?on_sale=1"><i class="fas fa-fire me-1"></i>Khuyến mãi</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/orders.html"><i class="fas fa-receipt me-1"></i>Tra cứu đơn</a></li>
+          <li class="nav-item"><a class="nav-link text-primary" href="/admin.html"><i class="fas fa-shield-alt me-1"></i>Admin</a></li>
+        </ul>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button class="nav-icon-btn border-0 position-relative" onclick="openCartDrawer()" title="Giỏ hàng">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="badge-count cart-badge-count" style="display: none;">0</span>
+        </button>
+        <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <i class="fas fa-bars fs-4"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== ORDER TRACKING CONTENT ==================== -->
+  <div class="container my-4">
+    <div class="text-center mb-4">
+      <h2 class="font-serif">Tra Cứu Tiến Độ Đơn Hàng</h2>
+      <p class="text-muted small">Nhập số điện thoại đặt hàng hoặc mã đơn hàng (VD: FS-XXXXXX) để kiểm tra trạng thái</p>
+    </div>
+
+    <!-- Search Box -->
+    <div class="row justify-content-center mb-5">
+      <div class="col-md-7 col-lg-5">
+        <form id="order-search-form" onsubmit="searchOrders(event)">
+          <div class="input-group shadow-sm rounded-pill overflow-hidden">
+            <input type="text" class="form-control border-0 ps-4 py-2" id="order-search-input" placeholder="Nhập số điện thoại hoặc mã đơn..." required>
+            <button class="btn btn-danger px-4 fw-bold" type="submit">
+              <i class="fas fa-search me-1"></i>Tra Cứu
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Kết quả tìm kiếm -->
+    <div id="orders-result-container">
+      <!-- Loaded dynamically via JS -->
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-white border-top mt-5 py-4">
+    <div class="container text-center text-muted small">
+      © 2026 FlowerShop. Chạy trên Cloudflare Workers, Cloudflare D1 SQL, Cloudflare KV & R2.
+    </div>
+  </footer>
+
+  <!-- ==================== CART DRAWER ==================== -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="cartDrawer" style="max-width: 420px; width: 100%;">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title font-weight-700">
+        <i class="fas fa-shopping-bag text-danger me-2"></i>Giỏ hàng (<span id="cart-drawer-count">0</span>)
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="cart-drawer-items"></div>
+    <div class="p-3 border-top bg-light">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted">Tổng cộng:</span>
+        <span class="fs-5 fw-bold text-danger" id="cart-drawer-total">0₫</span>
+      </div>
+      <div class="d-grid gap-2">
+        <a href="/cart.html" class="btn btn-outline-danger rounded-pill fw-bold">Xem Chi Tiết Giỏ Hàng</a>
+        <a href="/checkout.html" class="btn btn-danger rounded-pill fw-bold">Tiến Hành Đặt Hàng</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialPhone = urlParams.get('phone') || '';
+    const initialCode = urlParams.get('code') || '';
+
+    function getStatusBadge(status) {
+      switch (status) {
+        case 'pending': return '<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Chờ xử lý</span>';
+        case 'approved': return '<span class="badge bg-info text-dark"><i class="fas fa-check me-1"></i>Đã duyệt</span>';
+        case 'shipping': return '<span class="badge bg-primary"><i class="fas fa-truck me-1"></i>Đang giao hoa</span>';
+        case 'completed': return '<span class="badge bg-success"><i class="fas fa-check-double me-1"></i>Hoàn thành</span>';
+        case 'cancelled': return '<span class="badge bg-secondary"><i class="fas fa-times me-1"></i>Đã hủy</span>';
+        default: return `<span class="badge bg-light text-dark">${status}</span>`;
+      }
+    }
+
+    async function searchOrders(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('order-search-input').value.trim();
+      if (!input) return;
+
+      const container = document.getElementById('orders-result-container');
+      container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-danger"></div><div class="mt-2 text-muted">Đang truy vấn cơ sở dữ liệu Cloudflare D1...</div></div>';
+
+      // Nếu bắt đầu bằng FS- thì tìm theo mã đơn
+      let res;
+      if (input.toUpperCase().startsWith('FS-')) {
+        res = await apiRequest(`/orders/${encodeURIComponent(input)}`);
+        if (res.success && res.order) {
+          renderSingleOrder(res.order);
+          return;
+        }
+      }
+
+      // Ngược lại tìm theo số điện thoại
+      res = await apiRequest(`/orders?phone=${encodeURIComponent(input)}`);
+      if (res.success && res.orders && res.orders.length > 0) {
+        renderOrderList(res.orders);
+      } else {
+        container.innerHTML = `
+          <div class="text-center py-5">
+            <i class="fas fa-search-minus text-muted mb-3" style="font-size: 3rem;"></i>
+            <h5>Không tìm thấy đơn hàng nào</h5>
+            <p class="text-muted small">Vui lòng kiểm tra lại số điện thoại hoặc mã đơn hàng đã nhập.</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderOrderList(orders) {
+      const container = document.getElementById('orders-result-container');
+      container.innerHTML = `
+        <h5 class="fw-bold mb-3 font-serif">Tìm thấy ${orders.length} đơn hàng:</h5>
+        <div class="d-flex flex-column gap-3">
+          ${orders.map(o => `
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+              <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+                <div>
+                  <span class="fw-bold fs-6 text-danger me-2">${o.order_code}</span>
+                  ${getStatusBadge(o.status)}
+                </div>
+                <div class="text-muted small">${new Date(o.created_at).toLocaleString('vi-VN')}</div>
+              </div>
+              <div class="row g-2 small text-muted my-1">
+                <div class="col-sm-6"><strong>Người nhận:</strong> ${o.customer_name} (${o.customer_phone})</div>
+                <div class="col-sm-6"><strong>Địa chỉ:</strong> ${o.shipping_address}, ${o.city}</div>
+                <div class="col-sm-6"><strong>Phương thức:</strong> ${o.payment_method.toUpperCase()} (${o.payment_status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'})</div>
+                <div class="col-sm-6"><strong>Tổng tiền:</strong> <span class="fw-bold text-danger fs-6">${formatVND(o.total_amount)}</span></div>
+              </div>
+              <div class="mt-3 text-end">
+                <a href="/order-success.html?code=${o.order_code}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                  <i class="fas fa-eye me-1"></i>Xem Chi Tiết & Mã QR
+                </a>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderSingleOrder(order) {
+      renderOrderList([order]);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('order-search-input');
+      if (initialCode) {
+        input.value = initialCode;
+        searchOrders();
+      } else if (initialPhone) {
+        input.value = initialPhone;
+        searchOrders();
+      }
+    });
+  </script>
+</body>
+</html>
+

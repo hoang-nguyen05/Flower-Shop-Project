@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "flower-shop-cloudflare",
+  "main": "backend/src/index.ts",
+  "compatibility_date": "2025-02-01",
+  "assets": {
+    "directory": "./frontend",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "flower_shop_db",
+      "database_id": "flower_shop_db_local"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "flower_shop_kv_local"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "flower-shop-bucket"
+    }
+  ],
+  "vars": {
+    "APP_NAME": "FlowerShop - Tiệm Hoa Tươi Trực Tuyến",
+    "VIETQR_BANK_ID": "MB",
+    "VIETQR_ACCOUNT_NO": "0362843621",
+    "VIETQR_ACCOUNT_NAME": "NGUYEN DAC HOANG"
+  }
+}
+

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowerShop - Tiệm Hoa Tươi Trực Tuyến & Giao Nhanh 2H</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ==================== TOP ANNOUNCEMENT ==================== -->
+  <div class="bg-dark text-white py-2 text-center small fw-semibold">
+    <span>🌸 Chào mừng bạn đến FlowerShop! Nhập mã <span class="badge bg-danger text-white">FLOWER10</span> giảm ngay 10% đơn từ 300K • Freeship đơn từ 500K</span>
+  </div>
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <nav class="navbar navbar-expand-lg navbar-floral sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-seedling"></i>
+        <span>FlowerShop</span>
+      </a>
+
+      <!-- Search on desktop -->
+      <form class="d-none d-lg-flex ms-4 me-auto" id="global-search-form" style="max-width: 380px; width: 100%;">
+        <div class="input-group">
+          <input type="text" class="form-control rounded-pill-start border-end-0 ps-3 bg-light" id="global-search-input" placeholder="Tìm hoa hồng, tulip, hướng dương...">
+          <button class="btn btn-light rounded-pill-end border-start-0 text-muted px-3" type="submit">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </form>
+
+      <!-- Nav Links -->
+      <div class="collapse navbar-collapse flex-grow-0" id="mainNav">
+        <ul class="navbar-nav me-3 align-items-lg-center">
+          <li class="nav-item"><a class="nav-link active" href="/"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="/products.html"><i class="fas fa-store me-1"></i>Cửa hàng</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-th-large me-1"></i>Danh mục</a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" id="nav-categories-dropdown">
+              <!-- Loaded via JS -->
+            </ul>
+          </li>
+          <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/products.html?on_sale=1"><i class="fas fa-fire me-1"></i>Khuyến mãi</a></li>
+          <li class="nav-item"><a class="nav-link" href="/orders.html"><i class="fas fa-receipt me-1"></i>Tra cứu đơn</a></li>
+          <li class="nav-item"><a class="nav-link text-primary" href="/admin.html"><i class="fas fa-shield-alt me-1"></i>Admin</a></li>
+        </ul>
+      </div>
+
+      <!-- Actions (Wishlist & Cart) -->
+      <div class="d-flex align-items-center gap-2">
+        <button class="nav-icon-btn border-0" onclick="window.location.href='/products.html'" title="Yêu thích">
+          <i class="fas fa-heart text-danger"></i>
+          <span class="badge-count wishlist-badge-count" style="display: none;">0</span>
+        </button>
+
+        <button class="nav-icon-btn border-0 position-relative" onclick="openCartDrawer()" title="Giỏ hàng">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="badge-count cart-badge-count" style="display: none;">0</span>
+        </button>
+
+        <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <i class="fas fa-bars fs-4"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== HERO SECTION ==================== -->
+  <div class="container">
+    <div class="hero-section">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+          <span class="hero-tag">
+            <i class="fas fa-sparkles"></i> Hoa tươi thiết kế cao cấp
+          </span>
+          <h1 class="hero-title">
+            Trao Gửi Yêu Thương <br>
+            Bằng Những Đóa Hoa Tươi Thắm
+          </h1>
+          <p class="hero-desc">
+            FlowerShop mang đến những bó hoa nghệ thuật từ Đà Lạt & hoa nhập khẩu châu Âu. Giao hoa hỏa tốc 2 giờ, cam kết 100% tươi mới cùng thiệp viết tay chân thành.
+          </p>
+          <div class="d-flex flex-wrap gap-3">
+            <a href="/products.html" class="btn btn-danger btn-lg rounded-pill px-4 py-2 fw-bold shadow-sm">
+              <i class="fas fa-shopping-basket me-2"></i>Mua Hoa Ngay
+            </a>
+            <button class="btn btn-outline-dark btn-lg rounded-pill px-4 py-2 fw-bold" onclick="toggleChatbot()">
+              <i class="fas fa-robot text-danger me-2"></i>Tư Vấn Với Gemini AI
+            </button>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="hero-img-box">
+            <img src="https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=800&auto=format&fit=crop&q=80" alt="Hoa tươi FlowerShop">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STORE ADVANTAGES ==================== -->
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-shipping-fast"></i></div>
+        <div>
+          <h6 class="mb-0 fw-bold">Giao Hỏa Tốc 2H</h6>
+          <small class="text-muted">Đúng giờ, hoa giữ nguyên form</small>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-spa"></i></div>
+        <div>
+          <h6 class="mb-0 fw-bold">100% Hoa Tươi Mới</h6>
+          <small class="text-muted">Nhập mới mỗi sáng sớm</small>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-envelope-open-text"></i></div>
+        <div>
+          <h6 class="mb-0 fw-bold">Thiệp & Banner Miễn Phí</h6>
+          <small class="text-muted">Viết lời chúc theo ý bạn</small>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-qrcode"></i></div>
+        <div>
+          <h6 class="mb-0 fw-bold">Thanh Toán VietQR</h6>
+          <small class="text-muted">Quét mã nhận hàng an tâm</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CATEGORIES ==================== -->
+    <div class="mt-5">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <span class="text-danger fw-bold text-uppercase small">Bộ Sưu Tập</span>
+          <h2 class="mb-0">Danh Mục Hoa Yêu Thích</h2>
+        </div>
+        <a href="/products.html" class="text-danger fw-bold small">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+      </div>
+      <div class="d-flex gap-2 overflow-auto pb-2" id="home-category-chips">
+        <!-- Loaded via JS -->
+      </div>
+    </div>
+
+    <!-- ==================== FEATURED PRODUCTS ==================== -->
+    <div class="mt-5">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <span class="text-danger fw-bold text-uppercase small">Gợi Ý Hôm Nay</span>
+          <h2 class="mb-0">Hoa Bán Chạy Nhất 🔥</h2>
+        </div>
+        <a href="/products.html" class="text-danger fw-bold small">Xem thêm <i class="fas fa-arrow-right ms-1"></i></a>
+      </div>
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4" id="featured-products-container">
+        <!-- Loaded via JS -->
+      </div>
+    </div>
+
+    <!-- ==================== FLASH SALE BANNER ==================== -->
+    <div class="card border-0 rounded-4 my-5 overflow-hidden shadow-sm text-white" style="background: linear-gradient(135deg, #be123c 0%, #e11d48 50%, #f43f5e 100%);">
+      <div class="card-body p-4 p-md-5">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">Ưu Đãi Đặc Biệt Trong Tuần</span>
+            <h2 class="text-white mb-2 font-serif display-6">Giảm Giá Lên Đến 30% Tất Cả Các Mẫu Hoa Khai Trương</h2>
+            <p class="mb-3 text-white-50">Áp dụng mã <strong>GIAM50K</strong> khi thanh toán cho đơn hàng từ 500.000đ. Tặng kèm chậu sứ sang trọng.</p>
+            <a href="/products.html?on_sale=1" class="btn btn-light text-danger fw-bold rounded-pill px-4 py-2">
+              <i class="fas fa-bolt me-2"></i>Xem Khuyến Mãi Ngay
+            </a>
+          </div>
+          <div class="col-md-4 text-center d-none d-md-block">
+            <i class="fas fa-gifts" style="font-size: 8rem; opacity: 0.25;"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ON SALE PRODUCTS ==================== -->
+    <div class="mb-5">
+      <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <span class="text-danger fw-bold text-uppercase small">Ưu Đãi Hấp Dẫn</span>
+          <h2 class="mb-0">Hoa Giảm Giá Sốc 🏷️</h2>
+        </div>
+        <a href="/products.html?on_sale=1" class="text-danger fw-bold small">Xem tất cả <i class="fas fa-arrow-right ms-1"></i></a>
+      </div>
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4" id="onsale-products-container">
+        <!-- Loaded via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-white border-top mt-5 py-5">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <a class="navbar-brand mb-3 d-inline-block" href="/">
+            <i class="fas fa-seedling"></i>
+            <span>FlowerShop</span>
+          </a>
+          <p class="text-muted small">FlowerShop - Hệ thống điện hoa trực tuyến uy tín hàng đầu. Nền tảng được xây dựng trên công nghệ Serverless Cloudflare Workers, Cloudflare D1 Database, Cloudflare KV và Cloudflare R2 kết hợp Trợ lý AI Google Gemini.</p>
+          <div class="d-flex gap-3 text-muted">
+            <a href="#" class="fs-5 hover-danger"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="fs-5 hover-danger"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="fs-5 hover-danger"><i class="fab fa-tiktok"></i></a>
+            <a href="#" class="fs-5 hover-danger"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6 class="fw-bold mb-3">Về FlowerShop</h6>
+          <ul class="list-unstyled small text-muted d-flex flex-column gap-2">
+            <li><a href="/products.html">Cửa hàng hoa</a></li>
+            <li><a href="/orders.html">Tra cứu đơn hàng</a></li>
+            <li><a href="/admin.html">Trang quản trị</a></li>
+            <li><a href="#">Chính sách giao hàng</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6 class="fw-bold mb-3">Chủ Đề Hoa</h6>
+          <ul class="list-unstyled small text-muted d-flex flex-column gap-2">
+            <li><a href="/products.html?category=hoa-hong">Hoa Sinh Nhật</a></li>
+            <li><a href="/products.html?category=hoa-lan-ho-diep">Hoa Khai Trương</a></li>
+            <li><a href="/products.html?category=hoa-tulip">Hoa Tình Yêu</a></li>
+            <li><a href="/products.html?category=hoa-huong-duong">Hoa Tốt Nghiệp</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4">
+          <h6 class="fw-bold mb-3">Hỗ Trợ & Thanh Toán</h6>
+          <p class="small text-muted mb-2"><i class="fas fa-phone-alt text-danger me-2"></i>Hotline: <strong>1900 8888</strong> (8:00 - 21:00)</p>
+          <p class="small text-muted mb-3"><i class="fas fa-map-marker-alt text-danger me-2"></i>Địa chỉ: 123 Đường Hoa Tươi, Quận 1, TP. Hồ Chí Minh</p>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border p-2"><i class="fas fa-qrcode text-success me-1"></i>VietQR</span>
+            <span class="badge bg-light text-dark border p-2"><i class="fas fa-truck text-primary me-1"></i>COD</span>
+            <span class="badge bg-light text-dark border p-2"><i class="fas fa-wallet text-danger me-1"></i>MoMo</span>
+          </div>
+        </div>
+      </div>
+      <hr class="my-4 text-muted">
+      <div class="text-center text-muted small">
+        © 2026 FlowerShop. Triển khai trên nền tảng Cloudflare Workers, D1, KV, R2 & Gemini AI.
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== OFFCANVAS CART DRAWER ==================== -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="cartDrawer" style="max-width: 420px; width: 100%;">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title font-weight-700">
+        <i class="fas fa-shopping-bag text-danger me-2"></i>Giỏ hàng (<span id="cart-drawer-count">0</span>)
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="cart-drawer-items">
+      <!-- Loaded dynamically via cart.js -->
+    </div>
+    <div class="p-3 border-top bg-light">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted">Tổng cộng:</span>
+        <span class="fs-5 fw-bold text-danger" id="cart-drawer-total">0₫</span>
+      </div>
+      <div class="d-grid gap-2">
+        <a href="/cart.html" class="btn btn-outline-danger rounded-pill fw-bold">Xem Chi Tiết Giỏ Hàng</a>
+        <a href="/checkout.html" class="btn btn-danger rounded-pill fw-bold">Tiến Hành Đặt Hàng</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GEMINI AI CHATBOT ==================== -->
+  <div class="chatbot-bubble">
+    <button class="chatbot-btn" onclick="toggleChatbot()" title="Trợ lý AI Gemini tư vấn hoa tươi">
+      <div class="chatbot-pulse"></div>
+      <i class="fas fa-robot"></i>
+    </button>
+  </div>
+
+  <div class="chatbot-window" id="chatbot-window">
+    <div class="chatbot-header">
+      <div class="chatbot-title">
+        <i class="fas fa-robot fs-5"></i>
+        <div>
+          <div>Florist AI</div>
+          <div style="font-size: 0.72rem; opacity: 0.9; font-weight: 400;">Powered by Google Gemini 1.5</div>
+        </div>
+      </div>
+      <button class="btn btn-sm text-white" onclick="toggleChatbot()"><i class="fas fa-times fs-5"></i></button>
+    </div>
+
+    <div class="chatbot-messages" id="chatbot-messages">
+      <div class="chat-msg bot">
+        Xin chào quý khách! 🌸 Mình là chuyên viên AI của FlowerShop. Bạn đang muốn tìm hoa cho dịp đặc biệt nào để mình tư vấn nhé?
+      </div>
+    </div>
+
+    <!-- Quick Prompt Chips -->
+    <div class="chat-chips">
+      <button class="chat-chip" onclick="sendQuickPrompt('Tư vấn hoa sinh nhật tặng bạn gái')">🎂 Hoa sinh nhật</button>
+      <button class="chat-chip" onclick="sendQuickPrompt('Gợi ý hoa chúc mừng khai trương')">🏢 Hoa khai trương</button>
+      <button class="chat-chip" onclick="sendQuickPrompt('Bảng giá hoa tươi hôm nay')">💰 Bảng giá</button>
+      <button class="chat-chip" onclick="sendQuickPrompt('Mã giảm giá đang có')">🎟️ Mã coupon</button>
+    </div>
+
+    <div class="chatbot-input-bar">
+      <input type="text" id="chatbot-input" placeholder="Hỏi AI về chọn hoa, giá cả...">
+      <button class="chatbot-send-btn" id="chatbot-send" onclick="sendChatMessage()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MOBILE BOTTOM NAV ==================== -->
+  <div class="mobile-nav-bar">
+    <a href="/" class="mobile-nav-item active">
+      <i class="fas fa-home"></i>
+      <span>Trang chủ</span>
+    </a>
+    <a href="/products.html" class="mobile-nav-item">
+      <i class="fas fa-th-large"></i>
+      <span>Sản phẩm</span>
+    </a>
+    <a href="javascript:void(0)" onclick="openCartDrawer()" class="mobile-nav-item">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="badge-count cart-badge-count" style="display: none;">0</span>
+      <span>Giỏ hàng</span>
+    </a>
+    <a href="/orders.html" class="mobile-nav-item">
+      <i class="fas fa-receipt"></i>
+      <span>Đơn hàng</span>
+    </a>
+    <a href="javascript:void(0)" onclick="toggleChatbot()" class="mobile-nav-item text-danger">
+      <i class="fas fa-robot"></i>
+      <span>AI Chat</span>
+    </a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/chatbot.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    // Tải danh mục và sản phẩm trang chủ
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Tải danh mục
+      const catRes = await apiRequest('/categories');
+      if (catRes.success && catRes.categories) {
+        const chipsContainer = document.getElementById('home-category-chips');
+        chipsContainer.innerHTML = `
+          <a href="/products.html" class="category-chip active">Tất cả</a>
+        ` + catRes.categories.map(c => `
+          <a href="/products.html?category=${c.slug}" class="category-chip">${c.name}</a>
+        `).join('');
+      }
+
+      // 2. Tải hoa nổi bật
+      const featRes = await apiRequest('/products?featured=1');
+      if (featRes.success && featRes.products) {
+        renderProductGrid(featRes.products.slice(0, 8), 'featured-products-container');
+      }
+
+      // 3. Tải hoa khuyến mãi
+      const saleRes = await apiRequest('/products?on_sale=1');
+      if (saleRes.success && saleRes.products) {
+        renderProductGrid(saleRes.products.slice(0, 4), 'onsale-products-container');
+      }
+    });
+
+    function renderProductGrid(products, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      container.innerHTML = products.map(p => {
+        const discountBadge = (p.original_price && p.original_price > p.price)
+          ? `<span class="badge-sale">-${Math.round(((p.original_price - p.price) / p.original_price) * 100)}%</span>`
+          : '';
+        const originalPriceHtml = (p.original_price && p.original_price > p.price)
+          ? `<span class="price-original">${formatVND(p.original_price)}</span>`
+          : '';
+
+        return `
+          <div class="col">
+            <div class="product-card">
+              <div class="product-img-box">
+                <a href="/product-detail.html?id=${p.id}">
+                  <img src="${p.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600'}" alt="${p.name}" loading="lazy">
+                </a>
+                ${discountBadge}
+                <button class="nav-icon-btn border-0 position-absolute top-0 end-0 m-2 bg-white" onclick="toggleWishlist(${p.id}, this)" title="Yêu thích">
+                  <i class="far fa-heart"></i>
+                </button>
+              </div>
+              <div class="product-body">
+                <div class="product-category">${p.category_name || 'Hoa tươi'}</div>
+                <a href="/product-detail.html?id=${p.id}" class="product-title" title="${p.name}">${p.name}</a>
+                <div class="product-prices">
+                  <span class="price-current">${formatVND(p.price)}</span>
+                  ${originalPriceHtml}
+                </div>
+                <button class="btn-add-cart" onclick="addToCart(${p.id}, 1)">
+                  <i class="fas fa-cart-plus me-1"></i>Thêm Vào Giỏ
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
+

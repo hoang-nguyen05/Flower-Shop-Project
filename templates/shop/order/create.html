@@ -1,61 +1,226 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}Thanh toán - FlowerShop{% endblock %}
+{% block title %}Đặt hàng & Thanh toán - FlowerShop{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-option { cursor: pointer; }
+    .payment-option input[type=radio] { display: none; }
+    .payment-option .payment-card {
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .payment-option input[type=radio]:checked + .payment-card {
+        border-color: #7c4dba;
+        background: #f8f0ff;
+        box-shadow: 0 0 0 3px rgba(124,77,186,0.15);
+    }
+    .payment-icon { font-size: 1.4rem; }
+    .address-card { cursor: pointer; border: 2px solid #dee2e6; border-radius: 12px; padding: 1rem; transition: all 0.2s; }
+    .address-card:hover { border-color: #7c4dba; }
+    .address-card.active { border-color: #7c4dba; background: #f8f0ff; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2 class="mb-5 font-weight-bold text-center"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Hoàn tất đơn hàng</h2>
+<h2 class="mb-5 fw-bold text-center"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Hoàn tất đặt hàng</h2>
 
 <div class="row">
-    <div class="col-md-7">
-        <div class="card shadow-sm border-0 p-5">
-            <h4 class="mb-4 font-weight-bold text-primary"><i class="fas fa-truck me-2"></i>Thông tin giao hàng</h4>
-            <form method="POST">
-                {% csrf_token %}
+    <!-- Cột trái: Form điền thông tin -->
+    <div class="col-lg-7">
+        <form method="POST" id="checkout-form">
+            {% csrf_token %}
+            <!-- Chọn địa chỉ giao hàng nhanh -->
+            {% if user_addresses %}
+            <div class="card shadow-sm border-0 p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-map-marked-alt me-2 text-primary"></i>Chọn địa chỉ giao hàng</h5>
+                <div class="row g-3 mb-3">
+                    {% for addr in user_addresses %}
+                    <div class="col-12 col-md-6">
+                        <div class="address-card {% if addr == default_address %}active{% endif %}"
+                             onclick="fillAddress('{{ addr.full_name }}', '{{ addr.phone }}', '{{ addr.address }}', '{{ addr.city }}')">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">{{ addr.full_name }}</div>
+                                    <div class="text-muted small">{{ addr.phone }}</div>
+                                    <div class="small mt-1">{{ addr.address }}, {{ addr.city }}</div>
+                                </div>
+                                {% if addr.is_default %}<span class="badge bg-primary text-white ms-2">Mặc định</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'address_create' %}?next=order_create" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Thêm địa chỉ mới
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Thông tin giao hàng -->
+            <div class="card shadow-sm border-0 p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-truck me-2 text-primary"></i>Thông tin người nhận</h5>
                 <div class="row">
                     <div class="col-md-6">{{ form.first_name|as_crispy_field }}</div>
                     <div class="col-md-6">{{ form.last_name|as_crispy_field }}</div>
                 </div>
-                {{ form.email|as_crispy_field }}
+                <div class="row">
+                    <div class="col-md-6">{{ form.phone|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.email|as_crispy_field }}</div>
+                </div>
                 {{ form.address|as_crispy_field }}
                 <div class="row">
-                    <div class="col-md-6">{{ form.city|as_crispy_field }}</div>
-                    <div class="col-md-6">{{ form.postal_code|as_crispy_field }}</div>
+                    <div class="col-md-8">{{ form.city|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.postal_code|as_crispy_field }}</div>
                 </div>
-                <div class="d-grid mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg py-3">Xác nhận đặt hàng</button>
+                {{ form.notes|as_crispy_field }}
+            </div>
+
+            <!-- Phương thức thanh toán -->
+            <div class="card shadow-sm border-0 p-4 mb-4">
+                <h5 class="fw-bold mb-4"><i class="fas fa-credit-card me-2 text-primary"></i>Phương thức thanh toán</h5>
+                <div class="row g-3">
+                    <!-- COD -->
+                    <div class="col-12 col-sm-6">
+                        <label class="payment-option w-100">
+                            <input type="radio" name="payment_method" value="cod" {% if form.payment_method.value == 'cod' or not form.payment_method.value %}checked{% endif %}>
+                            <div class="payment-card d-flex align-items-center gap-3">
+                                <span class="payment-icon text-success"><i class="fas fa-money-bill-wave"></i></span>
+                                <div>
+                                    <div class="fw-semibold">Tiền mặt (COD)</div>
+                                    <small class="text-muted">Thanh toán khi nhận hàng</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <!-- VietQR -->
+                    <div class="col-12 col-sm-6">
+                        <label class="payment-option w-100">
+                            <input type="radio" name="payment_method" value="bank_transfer" {% if form.payment_method.value == 'bank_transfer' %}checked{% endif %}>
+                            <div class="payment-card d-flex align-items-center gap-3">
+                                <span class="payment-icon text-primary"><i class="fas fa-qrcode"></i></span>
+                                <div>
+                                    <div class="fw-semibold">VietQR Ngân hàng</div>
+                                    <small class="text-muted">Chuyển khoản qua mã QR</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <!-- MoMo -->
+                    <div class="col-12 col-sm-6">
+                        <label class="payment-option w-100">
+                            <input type="radio" name="payment_method" value="momo" {% if form.payment_method.value == 'momo' %}checked{% endif %}>
+                            <div class="payment-card d-flex align-items-center gap-3">
+                                <span class="payment-icon" style="color:#ae2070"><i class="fas fa-mobile-alt"></i></span>
+                                <div>
+                                    <div class="fw-semibold">Ví MoMo</div>
+                                    <small class="text-muted">Quét mã thanh toán MoMo</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <!-- VNPAY -->
+                    <div class="col-12 col-sm-6">
+                        <label class="payment-option w-100">
+                            <input type="radio" name="payment_method" value="vnpay" {% if form.payment_method.value == 'vnpay' %}checked{% endif %}>
+                            <div class="payment-card d-flex align-items-center gap-3">
+                                <span class="payment-icon" style="color:#005599"><i class="fas fa-university"></i></span>
+                                <div>
+                                    <div class="fw-semibold">VNPAY</div>
+                                    <small class="text-muted">Cổng thanh toán VNPAY</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="d-grid mt-2">
+                <button type="submit" class="btn btn-primary btn-lg py-3">
+                    <i class="fas fa-check-circle me-2"></i>Xác nhận đặt hàng
+                </button>
+            </div>
+        </form>
     </div>
-    <div class="col-md-5">
-        <div class="card shadow-sm border-0 p-4 bg-light">
-            <h4 class="mb-4 font-weight-bold"><i class="fas fa-shopping-basket me-2"></i>Sản phẩm của bạn</h4>
-            <ul class="list-group list-group-flush bg-transparent">
+
+    <!-- Cột phải: Tóm tắt đơn hàng -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 p-4 sticky-top" style="top: 80px;">
+            <h5 class="fw-bold mb-4"><i class="fas fa-shopping-basket me-2 text-primary"></i>Đơn hàng của bạn</h5>
+            <ul class="list-group list-group-flush">
                 {% for item in cart %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0 py-3 border-bottom-0">
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" width="45" class="rounded-2 object-fit-cover" alt="{{ item.product.name }}">
+                        {% endif %}
                         <div>
-                            <span class="font-weight-bold">{{ item.product.name }}</span>
-                            <span class="text-muted small ms-2">x{{ item.quantity }}</span>
+                            <div class="fw-semibold small">{{ item.product.name }}</div>
+                            <div class="text-muted small">x{{ item.quantity }}</div>
                         </div>
-                        <span class="font-weight-bold text-primary">{{ item.total_price|floatformat:0 }} VNĐ</span>
-                    </li>
+                    </div>
+                    <span class="fw-bold text-primary">{{ item.total_price|floatformat:0 }} ₫</span>
+                </li>
                 {% endfor %}
             </ul>
-            <hr class="my-4">
-            <div class="d-flex justify-content-between mb-2">
-                <span>Tạm tính:</span>
-                <span class="font-weight-bold">{{ cart.get_total_price|floatformat:0 }} VNĐ</span>
-            </div>
-            <div class="d-flex justify-content-between mb-4">
-                <span>Phí vận chuyển:</span>
-                <span class="text-success">Miễn phí</span>
-            </div>
-            <div class="d-flex justify-content-between mb-0 fs-3 font-weight-bold text-primary">
-                <span>Tổng cộng:</span>
-                <span>{{ cart.get_total_price|floatformat:0 }} VNĐ</span>
+            <div class="mt-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Tạm tính:</span>
+                    <span class="fw-semibold">{{ cart.get_subtotal_price|floatformat:0 }} ₫</span>
+                </div>
+                {% if cart.coupon %}
+                <div class="d-flex justify-content-between mb-2 text-success">
+                    <span><i class="fas fa-tag me-1"></i>{{ cart.coupon.code }}:</span>
+                    <span>-{{ cart.get_discount|floatformat:0 }} ₫</span>
+                </div>
+                {% endif %}
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Phí vận chuyển:</span>
+                    <span class="text-success"><i class="fas fa-truck me-1"></i>Miễn phí</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-0">
+                    <span class="fs-5 fw-bold">Tổng cộng:</span>
+                    <span class="fs-4 fw-bold text-primary">{{ cart.get_total_price|floatformat:0 }} ₫</span>
+                </div>
+                {% if cart.coupon %}
+                <div class="alert alert-success py-2 px-3 small mt-2 mb-0">
+                    <i class="fas fa-gift me-1"></i>Tiết kiệm <strong>{{ cart.get_discount|floatformat:0 }} ₫</strong> với mã <strong>{{ cart.coupon.code }}</strong>!
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fillAddress(fullName, phone, address, city) {
+    // Tách họ và tên
+    const parts = fullName.trim().split(' ');
+    const lastName = parts[0] || '';
+    const firstName = parts.slice(1).join(' ') || '';
+    
+    const firstNameField = document.querySelector('[name="first_name"]');
+    const lastNameField = document.querySelector('[name="last_name"]');
+    const phoneField = document.querySelector('[name="phone"]');
+    const addressField = document.querySelector('[name="address"]');
+    const cityField = document.querySelector('[name="city"]');
+    
+    if (firstNameField) firstNameField.value = firstName;
+    if (lastNameField) lastNameField.value = lastName;
+    if (phoneField) phoneField.value = phone;
+    if (addressField) addressField.value = address;
+    if (cityField) cityField.value = city;
+    
+    // Highlight active address
+    document.querySelectorAll('.address-card').forEach(c => c.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+}
+</script>
 {% endblock %}

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanh Toán Đơn Hàng - FlowerShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <nav class="navbar navbar-expand-lg navbar-floral sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fas fa-seedling"></i>
+        <span>FlowerShop</span>
+      </a>
+      <div class="d-flex align-items-center gap-2">
+        <a href="/cart.html" class="btn btn-outline-dark btn-sm rounded-pill">
+          <i class="fas fa-arrow-left me-1"></i>Trở lại giỏ hàng
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== CHECKOUT CONTENT ==================== -->
+  <div class="container my-4">
+    <h2 class="font-serif mb-4">Thông Tin Giao Hoa & Thanh Toán</h2>
+
+    <form id="checkout-form" onsubmit="handlePlaceOrder(event)">
+      <div class="row g-4">
+        <!-- Cột thông tin khách hàng (Bên trái) -->
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="fw-bold mb-3 font-serif"><i class="fas fa-map-marker-alt text-danger me-2"></i>1. Địa Chỉ Nhận Hoa</h5>
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Họ và tên người nhận *</label>
+                <input type="text" class="form-control rounded-pill" id="customer-name" placeholder="Nguyễn Văn A" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Số điện thoại người nhận *</label>
+                <input type="tel" class="form-control rounded-pill" id="customer-phone" placeholder="0912345678" required>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label small fw-bold">Email nhận hóa đơn (tuỳ chọn)</label>
+                <input type="email" class="form-control rounded-pill" id="customer-email" placeholder="example@email.com">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Tỉnh / Thành phố *</label>
+                <select class="form-select rounded-pill" id="shipping-city" required>
+                  <option value="Hà Nội">Hà Nội</option>
+                  <option value="Hồ Chí Minh" selected>TP. Hồ Chí Minh</option>
+                  <option value="Đà Nẵng">Đà Nẵng</option>
+                  <option value="Hải Phòng">Hải Phòng</option>
+                  <option value="Cần Thơ">Cần Thơ</option>
+                  <option value="Khác">Tỉnh thành khác</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Địa chỉ chi tiết (Số nhà, tên đường, phường) *</label>
+                <input type="text" class="form-control rounded-pill" id="shipping-address" placeholder="123 Nguyễn Thị Minh Khai, P. Bến Nghé" required>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label small fw-bold">Nội dung ghi thiệp & Ghi chú giao hàng</label>
+                <textarea class="form-control rounded-4" id="order-notes" rows="3" placeholder="Ví dụ: Chúc mừng sinh nhật em yêu! Giao trước 14h chiều giúp mình nhé..."></textarea>
+                <div class="form-text small">FlowerShop miễn phí 100% thiệp chúc mừng viết tay cao cấp.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phương thức thanh toán -->
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3 font-serif"><i class="fas fa-credit-card text-danger me-2"></i>2. Phương Thức Thanh Toán</h5>
+
+            <div class="d-flex flex-column gap-3">
+              <label class="card border rounded-3 p-3 cursor-pointer d-flex align-items-center gap-3">
+                <input type="radio" name="payment_method" value="vietqr" class="form-check-input" checked>
+                <div class="flex-grow-1">
+                  <div class="fw-bold text-dark"><i class="fas fa-qrcode text-success me-2"></i>Chuyển khoản Ngân Hàng (Quét mã VietQR)</div>
+                  <small class="text-muted">Hệ thống tạo mã QR tự động điền sẵn số tiền và mã đơn hàng. Thanh toán tức thì.</small>
+                </div>
+              </label>
+
+              <label class="card border rounded-3 p-3 cursor-pointer d-flex align-items-center gap-3">
+                <input type="radio" name="payment_method" value="cod" class="form-check-input">
+                <div class="flex-grow-1">
+                  <div class="fw-bold text-dark"><i class="fas fa-hand-holding-usd text-primary me-2"></i>Thanh toán khi nhận hàng (COD)</div>
+                  <small class="text-muted">Nhận hoa tươi, kiểm tra đúng mẫu mới thanh toán tiền mặt cho shipper.</small>
+                </div>
+              </label>
+
+              <label class="card border rounded-3 p-3 cursor-pointer d-flex align-items-center gap-3">
+                <input type="radio" name="payment_method" value="momo" class="form-check-input">
+                <div class="flex-grow-1">
+                  <div class="fw-bold text-dark"><i class="fas fa-wallet text-danger me-2"></i>Ví điện tử MoMo</div>
+                  <small class="text-muted">Quét mã ví MoMo tiện lợi.</small>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cột tóm tắt đơn hàng (Bên phải) -->
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 90px;">
+            <h5 class="fw-bold mb-3 font-serif">Đơn Hàng Của Bạn</h5>
+
+            <div id="checkout-summary-body" class="mb-3">
+              <!-- Loaded via JS -->
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Tạm tính:</span>
+              <span class="fw-bold" id="checkout-subtotal">0₫</span>
+            </div>
+
+            <div class="d-flex justify-content-between mb-2 text-success" id="checkout-discount-row" style="display: none !important;">
+              <span>Giảm giá coupon:</span>
+              <span class="fw-bold" id="checkout-discount">-0₫</span>
+            </div>
+
+            <div class="d-flex justify-content-between mb-3">
+              <span class="text-muted">Phí giao hoa:</span>
+              <span class="fw-bold text-primary" id="checkout-shipping">30.000₫</span>
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between align-items-baseline mb-4">
+              <span class="fw-bold fs-5">Tổng thanh toán:</span>
+              <span class="display-6 fw-bold text-danger" id="checkout-total">0₫</span>
+            </div>
+
+            <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold w-100 shadow-sm" id="btn-submit-order">
+              <i class="fas fa-check-circle me-2"></i>Xác Nhận Đặt Hoa Ngay
+            </button>
+
+            <div class="text-center text-muted small mt-3">
+              Bằng việc bấm xác nhận, bạn đồng ý với các chính sách giao hoa và đổi trả của FlowerShop.
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    function renderCheckoutSummary() {
+      const container = document.getElementById('checkout-summary-body');
+      const subtotalEl = document.getElementById('checkout-subtotal');
+      const discountEl = document.getElementById('checkout-discount');
+      const discountRow = document.getElementById('checkout-discount-row');
+      const shippingEl = document.getElementById('checkout-shipping');
+      const totalEl = document.getElementById('checkout-total');
+
+      if (!container) return;
+
+      if (!currentCart.items || currentCart.items.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning small">Giỏ hàng của bạn đang trống. <a href="/products.html">Chọn hoa ngay</a></div>';
+        return;
+      }
+
+      container.innerHTML = currentCart.items.map(item => `
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <div class="d-flex align-items-center gap-2">
+            <img src="${item.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=100'}" class="rounded-2" width="40" height="40" style="object-fit: cover;">
+            <div>
+              <div class="small fw-bold text-truncate" style="max-width: 170px;">${item.name}</div>
+              <div class="text-muted small">SL: ${item.quantity} x ${formatVND(item.price)}</div>
+            </div>
+          </div>
+          <div class="fw-bold text-danger small">${formatVND(item.subtotal)}</div>
+        </div>
+      `).join('');
+
+      subtotalEl.textContent = formatVND(currentCart.subtotal);
+      shippingEl.textContent = currentCart.shippingFee === 0 ? 'Miễn phí' : formatVND(currentCart.shippingFee);
+      totalEl.textContent = formatVND(currentCart.total);
+
+      if (currentCart.coupon) {
+        discountRow.style.setProperty('display', 'flex', 'important');
+        discountEl.textContent = `-${formatVND(currentCart.coupon.discountAmount)}`;
+      } else {
+        discountRow.style.setProperty('display', 'none', 'important');
+      }
+    }
+
+    async function handlePlaceOrder(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-order');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý đơn hàng...';
+
+      const customer_name = document.getElementById('customer-name').value.trim();
+      const customer_phone = document.getElementById('customer-phone').value.trim();
+      const customer_email = document.getElementById('customer-email').value.trim();
+      const city = document.getElementById('shipping-city').value;
+      const shipping_address = document.getElementById('shipping-address').value.trim();
+      const notes = document.getElementById('order-notes').value.trim();
+      const payment_method = document.querySelector('input[name="payment_method"]:checked')?.value || 'vietqr';
+
+      const res = await apiRequest('/orders', {
+        method: 'POST',
+        body: JSON.stringify({
+          customer_name,
+          customer_phone,
+          customer_email,
+          city,
+          shipping_address,
+          notes,
+          payment_method
+        })
+      });
+
+      if (res.success && res.orderCode) {
+        showToast('Đặt hoa thành công! Đang chuyển hướng...');
+        setTimeout(() => {
+          window.location.href = `/order-success.html?code=${res.orderCode}`;
+        }, 800);
+      } else {
+        showToast(res.error || 'Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Xác Nhận Đặt Hoa Ngay';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCart();
+    });
+  </script>
+</body>
+</html>
+
