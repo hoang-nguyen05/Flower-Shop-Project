@@ -37,7 +37,11 @@ app.get('/api/health', async (c) => {
   }
 
   try {
-    await c.env.R2.list({ limit: 1 });
+    if (c.env.R2) {
+      await c.env.R2.list({ limit: 1 });
+    } else {
+      r2Status = 'optional (chưa bật)';
+    }
   } catch (err: any) {
     r2Status = 'error: ' + err.message;
   }

@@ -109,6 +109,7 @@ storageRouter.get('/list', async (c) => {
 // 4. DELETE /api/storage/files/*: Xóa tệp khỏi Cloudflare R2
 storageRouter.delete('/files/*', async (c) => {
   try {
+    if (!c.env.R2) return c.json({ success: false, error: 'Cloudflare R2 chưa được bật' }, 503);
     const url = new URL(c.req.url);
     const key = decodeURIComponent(url.pathname.replace(/^\/api\/storage\/files\//, ''));
 
