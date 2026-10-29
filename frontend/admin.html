@@ -36,7 +36,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
       <div>
         <h2 class="font-serif fw-bold mb-1">Bảng Điều Khiển Quản Trị Hệ Thống</h2>
-        <div class="text-muted small">Quản lý cơ sở dữ liệu Cloudflare D1, bộ nhớ Cloudflare KV, lưu trữ ảnh Cloudflare R2 & Trợ lý Gemini AI</div>
+        <div class="text-muted small">Quản lý cơ sở dữ liệu Cloudflare D1, bộ nhớ Cloudflare KV, lưu trữ ảnh Cloudflare R2 & Trợ lý Florist AI</div>
       </div>
       <div>
         <button class="btn btn-primary rounded-pill px-3 btn-sm" onclick="loadDashboardData()">
@@ -74,7 +74,7 @@
           </div>
           <div class="col-sm-6 col-lg-3">
             <div class="p-3 rounded-3 bg-light border">
-              <div class="text-muted small mb-1"><i class="fas fa-robot text-danger me-1"></i>Google Gemini AI Chatbot</div>
+              <div class="text-muted small mb-1"><i class="fas fa-robot text-danger me-1"></i>Trợ Lý AI Florist</div>
               <div class="fw-bold text-success" id="status-gemini"><i class="fas fa-check-circle me-1"></i>Sẵn sàng hỗ trợ</div>
             </div>
           </div>
@@ -144,7 +144,7 @@
       </li>
       <li class="nav-item">
         <button class="nav-link rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-gemini">
-          <i class="fas fa-key me-2"></i>Cài Đặt Gemini API
+          <i class="fas fa-key me-2"></i>Cài Đặt Trợ Lý AI
         </button>
       </li>
     </ul>
@@ -288,28 +288,27 @@
         </div>
       </div>
 
-      <!-- 4. CÀI ĐẶT GEMINI API -->
+      <!-- 4. CÀI ĐẶT TRỢ LÝ AI -->
       <div class="tab-pane fade" id="tab-gemini">
         <div class="card border-0 shadow-sm rounded-4 p-4" style="max-width: 700px;">
-          <h5 class="fw-bold mb-2 font-serif"><i class="fas fa-robot text-danger me-2"></i>Cài Đặt Google Gemini API Cho Chatbot</h5>
-          <p class="text-muted small">Bạn có thể cấu hình API Key của Google Gemini để trợ lý AI Florist trả lời câu hỏi của khách hàng trên toàn thế giới.</p>
+          <h5 class="fw-bold mb-2 font-serif"><i class="fas fa-robot text-danger me-2"></i>Cài Đặt Khóa API Cho Trợ Lý AI</h5>
+          <p class="text-muted small">Cấu hình API Key để kích hoạt năng lực xử lý ngôn ngữ tự nhiên thông minh cho trợ lý AI Florist tư vấn khách hàng 24/7.</p>
 
           <div class="alert alert-info small rounded-3 mb-3">
-            <strong>💡 Cách lấy API Key miễn phí:</strong>
+            <strong>💡 Cách lấy API Key kết nối AI:</strong>
             <ol class="mb-0 ps-3 mt-1">
-              <li>Truy cập <a href="https://aistudio.google.com/app/apikey" target="_blank" class="fw-bold">Google AI Studio</a> và đăng nhập Gmail.</li>
-              <li>Bấm <strong>Create API Key</strong> và sao chép mã khoá.</li>
-              <li>Dán vào ô bên dưới hoặc lưu trong biến môi trường Cloudflare Secret: <code>wrangler secret put GEMINI_API_KEY</code>.</li>
+              <li>Lấy API Key từ nền tảng cung cấp dịch vụ AI.</li>
+              <li>Dán vào ô bên dưới hoặc cấu hình trực tiếp trong Cloudflare Secret: <code>wrangler secret put GEMINI_API_KEY</code>.</li>
             </ol>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-bold">Google Gemini API Key:</label>
-            <input type="password" class="form-control rounded-pill" id="gemini-key-input" placeholder="AIzaSy...">
+            <label class="form-label small fw-bold">Khóa API Trợ Lý AI:</label>
+            <input type="password" class="form-control rounded-pill" id="gemini-key-input" placeholder="Nhập API Key...">
           </div>
 
           <button class="btn btn-danger rounded-pill fw-bold px-4" onclick="saveGeminiKey()">
-            <i class="fas fa-save me-1"></i>Lưu API Key Vào Trình Duyệt
+            <i class="fas fa-save me-1"></i>Lưu Khóa API
           </button>
         </div>
       </div>
@@ -487,7 +486,7 @@
       }
     }
 
-    // LƯU GEMINI KEY
+    // LƯU API KEY CHO TRỢ LÝ
     function saveGeminiKey() {
       const key = document.getElementById('gemini-key-input').value.trim();
       if (!key) {
@@ -495,7 +494,7 @@
         return;
       }
       localStorage.setItem('custom_gemini_api_key', key);
-      showToast('Đã lưu Gemini API Key vào trình duyệt thành công!');
+      showToast('Đã lưu Khóa API Trợ Lý vào trình duyệt thành công!');
     }
 
     document.addEventListener('DOMContentLoaded', () => {

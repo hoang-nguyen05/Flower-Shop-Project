@@ -54,7 +54,7 @@ app.get('/api/health', async (c) => {
       cloudflare_d1: d1Status,
       cloudflare_kv: kvStatus,
       cloudflare_r2: r2Status,
-      gemini_ai_configured: Boolean(c.env.GEMINI_API_KEY)
+      ai_assistant_configured: Boolean(c.env.GEMINI_API_KEY)
     }
   });
 });

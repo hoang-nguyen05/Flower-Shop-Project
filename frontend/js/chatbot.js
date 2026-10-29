@@ -1,6 +1,6 @@
 // ========================================================
-// FlowerShop - Gemini AI Florist Chatbot
-// Tích hợp Google Gemini API qua Cloudflare Worker Backend
+// FlowerShop - Florist AI Chatbot
+// Tích hợp AI Trợ Lý Tư Vấn qua Cloudflare Worker Backend
 // ========================================================
 
 let chatHistory = [];

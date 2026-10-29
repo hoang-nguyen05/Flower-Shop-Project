@@ -38,7 +38,7 @@ adminRouter.get('/dashboard', async (c) => {
       d1: 'Hoạt động (Cloudflare D1 SQL)',
       kv: 'Hoạt động (Cloudflare Key-Value)',
       r2: 'Hoạt động (Cloudflare R2 Storage)',
-      gemini: c.env.GEMINI_API_KEY ? 'Đã kết nối (Gemini Flash)' : 'Chưa nhập API Key (Đang dùng Florist Fallback)'
+      gemini: c.env.GEMINI_API_KEY ? 'Đã kết nối (Florist AI Engine)' : 'Đang dùng Florist Fallback Engine'
     };
 
     return c.json({

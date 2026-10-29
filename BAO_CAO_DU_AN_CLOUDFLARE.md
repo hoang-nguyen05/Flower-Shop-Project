@@ -22,6 +22,7 @@
 6. [Thanh Toán Tự Động VietQR](#6-thanh-toán-tự-động-vietqr)
 7. [Bảng Tra Cứu API Endpoints](#7-bảng-tra-cứu-api-endpoints)
 8. [Hướng Dẫn Chạy Local & Triển Khai Lại (Re-deploy)](#8-hướng-dẫn-chạy-local--triển-khai-lại)
+9. [Khả Năng Đặt Hàng Thực Tế & Ứng Dụng Đa Thiết Bị (Mobile / PC)](#9-khả-năng-đặt-hàng-thực-tế--ứng-dụng-đa-thiết-bị-mobile--pc)
 
 ---
 
@@ -216,6 +217,10 @@ Chatbot được giới hạn nghiêm ngặt theo đúng yêu cầu:
 - **Chỉ phục vụ khách mua hoa:** Tư vấn ý nghĩa hoa, dịp lễ phù hợp, hướng dẫn sử dụng tính năng web (cách đặt hàng, cách nhập mã coupon, cách tra cứu đơn hàng, phương thức thanh toán VietQR, cam kết giao hoa hỏa tốc 2 giờ).
 - **Tuyệt đối không can thiệp Admin:** Nếu có người hỏi về tài khoản quản trị, doanh thu cửa hàng, cơ sở dữ liệu hay sửa/xóa sản phẩm, AI sẽ từ chối lịch sự và hướng dẫn liên hệ ban quản lý shop qua hotline 1900 8888.
 
+### 5.4. Chuẩn Hóa Nhận Diện Thương Hiệu Độc Quyền (White-Labeling)
+- Toàn bộ giao diện khách hàng (nút kêu gọi hành động Hero banner, tiêu đề cửa sổ chat, thông điệp chào mừng và phản hồi từ AI) đều được đặt tên độc quyền là **"Florist AI" - Trợ lý tư vấn chọn hoa 24/7**.
+- Tuyệt đối loại bỏ các nhãn công nghệ lộ liễu như "Powered by Google Gemini" hay "Tư vấn với Gemini AI" nhằm mang lại tính thẩm mỹ thương hiệu cao cấp, bảo mật công nghệ backend và tăng tính chuyên nghiệp cho website thương mại điện tử thực tế.
+
 ---
 
 ## 6. Thanh Toán Tự Động VietQR
@@ -275,6 +280,40 @@ npm run deploy
 ```
 Wrangler sẽ tự động tối ưu hóa, đóng gói tài nguyên và đẩy lên địa chỉ chính thức:  
 **https://flower-shop-cloudflare.dtc235200306.workers.dev**
+
+---
+
+## 9. Khả Năng Đặt Hàng Thực Tế & Ứng Dụng Đa Thiết Bị (Mobile / PC)
+
+**Câu hỏi đặt ra:** *Người khác mở link web này từ điện thoại hoặc máy tính cá nhân ở nơi khác thì có đặt hàng thật được không? Dự án có hoạt động thực tế như một shop online thật sự không?*
+
+**Câu trả lời là: HOÀN TOÀN CÓ THỂ ĐẶT HÀNG THỰC TẾ 100%!**
+
+Dự án không phải là giao diện mockup hay giả lập, mà là một ứng dụng thương mại điện tử hoạt động thực thụ trên internet với chu trình khép kín:
+
+1. **Truy cập tự do trên mọi thiết bị và hệ điều hành:**
+   - Link `https://flower-shop-cloudflare.dtc235200306.workers.dev` là đường dẫn công khai toàn cầu được phân phối bởi CDN Cloudflare (300+ Edge Data Centers). Bất kỳ ai mở trên iPhone, Android, MacBook, laptop Windows qua 4G/5G/WiFi đều truy cập tức thì mà không cần cài đặt gì.
+2. **Phiên giỏ hàng độc lập từng người dùng (Cloudflare KV):**
+   - Mỗi khách truy cập sẽ được tự động cấp một mã phiên (`x-session-id`) lưu trữ trên cookie/localStorage.
+   - Khi Người A đặt hoa hồng trên điện thoại, Người B đặt lan hồ điệp trên máy tính, giỏ hàng của hai người hoàn toàn độc lập, lưu trên Cloudflare KV. Khi tắt trình duyệt hoặc đổi tab quay lại, giỏ hàng vẫn được bảo toàn nguyên vẹn.
+3. **Quy trình đặt hàng thực tế & Trừ kho tự động (Cloudflare D1 SQL):**
+   - Khi khách hàng điền tên, số điện thoại, địa chỉ nhận hoa và bấm **"Xác Nhận Đặt Hoa"**:
+   - Backend Cloudflare Worker tiếp nhận, xác thực tồn kho thực tế trong CSDL D1.
+   - Sinh mã đơn hàng chuẩn định dạng `FS-1730...`.
+   - Lưu đầy đủ thông tin đơn hàng vào bảng `orders` và bảng `order_items`.
+   - **Tự động trừ số lượng tồn kho** của từng mẫu hoa trong D1 để ngăn chặn tình trạng bán vượt số lượng thực tế.
+4. **Thanh toán chuyển khoản thực tế qua VietQR:**
+   - Khách hàng chọn phương thức "Chuyển khoản VietQR" sẽ nhận ngay mã QR động tích hợp thông tin tài khoản thụ hưởng:
+     - **Ngân hàng:** MB Bank (Ngân hàng Quân đội)
+     - **Số tài khoản:** `0362843621`
+     - **Chủ tài khoản:** `NGUYEN DAC HOANG`
+     - **Số tiền:** Đúng chính xác số tiền cần thanh toán của đơn hàng (sau khi đã tính mã giảm giá).
+     - **Nội dung:** Đúng mã đơn hàng `THANHTOAN FS-XXXXXX`.
+   - Người mua dùng bất kỳ app ngân hàng nào (Vietcombank, MB, Techcombank, VPBank, MoMo,...) quét mã là **tiền thật sẽ chuyển thẳng vào tài khoản MB Bank của bạn ngay tức thì**.
+5. **Tra cứu đơn hàng minh bạch cho khách hàng:**
+   - Khách hàng có thể truy cập trang `/orders.html`, nhập số điện thoại hoặc mã đơn hàng vừa đặt để theo dõi trạng thái tiến độ ("Chờ xác nhận", "Đang cắm hoa", "Đang giao hàng", "Giao thành công").
+6. **Bảng điều khiển quản lý đơn hàng cho chủ shop:**
+   - Chủ shop có thể mở trang `/admin.html` trên điện thoại hoặc máy tính để duyệt đơn, xem khách nào vừa đặt từ đâu, doanh thu tích lũy và cập nhật trạng thái đơn hàng theo thời gian thực.
 
 ---
 
