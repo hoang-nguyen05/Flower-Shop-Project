@@ -140,3 +140,32 @@ export interface Review {
   comment: string;
   created_at: string;
 }
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  password_hash?: string;
+  full_name: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  role: 'admin' | 'customer';
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserSession {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  role: 'admin' | 'customer';
+  avatar_url?: string;
+  token: string;
+  createdAt: number;
+}

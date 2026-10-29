@@ -23,6 +23,7 @@
 7. [Bảng Tra Cứu API Endpoints](#7-bảng-tra-cứu-api-endpoints)
 8. [Hướng Dẫn Chạy Local & Triển Khai Lại (Re-deploy)](#8-hướng-dẫn-chạy-local--triển-khai-lại)
 9. [Khả Năng Đặt Hàng Thực Tế & Ứng Dụng Đa Thiết Bị (Mobile / PC)](#9-khả-năng-đặt-hàng-thực-tế--ứng-dụng-đa-thiết-bị-mobile--pc)
+10. [Hệ Thống Đăng Nhập, Phân Quyền (Admin/Khách) & Hồ Sơ Cá Nhân](#10-hệ-thống-đăng-nhập-phân-quyền-adminkhách--hồ-sơ-cá-nhân)
 
 ---
 
@@ -314,6 +315,33 @@ Dự án không phải là giao diện mockup hay giả lập, mà là một ứ
    - Khách hàng có thể truy cập trang `/orders.html`, nhập số điện thoại hoặc mã đơn hàng vừa đặt để theo dõi trạng thái tiến độ ("Chờ xác nhận", "Đang cắm hoa", "Đang giao hàng", "Giao thành công").
 6. **Bảng điều khiển quản lý đơn hàng cho chủ shop:**
    - Chủ shop có thể mở trang `/admin.html` trên điện thoại hoặc máy tính để duyệt đơn, xem khách nào vừa đặt từ đâu, doanh thu tích lũy và cập nhật trạng thái đơn hàng theo thời gian thực.
+
+---
+
+## 10. Hệ Thống Đăng Nhập, Phân Quyền (Admin/Khách) & Hồ Sơ Cá Nhân
+
+Nhằm đáp ứng đầy đủ tính năng tiêu chuẩn của một sàn thương mại điện tử chuyên nghiệp, hệ thống đã tích hợp trọn vẹn module **Xác thực người dùng (Authentication) và Phân quyền theo vai trò (Role-Based Authorization)**:
+
+### 10.1. Cơ Chế Lưu Trữ & Bảo Mật Chuẩn Cloudflare
+- **Mật khẩu an toàn:** Mật khẩu được băm (hash) bằng thuật toán SHA-256 kết hợp mã muối bảo mật (Salt) thông qua chuẩn **Web Crypto API** chạy trực tiếp trong Cloudflare Workers, không lưu mật khẩu thô.
+- **Quản lý phiên làm việc (Session Management) trên Cloudflare KV:** Khi người dùng đăng nhập thành công, một Token bảo mật được tạo ra và lưu trong **Cloudflare Key-Value (KV)** với thời hạn 7 ngày (`expirationTtl: 604800s`). Mỗi khi người dùng gọi API, Worker tra cứu trực tiếp từ KV với tốc độ miligiây.
+- **Bảng dữ liệu `users` & `wishlists` trong Cloudflare D1:** Lưu thông tin tài khoản, vai trò (`role: 'admin'` hoặc `'customer'`), số điện thoại, địa chỉ mặc định và danh sách hoa yêu thích.
+
+### 10.2. Phân Quyền Vai Trò Rõ Ràng (RBAC)
+
+| Vai trò (Role) | Tài khoản mẫu | Quyền hạn & Tính năng trên Website |
+| :--- | :--- | :--- |
+| **Quản trị viên (Admin)** | `admin` / `admin123` | - Truy cập toàn quyền **Bảng điều khiển Quản trị (`/admin.html`)**.<br>- Xem thống kê tổng doanh thu, số đơn, số thành viên.<br>- Quản lý đơn hàng: Đổi trạng thái (Chờ xác nhận ➡️ Đang cắm hoa ➡️ Đang giao ➡️ Hoàn thành ➡️ Hủy đơn).<br>- Quản lý sản phẩm: Thêm mẫu hoa mới, sửa giá, sửa số lượng kho, xóa hoa trong Cloudflare D1.<br>- Quản lý danh sách thành viên trong hệ thống.<br>- Tải ảnh lên kho Cloudflare R2.<br>- Cấu hình khóa API cho Florist AI. |
+| **Khách hàng (Customer)** | `khachhang` / `123456` | - Quản lý **Hồ sơ cá nhân (`/profile.html`)**: Đổi tên, số điện thoại, địa chỉ nhận hoa mặc định, đổi avatar.<br>- **Đổi mật khẩu** tài khoản an toàn.<br>- Xem **Lịch sử đơn hàng cá nhân** và tiến độ xử lý.<br>- Quản lý **Danh sách hoa yêu thích (`/wishlist.html`)**.<br>- **Tự động điền (Auto Pre-fill):** Khi vào trang Thanh toán (`/checkout.html`), hệ thống tự động điền sẵn Họ tên, SĐT và Địa chỉ từ hồ sơ cá nhân.<br>- **Chặn truy cập Admin (Auth Gate):** Khách hàng bình thường nếu truy cập vào `/admin.html` sẽ bị hệ thống chặn lại và yêu cầu đăng nhập bằng tài khoản Admin. |
+
+### 10.3. Giao Diện Người Dùng & Điều Hướng Thông Minh (Dynamic Navbar)
+- **Khi chưa đăng nhập:** Góc trên Navbar hiển thị nút **"Đăng Nhập"** & **"Đăng Ký"**; thanh điều hướng dưới mobile hiển thị icon "Đăng nhập".
+- **Khi đã đăng nhập:** Hiển thị Avatar tròn + Họ tên người dùng + Dropdown menu cá nhân hóa:
+  - 👤 **Hồ sơ cá nhân** (`/profile.html`)
+  - 📦 **Đơn hàng của tôi** (`/orders.html`)
+  - ❤️ **Hoa yêu thích** (`/wishlist.html`)
+  - ⚙️ **Trang Quản Trị Admin** (`/admin.html`) *(chỉ hiển thị nếu tài khoản là Admin)*
+  - 🚪 **Đăng xuất**
 
 ---
 

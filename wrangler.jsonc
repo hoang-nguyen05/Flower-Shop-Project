@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "flower-shop-cloudflare",
+  "account_id": "701ece81cedd7db4bf1eb764825c6781",
   "main": "backend/src/index.ts",
   "compatibility_date": "2025-02-01",
   "assets": {

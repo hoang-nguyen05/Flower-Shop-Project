@@ -112,3 +112,36 @@ CREATE TABLE reviews (
 
 CREATE INDEX idx_reviews_product ON reviews(product_id);
 
+-- 7. TÀI KHOẢN NGƯỜI DÙNG & PHÂN QUYỀN (USERS)
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    phone TEXT,
+    address TEXT,
+    city TEXT DEFAULT 'Hà Nội',
+    role TEXT NOT NULL DEFAULT 'customer', -- 'admin' hoặc 'customer'
+    avatar_url TEXT DEFAULT 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_email ON users(email);
+
+-- 8. DANH SÁCH YÊU THÍCH (WISHLISTS)
+CREATE TABLE wishlists (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    UNIQUE(user_id, product_id)
+);
+
+CREATE INDEX idx_wishlists_user ON wishlists(user_id);
+
+

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng Nhập Thành Viên - FlowerShop</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <header class="site-header sticky-top bg-white border-bottom shadow-sm">
+    <div class="container py-2">
+      <div class="d-flex align-items-center justify-content-between">
+        <a href="/index.html" class="brand-logo text-decoration-none d-flex align-items-center">
+          <i class="fas fa-spa brand-icon me-2 text-danger fs-3"></i>
+          <div>
+            <span class="brand-name font-serif fw-bold fs-4 text-danger">FlowerShop</span>
+            <span class="d-none d-sm-block brand-tagline text-muted small" style="font-size: 0.68rem;">TIỆM HOA TƯƠI TRỰC TUYẾN</span>
+          </div>
+        </a>
+
+        <div class="d-flex align-items-center gap-3">
+          <a href="/index.html" class="nav-link text-muted small fw-bold">
+            <i class="fas fa-home me-1"></i>Trang chủ
+          </a>
+          <a href="/products.html" class="nav-link text-muted small fw-bold">
+            <i class="fas fa-store me-1"></i>Cửa hàng
+          </a>
+          <div id="user-nav-container"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== LOGIN FORM ==================== -->
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+          <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center bg-danger-subtle rounded-circle mb-3" style="width: 70px; height: 70px;">
+              <i class="fas fa-user-lock text-danger fs-2"></i>
+            </div>
+            <h3 class="font-serif fw-bold text-dark mb-1">Đăng Nhập FlowerShop</h3>
+            <p class="text-muted small">Chào mừng bạn quay trở lại! Đăng nhập để quản lý đơn hàng và nhận ưu đãi riêng.</p>
+          </div>
+
+          <!-- Quick Fill Demo Accounts -->
+          <div class="alert alert-light border rounded-3 p-3 mb-4 small">
+            <div class="fw-bold text-dark mb-2"><i class="fas fa-magic text-warning me-1"></i>Tài khoản dùng thử nhanh:</div>
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="fillAccount('admin', 'admin123')">
+                <i class="fas fa-user-shield me-1"></i>Admin (admin / admin123)
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="fillAccount('khachhang', '123456')">
+                <i class="fas fa-user me-1"></i>Khách hàng (khachhang / 123456)
+              </button>
+            </div>
+          </div>
+
+          <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-dark">Tên đăng nhập hoặc Email *</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 rounded-start-pill"><i class="fas fa-user text-muted"></i></span>
+                <input type="text" class="form-control bg-light border-start-0 rounded-end-pill py-2" id="username" placeholder="Nhập username hoặc email" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <label class="form-label small fw-bold text-dark">Mật khẩu *</label>
+                <a href="javascript:void(0)" onclick="showToast('Vui lòng liên hệ Hotline 1900 8888 để được cấp lại mật khẩu!', 'warning')" class="text-decoration-none small text-muted">Quên mật khẩu?</a>
+              </div>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 rounded-start-pill"><i class="fas fa-lock text-muted"></i></span>
+                <input type="password" class="form-control bg-light border-start-0 rounded-end-pill py-2" id="password" placeholder="Nhập mật khẩu của bạn" required>
+              </div>
+            </div>
+
+            <div class="form-check mb-4">
+              <input class="form-check-input" type="checkbox" id="rememberMe" checked>
+              <label class="form-check-label small text-muted" for="rememberMe">
+                Ghi nhớ đăng nhập trên thiết bị này
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold shadow-sm" id="btn-submit">
+              <i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập Ngay
+            </button>
+          </form>
+
+          <div class="text-center mt-4 pt-3 border-top">
+            <span class="text-muted small">Bạn chưa có tài khoản? </span>
+            <a href="/register.html" class="fw-bold text-danger text-decoration-none small">Đăng ký thành viên mới</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    function fillAccount(username, password) {
+      document.getElementById('username').value = username;
+      document.getElementById('password').value = password;
+      showToast(`Đã điền thông tin tài khoản: ${username}`);
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit');
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        showToast('Vui lòng điền đủ tên đăng nhập và mật khẩu!', 'warning');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý đăng nhập...';
+
+      try {
+        const res = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password })
+        });
+
+        if (res.success && res.token && res.user) {
+          setAuthSession(res.token, res.user);
+          showToast(res.message || 'Đăng nhập thành công!');
+
+          setTimeout(() => {
+            if (res.user.role === 'admin') {
+              window.location.href = '/admin.html';
+            } else {
+              window.location.href = '/profile.html';
+            }
+          }, 800);
+        } else {
+          showToast(res.error || 'Đăng nhập không thành công!', 'error');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập Ngay';
+        }
+      } catch (err) {
+        showToast('Lỗi kết nối máy chủ Cloudflare!', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập Ngay';
+      }
+    }
+
+    // Nếu đã đăng nhập rồi thì tự chuyển hướng
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = getCurrentUser();
+      if (user) {
+        if (user.role === 'admin') {
+          window.location.href = '/admin.html';
+        } else {
+          window.location.href = '/profile.html';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -24,6 +24,7 @@
         <a href="/cart.html" class="btn btn-outline-dark btn-sm rounded-pill">
           <i class="fas fa-arrow-left me-1"></i>Trở lại giỏ hàng
         </a>
+        <div id="user-nav-container" class="ms-1"></div>
       </div>
     </div>
   </nav>
@@ -244,6 +245,16 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       loadCart();
+
+      // Tự động điền thông tin nếu đã đăng nhập tài khoản
+      const user = getCurrentUser();
+      if (user) {
+        if (user.full_name) document.getElementById('customer-name').value = user.full_name;
+        if (user.phone) document.getElementById('customer-phone').value = user.phone;
+        if (user.email) document.getElementById('customer-email').value = user.email;
+        if (user.address) document.getElementById('shipping-address').value = user.address;
+        if (user.city) document.getElementById('shipping-city').value = user.city;
+      }
     });
   </script>
 </body>

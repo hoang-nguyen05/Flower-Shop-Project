@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh Sách Hoa Yêu Thích - FlowerShop</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <header class="site-header sticky-top bg-white border-bottom shadow-sm">
+    <div class="container py-2">
+      <div class="d-flex align-items-center justify-content-between">
+        <a href="/index.html" class="brand-logo text-decoration-none d-flex align-items-center">
+          <i class="fas fa-spa brand-icon me-2 text-danger fs-3"></i>
+          <div>
+            <span class="brand-name font-serif fw-bold fs-4 text-danger">FlowerShop</span>
+            <span class="d-none d-sm-block brand-tagline text-muted small" style="font-size: 0.68rem;">TIỆM HOA TƯƠI TRỰC TUYẾN</span>
+          </div>
+        </a>
+
+        <div class="d-flex align-items-center gap-3">
+          <a href="/index.html" class="nav-link text-muted small fw-bold">
+            <i class="fas fa-home me-1"></i>Trang chủ
+          </a>
+          <a href="/products.html" class="nav-link text-muted small fw-bold">
+            <i class="fas fa-store me-1"></i>Cửa hàng
+          </a>
+          <div id="user-nav-container"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="/index.html" class="text-decoration-none text-muted">Trang chủ</a></li>
+        <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">Hoa yêu thích</li>
+      </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="font-serif fw-bold mb-1 text-dark">
+          <i class="fas fa-heart text-danger me-2"></i>Bộ Sưu Tập Hoa Yêu Thích Của Bạn
+        </h3>
+        <p class="text-muted small mb-0">Các mẫu hoa tươi bạn đã thả tim để xem lại hoặc đặt mua sau.</p>
+      </div>
+      <a href="/products.html" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">
+        <i class="fas fa-plus me-1"></i>Khám phá thêm hoa
+      </a>
+    </div>
+
+    <div id="wishlist-container" class="row g-4">
+      <div class="col-12 text-center py-5">
+        <i class="fas fa-spinner fa-spin fs-2 text-danger mb-3"></i>
+        <div class="text-muted">Đang tải danh sách hoa yêu thích...</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+    async function loadWishlist() {
+      const container = document.getElementById('wishlist-container');
+      const token = getAuthToken();
+
+      if (!token) {
+        container.innerHTML = `
+          <div class="col-12 text-center py-5">
+            <i class="fas fa-lock fs-1 text-muted mb-3 opacity-50"></i>
+            <h5 class="fw-bold text-dark">Vui lòng đăng nhập để xem danh sách yêu thích</h5>
+            <p class="text-muted small mb-3">Đăng nhập tài khoản để lưu trữ các bó hoa bạn yêu thích trên mọi thiết bị.</p>
+            <a href="/login.html" class="btn btn-danger rounded-pill px-4 fw-bold">Đăng Nhập Ngay</a>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const res = await apiRequest('/auth/wishlist');
+        if (res.success && res.items && res.items.length > 0) {
+          container.innerHTML = res.items.map(item => `
+            <div class="col-6 col-md-4 col-lg-3" id="wishlist-card-${item.id}">
+              <div class="flower-card h-100 bg-white rounded-4 shadow-sm border p-3 position-relative d-flex flex-column">
+                <button class="btn btn-sm btn-light rounded-circle position-absolute top-0 end-0 m-3 shadow-sm text-danger" 
+                        onclick="removeWishlist(${item.id})" title="Bỏ thích">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+                <a href="/product-detail.html?id=${item.id}" class="text-decoration-none">
+                  <div class="flower-card-img-wrap rounded-3 overflow-hidden mb-3" style="height: 200px;">
+                    <img src="${item.image_url}" alt="${item.name}" class="w-100 h-100 object-fit-cover">
+                  </div>
+                  <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.7rem;">${item.category_name || 'Hoa tươi'}</div>
+                  <h6 class="fw-bold text-dark text-truncate mb-2" title="${item.name}">${item.name}</h6>
+                  <div class="fw-bold text-danger fs-6 mb-3">${formatVND(item.price)}</div>
+                </a>
+                <button class="btn btn-danger btn-sm rounded-pill w-100 fw-bold mt-auto" onclick="addToCart(${item.id})">
+                  <i class="fas fa-cart-plus me-1"></i>Thêm Vào Giỏ
+                </button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `
+            <div class="col-12 text-center py-5">
+              <i class="fas fa-heart-broken fs-1 text-muted mb-3 opacity-50"></i>
+              <h5 class="fw-bold text-dark">Danh sách yêu thích trống</h5>
+              <p class="text-muted small mb-3">Bạn chưa bấm thả tim mẫu hoa nào. Hãy dạo quanh cửa hàng và lưu các bó hoa bạn thích nhé!</p>
+              <a href="/products.html" class="btn btn-danger rounded-pill px-4 fw-bold">Xem Cửa Hàng Hoa</a>
+            </div>
+          `;
+        }
+      } catch (err) {
+        container.innerHTML = '<div class="col-12 alert alert-danger">Lỗi tải danh sách yêu thích!</div>';
+      }
+    }
+
+    async function removeWishlist(productId) {
+      try {
+        const res = await apiRequest('/auth/wishlist/toggle', {
+          method: 'POST',
+          body: JSON.stringify({ productId })
+        });
+        if (res.success) {
+          showToast('Đã xóa hoa khỏi danh sách yêu thích');
+          const card = document.getElementById(`wishlist-card-${productId}`);
+          if (card) card.remove();
+        }
+      } catch (e) {
+        showToast('Lỗi khi thao tác!', 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadWishlist);
+  </script>
+</body>
+</html>

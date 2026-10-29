@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard & Cloudflare Control - FlowerShop</title>
+  <title>Bảng Điều Khiển Quản Trị Hệ Thống - FlowerShop</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
@@ -21,25 +21,62 @@
         <span>FlowerShop Admin Console</span>
       </a>
       <div class="d-flex align-items-center gap-3">
-        <span class="badge bg-danger rounded-pill px-3 py-2 small">
-          <i class="fas fa-bolt me-1"></i>Cloudflare Workers
+        <span class="badge bg-danger rounded-pill px-3 py-2 small d-none d-sm-inline-block">
+          <i class="fas fa-bolt me-1"></i>Cloudflare Workers & D1
         </span>
         <a href="/" class="btn btn-outline-light btn-sm rounded-pill px-3">
           <i class="fas fa-external-link-alt me-1"></i>Xem Website
         </a>
+        <div id="user-nav-container"></div>
       </div>
     </div>
   </nav>
 
-  <div class="container-fluid px-4 my-4">
+  <!-- ==================== AUTH GATE (KIỂM TRA QUYỀN ADMIN) ==================== -->
+  <div id="admin-auth-gate" class="container py-5" style="display: none;">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white text-center">
+          <div class="d-inline-flex align-items-center justify-content-center bg-danger-subtle rounded-circle mb-3 mx-auto" style="width: 75px; height: 75px;">
+            <i class="fas fa-lock text-danger fs-2"></i>
+          </div>
+          <h4 class="font-serif fw-bold text-dark mb-2">Yêu Cầu Quyền Quản Trị Viên</h4>
+          <p class="text-muted small mb-4" id="auth-gate-desc">
+            Trang này dành riêng cho tài khoản Quản trị viên (Admin). Vui lòng đăng nhập bằng tài khoản Admin để truy cập toàn quyền hệ thống.
+          </p>
+
+          <!-- Quick Fill Demo Admin -->
+          <div class="alert alert-light border rounded-3 p-3 mb-4 text-start small">
+            <div class="fw-bold text-dark mb-1"><i class="fas fa-key text-warning me-1"></i>Tài khoản Admin mặc định:</div>
+            <div>Username: <code>admin</code> | Password: <code>admin123</code></div>
+            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill mt-2 w-100 fw-bold" onclick="quickLoginAdmin()">
+              <i class="fas fa-magic me-1"></i>Đăng Nhập Nhanh Bằng Tài Khoản Admin
+            </button>
+          </div>
+
+          <div class="d-grid gap-2">
+            <a href="/login.html" class="btn btn-danger rounded-pill fw-bold py-2">
+              <i class="fas fa-sign-in-alt me-1"></i>Chuyển Đến Trang Đăng Nhập
+            </a>
+            <a href="/index.html" class="btn btn-outline-secondary rounded-pill fw-bold py-2">
+              <i class="fas fa-arrow-left me-1"></i>Quay Về Trang Chủ
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN ADMIN DASHBOARD ==================== -->
+  <div id="admin-main-content" class="container-fluid px-4 my-4" style="display: none;">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
       <div>
         <h2 class="font-serif fw-bold mb-1">Bảng Điều Khiển Quản Trị Hệ Thống</h2>
         <div class="text-muted small">Quản lý cơ sở dữ liệu Cloudflare D1, bộ nhớ Cloudflare KV, lưu trữ ảnh Cloudflare R2 & Trợ lý Florist AI</div>
       </div>
-      <div>
-        <button class="btn btn-primary rounded-pill px-3 btn-sm" onclick="loadDashboardData()">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-primary rounded-pill px-3 btn-sm fw-bold" onclick="loadDashboardData()">
           <i class="fas fa-sync-alt me-1"></i>Làm mới dữ liệu
         </button>
       </div>
@@ -117,29 +154,41 @@
       <div class="col-sm-6 col-lg-3">
         <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <span class="text-muted small">Tổng Mẫu Hoa (D1)</span>
-            <div class="rounded-circle bg-danger bg-opacity-10 p-2 text-danger"><i class="fas fa-seedling fs-5"></i></div>
+            <span class="text-muted small">Thành Viên & Mẫu Hoa</span>
+            <div class="rounded-circle bg-danger bg-opacity-10 p-2 text-danger"><i class="fas fa-users fs-5"></i></div>
           </div>
-          <h3 class="fw-bold text-dark mb-0 font-serif" id="stat-products">0</h3>
+          <h3 class="fw-bold text-dark mb-0 font-serif">
+            <span id="stat-users">2</span> user / <span id="stat-products">8</span> hoa
+          </h3>
         </div>
       </div>
     </div>
 
-    <!-- ==================== TABS CONTENT ==================== -->
-    <ul class="nav nav-pills mb-4 gap-2" id="adminTabs" role="tablist">
+    <!-- ==================== TABS NAVIGATION ==================== -->
+    <ul class="nav nav-pills mb-4 gap-2 flex-wrap" id="adminTabs" role="tablist">
       <li class="nav-item">
-        <button class="nav-link active rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-orders">
+        <button class="nav-link active rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-orders" onclick="loadAllOrders()">
           <i class="fas fa-shopping-bag me-2"></i>Quản Lý Đơn Hàng
         </button>
       </li>
       <li class="nav-item">
-        <button class="nav-link rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-r2">
-          <i class="fas fa-cloud-upload-alt me-2"></i>Cloudflare R2 Storage (Upload Ảnh)
+        <button class="nav-link rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-products-list" onclick="loadAdminProducts()">
+          <i class="fas fa-list me-2"></i>Danh Sách Hoa Tươi (D1)
         </button>
       </li>
       <li class="nav-item">
-        <button class="nav-link rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-products">
-          <i class="fas fa-plus-circle me-2"></i>Thêm Mẫu Hoa (D1)
+        <button class="nav-link rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-add-product">
+          <i class="fas fa-plus-circle me-2"></i>Thêm Mẫu Hoa Mới
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-users" onclick="loadAdminUsers()">
+          <i class="fas fa-users-cog me-2"></i>Người Dùng & Phân Quyền
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link rounded-pill px-4 fw-bold" data-bs-toggle="pill" data-bs-target="#tab-r2">
+          <i class="fas fa-cloud-upload-alt me-2"></i>Lưu Trữ Ảnh (R2)
         </button>
       </li>
       <li class="nav-item">
@@ -152,9 +201,12 @@
     <div class="tab-content">
       <!-- 1. QUẢN LÝ ĐƠN HÀNG -->
       <div class="tab-pane fade show active" id="tab-orders">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
           <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold mb-0">Danh Sách Đơn Hàng Mới Nhất Trong D1</h6>
+            <h6 class="fw-bold mb-0 text-dark">Danh Sách Đơn Đặt Hoa Thực Tế Trong Cloudflare D1</h6>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="loadAllOrders()">
+              <i class="fas fa-sync-alt me-1"></i>Làm mới
+            </button>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -164,14 +216,15 @@
                     <th class="ps-4">Mã đơn</th>
                     <th>Khách hàng</th>
                     <th>Số điện thoại</th>
+                    <th>Địa chỉ nhận hoa</th>
                     <th>Tổng tiền</th>
                     <th>Phương thức</th>
                     <th>Trạng thái đơn</th>
-                    <th>Thao tác</th>
+                    <th>Cập nhật trạng thái</th>
                   </tr>
                 </thead>
                 <tbody id="admin-orders-tbody">
-                  <!-- Loaded via JS -->
+                  <tr><td colspan="8" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Đang tải danh sách đơn hàng...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -179,61 +232,42 @@
         </div>
       </div>
 
-      <!-- 2. CLOUDFLARE R2 OBJECT STORAGE -->
-      <div class="tab-pane fade" id="tab-r2">
-        <div class="row g-4">
-          <div class="col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-              <h5 class="fw-bold mb-2 font-serif"><i class="fas fa-cloud-upload-alt text-danger me-2"></i>Tải Ảnh/Tài Liệu Lên Cloudflare R2</h5>
-              <p class="text-muted small">Tệp sẽ được lưu trữ trực tiếp trên Cloudflare R2 Bucket (S3-compatible object storage) với tốc độ phân phối cực nhanh.</p>
-              
-              <form id="r2-upload-form" onsubmit="handleR2Upload(event)">
-                <div class="mb-3">
-                  <label class="form-label small fw-bold">Chọn tệp hình ảnh hoa hoặc tài liệu:</label>
-                  <input type="file" class="form-control rounded-pill" id="r2-file-input" accept="image/*,application/pdf" required>
-                </div>
-                <button type="submit" class="btn btn-danger rounded-pill fw-bold px-4" id="btn-upload-r2">
-                  <i class="fas fa-upload me-1"></i>Tải Lên R2
-                </button>
-              </form>
-
-              <div id="r2-upload-result" class="mt-3" style="display: none;"></div>
-            </div>
+      <!-- 2. DANH SÁCH SẢN PHẨM TRONG D1 -->
+      <div class="tab-pane fade" id="tab-products-list">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark">Quản Lý Danh Sách Hoa Tươi Đang Bán (Cloudflare D1)</h6>
+            <button class="btn btn-sm btn-danger rounded-pill fw-bold" onclick="document.querySelector('[data-bs-target=\'#tab-add-product\']').click()">
+              <i class="fas fa-plus me-1"></i>Thêm Mẫu Hoa Mới
+            </button>
           </div>
-
-          <div class="col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0 font-serif">Tệp Đã Lưu Trong Cloudflare R2</h5>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill" onclick="loadR2Files()">
-                  <i class="fas fa-sync me-1"></i>Tải lại danh sách
-                </button>
-              </div>
-
-              <div class="table-responsive">
-                <table class="table align-middle small">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Xem trước</th>
-                      <th>Tên tệp trong R2</th>
-                      <th>Kích thước</th>
-                      <th>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody id="r2-files-tbody">
-                    <tr><td colspan="4" class="text-center py-4 text-muted">Đang tải danh sách tệp R2...</td></tr>
-                  </tbody>
-                </table>
-              </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead class="table-light small">
+                  <tr>
+                    <th class="ps-4">Hình ảnh</th>
+                    <th>Tên mẫu hoa</th>
+                    <th>Danh mục</th>
+                    <th>Giá bán</th>
+                    <th>Tồn kho</th>
+                    <th>Nổi bật</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-products-tbody">
+                  <tr><td colspan="7" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Đang tải danh sách hoa...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
 
       <!-- 3. THÊM HOA VÀO CLOUDFLARE D1 -->
-      <div class="tab-pane fade" id="tab-products">
-        <div class="card border-0 shadow-sm rounded-4 p-4" style="max-width: 800px;">
-          <h5 class="fw-bold mb-3 font-serif"><i class="fas fa-plus-circle text-danger me-2"></i>Thêm Mẫu Hoa Mới Vào Cơ Sở Dữ Liệu D1</h5>
+      <div class="tab-pane fade" id="tab-add-product">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="max-width: 850px;">
+          <h5 class="fw-bold mb-3 font-serif"><i class="fas fa-plus-circle text-danger me-2"></i>Thêm Mẫu Hoa Tươi Mới Vào Cơ Sở Dữ Liệu D1</h5>
           
           <form id="add-product-form" onsubmit="handleAddProduct(event)">
             <div class="row g-3">
@@ -261,26 +295,26 @@
                 <input type="number" class="form-control rounded-pill" id="prod-orig-price" placeholder="550000">
               </div>
               <div class="col-md-4">
-                <label class="form-label small fw-bold">Số lượng trong kho</label>
+                <label class="form-label small fw-bold">Số lượng trong kho (bó)</label>
                 <input type="number" class="form-control rounded-pill" id="prod-stock" value="15" required>
               </div>
               <div class="col-12">
-                <label class="form-label small fw-bold">URL Hình ảnh (Dán URL tải lên từ R2 hoặc link Unsplash) *</label>
+                <label class="form-label small fw-bold">URL Hình ảnh hoa * (Có thể lấy từ Unsplash hoặc từ Cloudflare R2)</label>
                 <input type="url" class="form-control rounded-pill" id="prod-image" placeholder="https://images.unsplash.com/... hoặc /api/storage/files/..." required>
               </div>
               <div class="col-12">
                 <label class="form-label small fw-bold">Mô tả hoa tươi</label>
-                <textarea class="form-control rounded-4" id="prod-desc" rows="3" placeholder="Mô tả số cành, xuất xứ, ý nghĩa và tone màu..."></textarea>
+                <textarea class="form-control rounded-4" id="prod-desc" rows="3" placeholder="Mô tả số cành hoa, xuất xứ, ý nghĩa hoa và tone màu chủ đạo..."></textarea>
               </div>
               <div class="col-12">
                 <div class="form-check form-switch">
                   <input class="form-check-input" type="checkbox" id="prod-featured" checked>
-                  <label class="form-check-label small fw-bold" for="prod-featured">Đánh dấu là Sản phẩm nổi bật</label>
+                  <label class="form-check-label small fw-bold" for="prod-featured">Đánh dấu là Sản phẩm nổi bật (Featured)</label>
                 </div>
               </div>
-              <div class="col-12">
-                <button type="submit" class="btn btn-danger rounded-pill fw-bold px-4" id="btn-save-prod">
-                  <i class="fas fa-save me-1"></i>Lưu Sản Phẩm Vào D1
+              <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-danger rounded-pill fw-bold px-4 shadow-sm" id="btn-save-prod">
+                  <i class="fas fa-save me-1"></i>Lưu Mẫu Hoa Vào Cloudflare D1
                 </button>
               </div>
             </div>
@@ -288,9 +322,92 @@
         </div>
       </div>
 
-      <!-- 4. CÀI ĐẶT TRỢ LÝ AI -->
+      <!-- 4. QUẢN LÝ NGƯỜI DÙNG & PHÂN QUYỀN -->
+      <div class="tab-pane fade" id="tab-users">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark">Danh Sách Thành Viên & Quản Trị Viên (Cloudflare D1)</h6>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="loadAdminUsers()">
+              <i class="fas fa-sync-alt me-1"></i>Tải lại
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead class="table-light small">
+                  <tr>
+                    <th class="ps-4">ID</th>
+                    <th>Họ và tên</th>
+                    <th>Tên đăng nhập</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Vai trò (Role)</th>
+                    <th>Ngày tham gia</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-tbody">
+                  <tr><td colspan="7" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Đang tải danh sách người dùng...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. CLOUDFLARE R2 OBJECT STORAGE -->
+      <div class="tab-pane fade" id="tab-r2">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <h5 class="fw-bold mb-2 font-serif"><i class="fas fa-cloud-upload-alt text-danger me-2"></i>Tải Ảnh/Tài Liệu Lên Cloudflare R2</h5>
+              <p class="text-muted small">Tệp sẽ được lưu trữ trực tiếp trên Cloudflare R2 Bucket với tốc độ phân phối cực nhanh.</p>
+              
+              <form id="r2-upload-form" onsubmit="handleR2Upload(event)">
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Chọn tệp hình ảnh hoa hoặc tài liệu:</label>
+                  <input type="file" class="form-control rounded-pill" id="r2-file-input" accept="image/*,application/pdf" required>
+                </div>
+                <button type="submit" class="btn btn-danger rounded-pill fw-bold px-4" id="btn-upload-r2">
+                  <i class="fas fa-upload me-1"></i>Tải Lên R2
+                </button>
+              </form>
+
+              <div id="r2-upload-result" class="mt-3" style="display: none;"></div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 font-serif">Tệp Đã Lưu Trong Cloudflare R2</h5>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill" onclick="loadR2Files()">
+                  <i class="fas fa-sync me-1"></i>Tải lại danh sách
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table align-middle small">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Xem trước</th>
+                      <th>Tên tệp trong R2</th>
+                      <th>Kích thước</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="r2-files-tbody">
+                    <tr><td colspan="4" class="text-center py-4 text-muted">Đang tải danh sách tệp R2...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. CÀI ĐẶT TRỢ LÝ AI -->
       <div class="tab-pane fade" id="tab-gemini">
-        <div class="card border-0 shadow-sm rounded-4 p-4" style="max-width: 700px;">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="max-width: 700px;">
           <h5 class="fw-bold mb-2 font-serif"><i class="fas fa-robot text-danger me-2"></i>Cài Đặt Khóa API Cho Trợ Lý AI</h5>
           <p class="text-muted small">Cấu hình API Key để kích hoạt năng lực xử lý ngôn ngữ tự nhiên thông minh cho trợ lý AI Florist tư vấn khách hàng 24/7.</p>
 
@@ -318,67 +435,255 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/api.js"></script>
   <script>
-    async function loadDashboardData() {
-      const res = await apiRequest('/admin/dashboard');
-      if (res.success && res.stats) {
-        document.getElementById('stat-revenue').textContent = formatVND(res.stats.totalRevenue);
-        document.getElementById('stat-orders').textContent = res.stats.totalOrders;
-        document.getElementById('stat-pending').textContent = res.stats.pendingOrders;
-        document.getElementById('stat-products').textContent = res.stats.totalProducts;
+    // 1. KIỂM TRA PHÂN QUYỀN TRUY CẬP ADMIN
+    async function checkAdminAuth() {
+      const user = getCurrentUser();
+      const authGate = document.getElementById('admin-auth-gate');
+      const mainContent = document.getElementById('admin-main-content');
 
-        // Render orders
-        renderAdminOrders(res.recentOrders || []);
-      }
-    }
-
-    function renderAdminOrders(orders) {
-      const tbody = document.getElementById('admin-orders-tbody');
-      if (!tbody) return;
-
-      if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Chưa có đơn hàng nào trong D1.</td></tr>';
+      if (!user) {
+        authGate.style.display = 'block';
+        mainContent.style.display = 'none';
         return;
       }
 
-      tbody.innerHTML = orders.map(o => `
-        <tr>
-          <td class="ps-4 fw-bold text-danger">${o.order_code}</td>
-          <td>${o.customer_name}</td>
-          <td>${o.customer_phone}</td>
-          <td class="fw-bold text-danger">${formatVND(o.total_amount)}</td>
-          <td><span class="badge bg-light text-dark border">${o.payment_method.toUpperCase()}</span></td>
-          <td>
-            <select class="form-select form-select-sm rounded-pill" onchange="updateOrderStatus(${o.id}, this.value)">
-              <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
-              <option value="approved" ${o.status === 'approved' ? 'selected' : ''}>Đã duyệt</option>
-              <option value="shipping" ${o.status === 'shipping' ? 'selected' : ''}>Đang giao</option>
-              <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
-              <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>Đã hủy</option>
-            </select>
-          </td>
-          <td>
-            <a href="/order-success.html?code=${o.order_code}" target="_blank" class="btn btn-sm btn-outline-dark rounded-pill px-2" title="Xem chi tiết">
-              <i class="fas fa-eye"></i>
-            </a>
-          </td>
-        </tr>
-      `).join('');
+      if (user.role !== 'admin') {
+        authGate.style.display = 'block';
+        mainContent.style.display = 'none';
+        document.getElementById('auth-gate-desc').innerHTML = `
+          <strong class="text-danger">Cảnh báo:</strong> Bạn đang đăng nhập bằng tài khoản thành viên <code>${user.username}</code>.<br>
+          Tài khoản khách hàng không có quyền truy cập trang quản trị. Vui lòng đăng nhập bằng tài khoản <strong>Admin</strong>.
+        `;
+        return;
+      }
+
+      // Đã xác thực là Admin
+      authGate.style.display = 'none';
+      mainContent.style.display = 'block';
+
+      loadDashboardData();
+      loadAllOrders();
+      loadR2Files();
     }
 
-    async function updateOrderStatus(orderId, status) {
-      const res = await apiRequest(`/orders/${orderId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status })
-      });
-      if (res.success) {
-        showToast('Đã cập nhật trạng thái đơn hàng!');
-        loadDashboardData();
-      } else {
-        showToast(res.error || 'Lỗi cập nhật', 'error');
+    // Đăng nhập nhanh tài khoản Admin
+    async function quickLoginAdmin() {
+      try {
+        const res = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+
+        if (res.success && res.token && res.user) {
+          setAuthSession(res.token, res.user);
+          showToast('Đăng nhập Admin thành công!');
+          checkAdminAuth();
+        } else {
+          showToast(res.error || 'Lỗi đăng nhập admin', 'error');
+        }
+      } catch (e) {
+        showToast('Lỗi máy chủ!', 'error');
       }
     }
 
-    // CLOUDFLARE R2 UPLOAD
+    // 2. TẢI DỮ LIỆU DASHBOARD & THỐNG KÊ
+    async function loadDashboardData() {
+      try {
+        const res = await apiRequest('/admin/dashboard');
+        if (res.success) {
+          const stats = res.stats;
+          document.getElementById('stat-revenue').textContent = formatVND(stats.totalRevenue);
+          document.getElementById('stat-orders').textContent = stats.totalOrders;
+          document.getElementById('stat-pending').textContent = stats.pendingOrders;
+          document.getElementById('stat-products').textContent = stats.totalProducts;
+          if (document.getElementById('stat-users')) {
+            document.getElementById('stat-users').textContent = stats.totalUsers || 2;
+          }
+
+          if (res.cloudflareStatus) {
+            document.getElementById('status-d1').innerHTML = '<i class="fas fa-check-circle me-1"></i>' + res.cloudflareStatus.d1;
+            document.getElementById('status-kv').innerHTML = '<i class="fas fa-check-circle me-1"></i>' + res.cloudflareStatus.kv;
+            document.getElementById('status-r2').innerHTML = '<i class="fas fa-check-circle me-1"></i>' + res.cloudflareStatus.r2;
+            document.getElementById('status-gemini').innerHTML = '<i class="fas fa-check-circle me-1"></i>' + res.cloudflareStatus.gemini;
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi tải dashboard:', err);
+      }
+    }
+
+    // 3. TẢI TOÀN BỘ ĐƠN HÀNG & CẬP NHẬT TRẠNG THÁI
+    async function loadAllOrders() {
+      const tbody = document.getElementById('admin-orders-tbody');
+      try {
+        const res = await apiRequest('/admin/orders');
+        if (res.success && res.orders) {
+          if (res.orders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Chưa có đơn hàng nào trong CSDL D1.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = res.orders.map(o => {
+            let statusBadge = '<span class="badge bg-warning text-dark">Chờ xác nhận</span>';
+            if (o.status === 'processing') statusBadge = '<span class="badge bg-info text-dark">Đang cắm hoa</span>';
+            if (o.status === 'shipping') statusBadge = '<span class="badge bg-primary">Đang giao</span>';
+            if (o.status === 'completed') statusBadge = '<span class="badge bg-success">Hoàn thành</span>';
+            if (o.status === 'cancelled') statusBadge = '<span class="badge bg-danger">Đã hủy</span>';
+
+            return `
+              <tr>
+                <td class="ps-4 fw-bold font-monospace text-danger">${o.order_code}</td>
+                <td><strong>${o.customer_name}</strong></td>
+                <td><a href="tel:${o.customer_phone}" class="text-decoration-none">${o.customer_phone}</a></td>
+                <td class="small text-truncate" style="max-width: 220px;" title="${o.shipping_address}, ${o.city}">
+                  ${o.shipping_address}, ${o.city}
+                </td>
+                <td class="fw-bold text-danger">${formatVND(o.total_amount)}</td>
+                <td><span class="badge bg-light text-dark border">${o.payment_method === 'vietqr' ? 'VietQR' : 'COD'}</span></td>
+                <td>${statusBadge}</td>
+                <td>
+                  <select class="form-select form-select-sm rounded-pill" onchange="updateOrderStatus(${o.id}, this.value)" style="width: 140px;">
+                    <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Chờ duyệt</option>
+                    <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Đang cắm hoa</option>
+                    <option value="shipping" ${o.status === 'shipping' ? 'selected' : ''}>Đang giao</option>
+                    <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
+                    <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>Hủy đơn</option>
+                  </select>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">Lỗi tải danh sách đơn hàng.</td></tr>';
+      }
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      try {
+        const res = await apiRequest(`/admin/orders/${orderId}/status`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.success) {
+          showToast('Đã cập nhật trạng thái đơn hàng thành công!');
+          loadDashboardData();
+        } else {
+          showToast(res.error || 'Lỗi cập nhật', 'error');
+        }
+      } catch (e) {
+        showToast('Lỗi máy chủ!', 'error');
+      }
+    }
+
+    // 4. QUẢN LÝ SẢN PHẨM (XEM, XÓA)
+    async function loadAdminProducts() {
+      const tbody = document.getElementById('admin-products-tbody');
+      try {
+        const res = await apiRequest('/admin/products');
+        if (res.success && res.products) {
+          tbody.innerHTML = res.products.map(p => `
+            <tr>
+              <td class="ps-4">
+                <img src="${p.image_url}" class="rounded-3 border object-fit-cover" width="45" height="45">
+              </td>
+              <td>
+                <div class="fw-bold">${p.name}</div>
+                <div class="text-muted small">Slug: ${p.slug}</div>
+              </td>
+              <td><span class="badge bg-light text-dark border">${p.category_name || 'Khác'}</span></td>
+              <td class="fw-bold text-danger">${formatVND(p.price)}</td>
+              <td><span class="badge ${p.stock > 3 ? 'bg-success' : 'bg-danger'}">${p.stock} bó</span></td>
+              <td>${p.is_featured ? '<span class="text-warning"><i class="fas fa-star"></i> Có</span>' : '<span class="text-muted">Không</span>'}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteProduct(${p.id}, '${p.name}')" title="Xóa hoa">
+                  <i class="fas fa-trash-alt me-1"></i>Xóa
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Lỗi tải danh sách sản phẩm.</td></tr>';
+      }
+    }
+
+    async function deleteProduct(productId, name) {
+      if (!confirm(`Bạn có chắc chắn muốn xóa mẫu hoa "${name}" khỏi cơ sở dữ liệu D1 không?`)) return;
+
+      try {
+        const res = await apiRequest(`/admin/products/${productId}`, { method: 'DELETE' });
+        if (res.success) {
+          showToast(`Đã xóa mẫu hoa "${name}" thành công!`);
+          loadAdminProducts();
+          loadDashboardData();
+        } else {
+          showToast(res.error || 'Lỗi khi xóa', 'error');
+        }
+      } catch (e) {
+        showToast('Lỗi máy chủ!', 'error');
+      }
+    }
+
+    // 5. QUẢN LÝ NGƯỜI DÙNG
+    async function loadAdminUsers() {
+      const tbody = document.getElementById('admin-users-tbody');
+      try {
+        const res = await apiRequest('/admin/users');
+        if (res.success && res.users) {
+          tbody.innerHTML = res.users.map(u => `
+            <tr>
+              <td class="ps-4 fw-bold font-monospace">#${u.id}</td>
+              <td><strong>${u.full_name}</strong></td>
+              <td><code>${u.username}</code></td>
+              <td>${u.email}</td>
+              <td>${u.phone || '<span class="text-muted">Chưa cập nhật</span>'}</td>
+              <td>
+                <span class="badge ${u.role === 'admin' ? 'bg-danger' : 'bg-secondary'} rounded-pill px-3">
+                  ${u.role === 'admin' ? '<i class="fas fa-shield-alt me-1"></i>Admin' : '<i class="fas fa-user me-1"></i>Khách hàng'}
+                </span>
+              </td>
+              <td class="small text-muted">${new Date(u.created_at).toLocaleDateString('vi-VN')}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Lỗi tải danh sách người dùng.</td></tr>';
+      }
+    }
+
+    // 6. THÊM SẢN PHẨM VÀO D1
+    async function handleAddProduct(e) {
+      e.preventDefault();
+      const name = document.getElementById('prod-name').value.trim();
+      const category_id = parseInt(document.getElementById('prod-category').value, 10);
+      const price = parseInt(document.getElementById('prod-price').value, 10);
+      const original_price = parseInt(document.getElementById('prod-orig-price').value || '0', 10);
+      const stock = parseInt(document.getElementById('prod-stock').value || '15', 10);
+      const image_url = document.getElementById('prod-image').value.trim();
+      const description = document.getElementById('prod-desc').value.trim();
+      const is_featured = document.getElementById('prod-featured').checked ? 1 : 0;
+
+      const res = await apiRequest('/admin/products', {
+        method: 'POST',
+        body: JSON.stringify({
+          name, category_id, price, original_price: original_price || null,
+          stock, image_url, description, is_featured
+        })
+      });
+
+      if (res.success) {
+        showToast(`Đã thêm "${name}" vào Cloudflare D1 thành công! 🌸`);
+        document.getElementById('add-product-form').reset();
+        loadDashboardData();
+        loadAdminProducts();
+        document.querySelector('[data-bs-target="#tab-products-list"]').click();
+      } else {
+        showToast(res.error || 'Lỗi khi lưu sản phẩm', 'error');
+      }
+    }
+
+    // 7. CLOUDFLARE R2 UPLOAD
     async function handleR2Upload(e) {
       e.preventDefault();
       const fileInput = document.getElementById('r2-file-input');
@@ -457,36 +762,7 @@
       }
     }
 
-    // THÊM SẢN PHẨM VÀO D1
-    async function handleAddProduct(e) {
-      e.preventDefault();
-      const name = document.getElementById('prod-name').value.trim();
-      const category_id = parseInt(document.getElementById('prod-category').value, 10);
-      const price = parseInt(document.getElementById('prod-price').value, 10);
-      const original_price = parseInt(document.getElementById('prod-orig-price').value || '0', 10);
-      const stock = parseInt(document.getElementById('prod-stock').value || '10', 10);
-      const image_url = document.getElementById('prod-image').value.trim();
-      const description = document.getElementById('prod-desc').value.trim();
-      const is_featured = document.getElementById('prod-featured').checked ? 1 : 0;
-
-      const res = await apiRequest('/products', {
-        method: 'POST',
-        body: JSON.stringify({
-          name, category_id, price, original_price: original_price || null,
-          stock, image_url, description, is_featured
-        })
-      });
-
-      if (res.success) {
-        showToast(`Đã thêm "${name}" vào Cloudflare D1 thành công! 🌸`);
-        document.getElementById('add-product-form').reset();
-        loadDashboardData();
-      } else {
-        showToast(res.error || 'Lỗi khi lưu sản phẩm', 'error');
-      }
-    }
-
-    // LƯU API KEY CHO TRỢ LÝ
+    // 8. LƯU KHÓA TRỢ LÝ AI
     function saveGeminiKey() {
       const key = document.getElementById('gemini-key-input').value.trim();
       if (!key) {
@@ -501,10 +777,9 @@
       const savedKey = localStorage.getItem('custom_gemini_api_key');
       if (savedKey) document.getElementById('gemini-key-input').value = savedKey;
 
-      loadDashboardData();
-      loadR2Files();
+      checkAdminAuth();
+      window.addEventListener('authChange', checkAdminAuth);
     });
   </script>
 </body>
 </html>
-

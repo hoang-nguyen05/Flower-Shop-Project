@@ -7,13 +7,14 @@ import { ordersRouter } from './routes/orders';
 import { chatbotRouter } from './routes/chatbot';
 import { storageRouter } from './routes/storage';
 import { adminRouter } from './routes/admin';
+import { authRouter } from './routes/auth';
 
 const app = new Hono<{ Bindings: Env }>();
 
 // 1. CORS Middleware để frontend gọi API trơn tru
 app.use('*', cors({
   origin: '*',
-  allowHeaders: ['Content-Type', 'Authorization', 'x-session-id', 'x-gemini-key'],
+  allowHeaders: ['Content-Type', 'Authorization', 'x-session-id', 'x-auth-token', 'x-admin-key'],
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   exposeHeaders: ['Set-Cookie', 'x-session-id']
 }));
@@ -66,6 +67,7 @@ app.route('/api/orders', ordersRouter);
 app.route('/api/chatbot', chatbotRouter);
 app.route('/api/storage', storageRouter);
 app.route('/api/admin', adminRouter);
+app.route('/api/auth', authRouter);
 
 // 4. Fallback cho Static Frontend Assets
 // Khi truy cập /, /index.html, /css/style.css, v.v., Hono tự động chuyển tiếp sang Cloudflare Assets

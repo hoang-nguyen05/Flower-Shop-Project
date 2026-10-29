@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hồ Sơ Cá Nhân - FlowerShop</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <header class="site-header sticky-top bg-white border-bottom shadow-sm">
+    <div class="container py-2">
+      <div class="d-flex align-items-center justify-content-between">
+        <a href="/index.html" class="brand-logo text-decoration-none d-flex align-items-center">
+          <i class="fas fa-spa brand-icon me-2 text-danger fs-3"></i>
+          <div>
+            <span class="brand-name font-serif fw-bold fs-4 text-danger">FlowerShop</span>
+            <span class="d-none d-sm-block brand-tagline text-muted small" style="font-size: 0.68rem;">TIỆM HOA TƯƠI TRỰC TUYẾN</span>
+          </div>
+        </a>
+
+        <div class="d-flex align-items-center gap-3">
+          <a href="/index.html" class="nav-link text-muted small fw-bold">
+            <i class="fas fa-home me-1"></i>Trang chủ
+          </a>
+          <a href="/products.html" class="nav-link text-muted small fw-bold">
+            <i class="fas fa-store me-1"></i>Cửa hàng
+          </a>
+          <div id="user-nav-container"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN PROFILE ==================== -->
+  <main class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="/index.html" class="text-decoration-none text-muted">Trang chủ</a></li>
+        <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">Hồ sơ cá nhân</li>
+      </ol>
+    </nav>
+
+    <div class="row g-4">
+      <!-- Cột Trái: Thông tin Avatar & Menu -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 text-center mb-4 bg-white">
+          <div class="position-relative d-inline-block mx-auto mb-3">
+            <img id="profile-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80" 
+                 alt="Avatar" class="rounded-circle border border-3 border-danger shadow-sm object-fit-cover" 
+                 style="width: 120px; height: 120px;">
+            <button class="btn btn-sm btn-danger rounded-circle position-absolute bottom-0 end-0 shadow-sm" 
+                    title="Đổi ảnh đại diện" onclick="promptAvatarChange()">
+              <i class="fas fa-camera"></i>
+            </button>
+          </div>
+
+          <h4 class="fw-bold font-serif mb-1" id="profile-fullname">Đang tải...</h4>
+          <p class="text-muted small mb-2" id="profile-username">@username</p>
+          <div class="mb-3" id="profile-role-badge">
+            <span class="badge bg-secondary rounded-pill px-3">Thành viên</span>
+          </div>
+
+          <div class="row g-2 border-top border-bottom py-3 mb-3 text-center">
+            <div class="col-6">
+              <a href="#tab-orders" data-bs-toggle="pill" class="text-decoration-none">
+                <div class="fw-bold fs-4 text-danger" id="count-orders">0</div>
+                <div class="text-muted small">Đơn hàng</div>
+              </a>
+            </div>
+            <div class="col-6 border-start">
+              <a href="/wishlist.html" class="text-decoration-none">
+                <div class="fw-bold fs-4 text-danger" id="count-wishlist">0</div>
+                <div class="text-muted small">Hoa yêu thích</div>
+              </a>
+            </div>
+          </div>
+
+          <button class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-bold" onclick="logoutUser()">
+            <i class="fas fa-sign-out-alt me-2"></i>Đăng Xuất
+          </button>
+        </div>
+
+        <!-- Điều hướng nhanh -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+          <div class="nav flex-column nav-pills gap-1" id="profile-pill-tabs" role="tablist">
+            <button class="nav-link active rounded-pill text-start py-2 px-3 fw-bold small" data-bs-toggle="pill" data-bs-target="#tab-info">
+              <i class="fas fa-user-edit me-2 text-primary"></i>Thông tin cá nhân & Địa chỉ
+            </button>
+            <button class="nav-link rounded-pill text-start py-2 px-3 fw-bold small" data-bs-toggle="pill" data-bs-target="#tab-password">
+              <i class="fas fa-key me-2 text-warning"></i>Đổi mật khẩu tài khoản
+            </button>
+            <button class="nav-link rounded-pill text-start py-2 px-3 fw-bold small" data-bs-toggle="pill" data-bs-target="#tab-orders" onclick="loadMyOrders()">
+              <i class="fas fa-receipt me-2 text-success"></i>Lịch sử đơn hàng của tôi
+            </button>
+            <a href="/wishlist.html" class="nav-link rounded-pill text-start py-2 px-3 fw-bold small text-dark">
+              <i class="fas fa-heart me-2 text-danger"></i>Danh sách hoa đã lưu thích
+            </a>
+            <div id="admin-link-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cột Phải: Nội dung Tabs -->
+      <div class="col-lg-8">
+        <div class="tab-content">
+          <!-- TAB 1: THÔNG TIN CÁ NHÂN -->
+          <div class="tab-pane fade show active" id="tab-info">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <h5 class="fw-bold font-serif mb-3 text-dark">
+                <i class="fas fa-user-circle text-danger me-2"></i>Cập Nhật Thông Tin Cá Nhân
+              </h5>
+              <p class="text-muted small mb-4">Thông tin này sẽ được tự động điền khi bạn đặt hoa trên FlowerShop.</p>
+
+              <form id="profile-form" onsubmit="handleUpdateProfile(event)">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold">Họ và tên *</label>
+                    <input type="text" class="form-control rounded-pill bg-light" id="edit-fullname" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold">Tên đăng nhập (Username)</label>
+                    <input type="text" class="form-control rounded-pill bg-light" id="edit-username" disabled>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold">Email</label>
+                    <input type="email" class="form-control rounded-pill bg-light" id="edit-email" disabled>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold">Số điện thoại nhận hoa</label>
+                    <input type="tel" class="form-control rounded-pill bg-light" id="edit-phone" placeholder="09xx xxx xxx">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold">Tỉnh / Thành phố</label>
+                    <input type="text" class="form-control rounded-pill bg-light" id="edit-city" placeholder="Hà Nội, TP.HCM...">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold">URL Ảnh đại diện (Avatar)</label>
+                    <input type="url" class="form-control rounded-pill bg-light" id="edit-avatar" placeholder="https://...">
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label small fw-bold">Địa chỉ giao hoa mặc định</label>
+                    <textarea class="form-control rounded-3 bg-light" id="edit-address" rows="2" placeholder="Số nhà, tên ngõ, tên đường, phường/xã..."></textarea>
+                  </div>
+                  <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" id="btn-save-profile">
+                      <i class="fas fa-save me-2"></i>Lưu Thông Tin Hồ Sơ
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- TAB 2: ĐỔI MẬT KHẨU -->
+          <div class="tab-pane fade" id="tab-password">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="max-width: 600px;">
+              <h5 class="fw-bold font-serif mb-3 text-dark">
+                <i class="fas fa-lock text-warning me-2"></i>Đổi Mật Khẩu
+              </h5>
+              <p class="text-muted small mb-4">Để bảo mật tài khoản, vui lòng không chia sẻ mật khẩu của bạn cho người khác.</p>
+
+              <form id="password-form" onsubmit="handleUpdatePassword(event)">
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Mật khẩu hiện tại *</label>
+                  <input type="password" class="form-control rounded-pill bg-light" id="old-password" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Mật khẩu mới * (tối thiểu 6 ký tự)</label>
+                  <input type="password" class="form-control rounded-pill bg-light" id="new-password" required>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label small fw-bold">Nhập lại mật khẩu mới *</label>
+                  <input type="password" class="form-control rounded-pill bg-light" id="confirm-new-password" required>
+                </div>
+                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" id="btn-save-password">
+                  <i class="fas fa-key me-2"></i>Cập Nhật Mật Khẩu
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- TAB 3: ĐƠN HÀNG CỦA TÔI -->
+          <div class="tab-pane fade" id="tab-orders">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold font-serif mb-0 text-dark">
+                  <i class="fas fa-box text-success me-2"></i>Lịch Sử Đơn Hàng Của Bạn
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="loadMyOrders()">
+                  <i class="fas fa-sync-alt me-1"></i>Tải lại
+                </button>
+              </div>
+
+              <div id="my-orders-list">
+                <div class="text-center py-5 text-muted">
+                  <i class="fas fa-spinner fa-spin fs-3 mb-2"></i>
+                  <div>Đang tải danh sách đơn hàng...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script>
+    let currentUser = null;
+
+    async function initProfile() {
+      const token = getAuthToken();
+      if (!token) {
+        showToast('Vui lòng đăng nhập để xem hồ sơ!', 'warning');
+        setTimeout(() => window.location.href = '/login.html', 800);
+        return;
+      }
+
+      try {
+        const res = await apiRequest('/auth/me');
+        if (res.success && res.user) {
+          currentUser = res.user;
+          renderProfileData(res.user);
+        } else {
+          clearAuthSession();
+          showToast('Phiên đăng nhập đã hết hạn!', 'warning');
+          setTimeout(() => window.location.href = '/login.html', 800);
+        }
+      } catch (err) {
+        showToast('Lỗi tải dữ liệu hồ sơ!', 'error');
+      }
+    }
+
+    function renderProfileData(user) {
+      document.getElementById('profile-fullname').textContent = user.full_name || user.username;
+      document.getElementById('profile-username').textContent = '@' + user.username;
+      
+      const avatarUrl = user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80';
+      document.getElementById('profile-avatar').src = avatarUrl;
+      document.getElementById('edit-avatar').value = avatarUrl;
+
+      const isAdmin = user.role === 'admin';
+      const roleBadge = document.getElementById('profile-role-badge');
+      if (isAdmin) {
+        roleBadge.innerHTML = '<span class="badge bg-danger rounded-pill px-3 py-1"><i class="fas fa-shield-alt me-1"></i>Quản Trị Viên (Admin)</span>';
+        document.getElementById('admin-link-container').innerHTML = `
+          <a href="/admin.html" class="nav-link rounded-pill text-start py-2 px-3 fw-bold small text-danger bg-danger-subtle mt-2">
+            <i class="fas fa-cog me-2"></i>Bảng Điều Khiển Quản Trị Hệ Thống
+          </a>
+        `;
+      } else {
+        roleBadge.innerHTML = '<span class="badge bg-secondary rounded-pill px-3 py-1"><i class="fas fa-user me-1"></i>Thành Viên FlowerShop</span>';
+      }
+
+      document.getElementById('count-orders').textContent = user.orders_count || 0;
+      document.getElementById('count-wishlist').textContent = user.wishlist_count || 0;
+
+      // Fill form edit
+      document.getElementById('edit-fullname').value = user.full_name || '';
+      document.getElementById('edit-username').value = user.username || '';
+      document.getElementById('edit-email').value = user.email || '';
+      document.getElementById('edit-phone').value = user.phone || '';
+      document.getElementById('edit-city').value = user.city || 'Hà Nội';
+      document.getElementById('edit-address').value = user.address || '';
+    }
+
+    async function handleUpdateProfile(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save-profile');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang lưu...';
+
+      const full_name = document.getElementById('edit-fullname').value.trim();
+      const phone = document.getElementById('edit-phone').value.trim();
+      const city = document.getElementById('edit-city').value.trim();
+      const address = document.getElementById('edit-address').value.trim();
+      const avatar_url = document.getElementById('edit-avatar').value.trim();
+
+      try {
+        const res = await apiRequest('/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ full_name, phone, city, address, avatar_url })
+        });
+
+        if (res.success && res.user) {
+          currentUser = res.user;
+          setAuthSession(getAuthToken(), res.user);
+          renderProfileData(res.user);
+          showToast('Đã cập nhật thông tin hồ sơ thành công!');
+        } else {
+          showToast(res.error || 'Cập nhật thất bại!', 'error');
+        }
+      } catch (err) {
+        showToast('Lỗi máy chủ khi cập nhật!', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save me-2"></i>Lưu Thông Tin Hồ Sơ';
+      }
+    }
+
+    async function handleUpdatePassword(e) {
+      e.preventDefault();
+      const old_password = document.getElementById('old-password').value;
+      const new_password = document.getElementById('new-password').value;
+      const confirm = document.getElementById('confirm-new-password').value;
+
+      if (new_password !== confirm) {
+        showToast('Mật khẩu mới nhập lại không khớp!', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-password');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang đổi mật khẩu...';
+
+      try {
+        const res = await apiRequest('/auth/password', {
+          method: 'PUT',
+          body: JSON.stringify({ old_password, new_password })
+        });
+
+        if (res.success) {
+          showToast('Đổi mật khẩu thành công!');
+          document.getElementById('password-form').reset();
+        } else {
+          showToast(res.error || 'Đổi mật khẩu thất bại!', 'error');
+        }
+      } catch (err) {
+        showToast('Lỗi máy chủ khi đổi mật khẩu!', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-key me-2"></i>Cập Nhật Mật Khẩu';
+      }
+    }
+
+    async function loadMyOrders() {
+      const container = document.getElementById('my-orders-list');
+      container.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>Đang tải đơn hàng...</div>';
+
+      try {
+        const res = await apiRequest('/auth/my-orders');
+        if (res.success && res.orders && res.orders.length > 0) {
+          container.innerHTML = res.orders.map(order => {
+            let statusBadge = '<span class="badge bg-warning text-dark">Chờ xác nhận</span>';
+            if (order.status === 'processing') statusBadge = '<span class="badge bg-info text-dark">Đang cắm hoa</span>';
+            if (order.status === 'shipping') statusBadge = '<span class="badge bg-primary">Đang giao hàng</span>';
+            if (order.status === 'completed') statusBadge = '<span class="badge bg-success">Hoàn thành</span>';
+            if (order.status === 'cancelled') statusBadge = '<span class="badge bg-danger">Đã hủy</span>';
+
+            return `
+              <div class="card border rounded-4 mb-3 p-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2 mb-2 gap-2">
+                  <div>
+                    <span class="fw-bold font-monospace text-danger">${order.order_code}</span>
+                    <span class="text-muted small ms-2">${new Date(order.created_at).toLocaleString('vi-VN')}</span>
+                  </div>
+                  <div>${statusBadge}</div>
+                </div>
+                <div class="row g-2 small">
+                  <div class="col-sm-6">
+                    <div><i class="fas fa-map-marker-alt text-muted me-1"></i><strong>Giao đến:</strong> ${order.shipping_address}, ${order.city}</div>
+                    <div><i class="fas fa-phone text-muted me-1"></i><strong>SĐT:</strong> ${order.customer_phone}</div>
+                  </div>
+                  <div class="col-sm-6 text-sm-end">
+                    <div><strong>Tổng tiền:</strong> <span class="fw-bold text-danger fs-6">${formatVND(order.total_amount)}</span></div>
+                    <div class="text-muted">Phương thức: ${order.payment_method === 'vietqr' ? 'Chuyển khoản VietQR' : 'Tiền mặt (COD)'}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = `
+            <div class="text-center py-5">
+              <i class="fas fa-receipt fs-1 text-muted mb-3 opacity-50"></i>
+              <p class="text-muted mb-3">Bạn chưa có đơn đặt hoa nào trên FlowerShop.</p>
+              <a href="/products.html" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Khám Phá Hoa Tươi Ngay</a>
+            </div>
+          `;
+        }
+      } catch (err) {
+        container.innerHTML = '<div class="alert alert-danger small">Lỗi tải danh sách đơn hàng.</div>';
+      }
+    }
+
+    function promptAvatarChange() {
+      const url = prompt('Dán link ảnh đại diện mới của bạn (URL ảnh online hoặc Unsplash):');
+      if (url && url.startsWith('http')) {
+        document.getElementById('edit-avatar').value = url;
+        document.getElementById('profile-avatar').src = url;
+        showToast('Bấm "Lưu Thông Tin Hồ Sơ" để hoàn tất cập nhật!');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initProfile);
+  </script>
+</body>
+</html>
