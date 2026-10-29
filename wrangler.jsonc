@@ -11,19 +11,13 @@
     {
       "binding": "DB",
       "database_name": "flower_shop_db",
-      "database_id": "flower_shop_db_local"
+      "database_id": "6104d683-ae9f-4915-84b9-770c795003f4"
     }
   ],
   "kv_namespaces": [
     {
       "binding": "KV",
-      "id": "flower_shop_kv_local"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "R2",
-      "bucket_name": "flower-shop-bucket"
+      "id": "158758169aee453e851f5703669a4ab9"
     }
   ],
   "vars": {
@@ -33,4 +27,3 @@
     "VIETQR_ACCOUNT_NAME": "NGUYEN DAC HOANG"
   }
 }
-

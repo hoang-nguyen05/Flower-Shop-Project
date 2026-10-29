@@ -3,13 +3,19 @@ import { Env, Product, Category } from '../types';
 
 export const chatbotRouter = new Hono<{ Bindings: Env }>();
 
-// 1. POST /api/chatbot: Trợ lý AI tư vấn hoa tươi dùng Gemini API
+// 1. POST /api/chatbot: Trợ lý AI tư vấn hoa tươi dùng Google Gemini API (Hỗ trợ đa Key xoay vòng)
 chatbotRouter.post('/', async (c) => {
   try {
     const body = await c.req.json();
     const userMessage = (body.message || '').trim();
     const clientApiKey = body.apiKey || c.req.header('x-gemini-key');
-    const apiKey = clientApiKey || c.env.GEMINI_API_KEY;
+    const rawApiKey = clientApiKey || c.env.GEMINI_API_KEY || '';
+
+    // Tách các API key nếu truyền nhiều key phân cách bằng dấu phẩy
+    const apiKeys = rawApiKey
+      .split(',')
+      .map((k: string) => k.trim())
+      .filter((k: string) => k.length > 5 && k !== 'YOUR_GEMINI_API_KEY_HERE');
 
     if (!userMessage) {
       return c.json({
@@ -18,7 +24,7 @@ chatbotRouter.post('/', async (c) => {
       });
     }
 
-    // 1. Lấy danh sách sản phẩm & danh mục từ Cloudflare D1 để làm ngữ cảnh cho Gemini
+    // 1. Lấy danh sách sản phẩm & danh mục từ Cloudflare D1 để làm ngữ cảnh thực tế cho Gemini
     let productContext = '';
     try {
       const { results: products } = await c.env.DB.prepare(
@@ -59,51 +65,70 @@ Dữ liệu shop hiện tại:
 ${productContext}
 `;
 
-    // 2. Kiểm tra nếu có API key thì gọi Google Gemini API
-    if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && apiKey.length > 10) {
-      try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 2. Nếu có danh sách API Key thì gọi Google Gemini API với cơ chế xoay vòng & dự phòng lỗi
+    if (apiKeys.length > 0) {
+      // Các mô hình thử lần lượt (Gemini 3.8 / 2.5 / 1.5)
+      const candidateModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
 
-        const geminiResponse = await fetch(geminiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: 'user',
-                parts: [
-                  { text: `${systemPrompt}\n\nKhách hàng hỏi: "${userMessage}"` }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 600,
-            }
-          })
-        });
+      for (let i = 0; i < apiKeys.length; i++) {
+        const activeKey = apiKeys[i];
 
-        if (geminiResponse.ok) {
-          const geminiData: any = await geminiResponse.json();
-          const replyText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+        for (const modelName of candidateModels) {
+          try {
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${activeKey}`;
 
-          if (replyText) {
-            return c.json({
-              success: true,
-              reply: replyText.trim(),
-              provider: 'Google Gemini 1.5 Flash'
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+            const geminiResponse = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              signal: controller.signal,
+              body: JSON.stringify({
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [
+                      { text: `${systemPrompt}\n\nKhách hàng hỏi: "${userMessage}"` }
+                    ]
+                  }
+                ],
+                generationConfig: {
+                  temperature: 0.7,
+                  maxOutputTokens: 600,
+                }
+              })
             });
+
+            clearTimeout(timeoutId);
+
+            if (geminiResponse.ok) {
+              const geminiData: any = await geminiResponse.json();
+              const replyText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+              if (replyText) {
+                return c.json({
+                  success: true,
+                  reply: replyText.trim(),
+                  provider: `Google Gemini (${modelName}) - Key #${i + 1}`
+                });
+              }
+            } else {
+              const errBody = await geminiResponse.text();
+              console.warn(`Lỗi Gemini [${modelName}] với Key #${i + 1}: ${geminiResponse.status} - ${errBody.substring(0, 150)}`);
+              // Nếu 404 (model không tìm thấy), thử model tiếp theo trong vòng lặp model
+              if (geminiResponse.status === 404) continue;
+              // Nếu 429 hoặc 403, thoát ra thử Key tiếp theo
+              break;
+            }
+          } catch (fetchErr: any) {
+            console.warn(`Exception khi gọi Gemini [${modelName}] với Key #${i + 1}:`, fetchErr.message);
           }
-        } else {
-          const errText = await geminiResponse.text();
-          console.error('Lỗi từ Gemini API:', errText);
         }
-      } catch (geminiErr: any) {
-        console.error('Exception khi gọi Gemini API:', geminiErr);
       }
     }
 
-    // 3. Fallback tư vấn thông minh (khi chưa điền Gemini API key hoặc offline)
+    // 3. Fallback tư vấn thông minh (khi API key lỗi hoặc mạng chậm)
     let fallbackReply = '';
     const lower = userMessage.toLowerCase();
 
@@ -119,17 +144,12 @@ ${productContext}
       fallbackReply = `Dạ chào bạn! FlowerShop rất vui được hỗ trợ bạn 🌸. Tiệm có đầy đủ hoa tươi Đà Lạt và hoa nhập khẩu cao cấp (Hoa Hồng, Lan Hồ Điệp, Tulip, Hướng Dương, Cẩm Tú Cầu).\n\n💡 Bạn có thể hỏi mình: *"Tư vấn hoa tặng sinh nhật người yêu"*, *"Hoa khai trương sang trọng"*, hoặc *"Bảng giá hoa hôm nay"*.`;
     }
 
-    if (!apiKey) {
-      fallbackReply += `\n\n*(💡 Mẹo: Bạn có thể cài đặt biến môi trường \`GEMINI_API_KEY\` trong \`.dev.vars\` hoặc chạy \`wrangler secret put GEMINI_API_KEY\` để AI sử dụng mô hình Google Gemini trực tiếp)*`;
-    }
-
     return c.json({
       success: true,
       reply: fallbackReply,
-      provider: apiKey ? 'Gemini Fallback' : 'Florist AI Local Engine'
+      provider: 'Florist AI Engine (FlowerShop)'
     });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
 });
-

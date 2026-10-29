@@ -6,6 +6,12 @@ export const storageRouter = new Hono<{ Bindings: Env }>();
 // 1. POST /api/storage/upload: Tải ảnh hoặc tài liệu lên Cloudflare R2
 storageRouter.post('/upload', async (c) => {
   try {
+    if (!c.env.R2) {
+      return c.json({
+        success: false,
+        error: 'Cloudflare R2 chưa được bật trên tài khoản Cloudflare. Vui lòng vào Cloudflare Dashboard bấm "Enable R2" để sử dụng.'
+      }, 503);
+    }
     const formData = await c.req.formData();
     const file = formData.get('file') as File | null;
 
@@ -47,6 +53,7 @@ storageRouter.post('/upload', async (c) => {
 // 2. GET /api/storage/files/:key: Truy xuất và hiển thị ảnh / tài liệu từ Cloudflare R2
 storageRouter.get('/files/*', async (c) => {
   try {
+    if (!c.env.R2) return c.text('Cloudflare R2 chưa được bật', 503);
     // Lấy key sau '/files/'
     const url = new URL(c.req.url);
     const key = decodeURIComponent(url.pathname.replace(/^\/api\/storage\/files\//, ''));
@@ -75,6 +82,9 @@ storageRouter.get('/files/*', async (c) => {
 // 3. GET /api/storage/list: Danh sách tệp đã lưu trong Cloudflare R2 (dành cho Admin)
 storageRouter.get('/list', async (c) => {
   try {
+    if (!c.env.R2) {
+      return c.json({ success: true, total: 0, files: [] });
+    }
     const prefix = c.req.query('prefix') || 'uploads/';
     const listing = await c.env.R2.list({ prefix, limit: 50 });
 
