@@ -1,8 +1,13 @@
 # 🌸 BÁO CÁO TỔNG QUAN KIẾN TRÚC & HẠ TẦNG CLOUDFLARE
 ## DỰ ÁN WEBSITE THƯƠNG MẠI ĐIỆN TỬ BÁN HOA TƯƠI (FLOWER SHOP)
 
-> **Tác giả / Sinh viên thực hiện:** Nguyễn Đắc Hoàng (dtc235200306@ictu.edu.vn)  
-> **Nền tảng công nghệ chính:** Cloudflare Serverless Stack (Workers, D1 SQL, KV Cache, R2 Storage) + Google Gemini AI  
+> **Đơn vị đào tạo:** Trường Đại học Công Nghệ Thông Tin & Truyền Thông (ICTU) - Đại học Thái Nguyên  
+> **Nhóm sinh viên thực hiện:**
+> 1. **Nguyễn Đắc Hoàng** (Nhóm trưởng - Fullstack Developer & Cloudflare Architecture - MSV: DTC235200306)
+> 2. **Lường Thị Hạnh** (UI/UX Designer & Content Creator)
+> 3. **Nông Lâm Ngọc Sơn** (Backend Engineer & Cloudflare Storage Specialist)
+> 4. **Hoàng Bắc** (Frontend Developer & QA Tester)  
+> **Nền tảng công nghệ chính:** Cloudflare Serverless Stack (Workers, D1 SQL, KV Cache, R2 Storage) + AI Chatbot Florist AI  
 > **Đường dẫn Website trực tiếp (Live URL):** [https://flower-shop-cloudflare.dtc235200306.workers.dev](https://flower-shop-cloudflare.dtc235200306.workers.dev)  
 > **Mã nguồn GitHub:** [https://github.com/hoang-nguyen05/Flower-Shop-Project.git](https://github.com/hoang-nguyen05/Flower-Shop-Project.git)
 
