@@ -41,6 +41,8 @@
           </li>
           <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/products.html?on_sale=1"><i class="fas fa-fire me-1"></i>Khuyến mãi</a></li>
           <li class="nav-item"><a class="nav-link" href="/orders.html"><i class="fas fa-receipt me-1"></i>Tra cứu đơn</a></li>
+          <li class="nav-item"><a class="nav-link" href="/about.html"><i class="fas fa-heart me-1"></i>Về chúng tôi</a></li>
+          <li class="nav-item"><a class="nav-link" href="/contact.html"><i class="fas fa-phone-alt me-1"></i>Liên hệ</a></li>
         </ul>
       </div>
 
@@ -91,8 +93,17 @@
     </div>
 
     <!-- Category filter chips -->
-    <div class="d-flex gap-2 overflow-auto pb-3 mb-4" id="category-filter-chips">
+    <div class="d-flex gap-2 overflow-auto pb-2 mb-2" id="category-filter-chips">
       <!-- Loaded via JS -->
+    </div>
+
+    <!-- Quick Price Range Filters (Inspired by Modern E-commerce) -->
+    <div class="d-flex align-items-center gap-2 overflow-auto pb-3 mb-4">
+      <span class="text-muted small fw-bold me-1"><i class="fas fa-filter text-danger me-1"></i>Mức giá:</span>
+      <button class="price-chip active" id="pchip-all" onclick="filterByPrice(0, 0, 'all')">Tất cả mức giá</button>
+      <button class="price-chip" id="pchip-u350" onclick="filterByPrice(0, 350000, 'u350')">Dưới 350k</button>
+      <button class="price-chip" id="pchip-350to600" onclick="filterByPrice(350000, 600000, '350to600')">350k - 600k</button>
+      <button class="price-chip" id="pchip-a600" onclick="filterByPrice(600000, 0, 'a600')">Trên 600k</button>
     </div>
 
     <!-- Products Grid -->
@@ -207,6 +218,19 @@
     let currentSearch = urlParams.get('q') || '';
     let currentOnSale = urlParams.get('on_sale') || '';
     let currentSort = urlParams.get('sort') || 'newest';
+    let currentMinPrice = 0;
+    let currentMaxPrice = 0;
+
+    function filterByPrice(min, max, chipId) {
+      currentMinPrice = min;
+      currentMaxPrice = max;
+
+      document.querySelectorAll('.price-chip').forEach(el => el.classList.remove('active'));
+      const activeBtn = document.getElementById(`pchip-${chipId}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      loadProducts();
+    }
 
     async function loadProducts() {
       const grid = document.getElementById('products-grid');
@@ -216,6 +240,8 @@
       if (currentCategory) queryStr += `&category=${currentCategory}`;
       if (currentSearch) queryStr += `&q=${encodeURIComponent(currentSearch)}`;
       if (currentOnSale) queryStr += `&on_sale=1`;
+      if (currentMinPrice > 0) queryStr += `&min_price=${currentMinPrice}`;
+      if (currentMaxPrice > 0) queryStr += `&max_price=${currentMaxPrice}`;
 
       const res = await apiRequest(`/products${queryStr}`);
 

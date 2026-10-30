@@ -34,6 +34,8 @@ productsRouter.get('/products', async (c) => {
     const featured = c.req.query('featured');
     const onSale = c.req.query('on_sale');
     const sort = c.req.query('sort') || 'newest';
+    const minPrice = c.req.query('min_price');
+    const maxPrice = c.req.query('max_price');
 
     let sql = `
       SELECT p.*, c.name as category_name, c.slug as category_slug,
@@ -62,6 +64,16 @@ productsRouter.get('/products', async (c) => {
 
     if (onSale === '1') {
       sql += ` AND p.original_price > p.price`;
+    }
+
+    if (minPrice && !isNaN(Number(minPrice))) {
+      sql += ` AND p.price >= ?`;
+      params.push(Number(minPrice));
+    }
+
+    if (maxPrice && !isNaN(Number(maxPrice))) {
+      sql += ` AND p.price <= ?`;
+      params.push(Number(maxPrice));
     }
 
     sql += ` GROUP BY p.id`;

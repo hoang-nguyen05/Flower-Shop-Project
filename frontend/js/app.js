@@ -79,3 +79,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// 4. Xử lý đăng ký nhận ưu đãi (Newsletter)
+function handleNewsletter(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('newsletter-input');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  showToast('🎉 Đăng ký thành công! Mã ưu đãi FLOWER10 (giảm 10%) đã được kích hoạt.');
+  localStorage.setItem('applied_coupon', 'FLOWER10');
+  input.value = '';
+}
+
+

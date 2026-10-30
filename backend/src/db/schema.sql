@@ -2,6 +2,8 @@
 -- Cloudflare D1 Database Schema - Flower Shop E-Commerce
 -- ===================================================
 
+DROP TABLE IF EXISTS wishlists;
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
