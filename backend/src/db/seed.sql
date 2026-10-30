@@ -9,7 +9,7 @@ INSERT INTO categories (id, name, slug, description, image_url) VALUES
 (3, 'Hoa Cẩm Tú Cầu', 'hoa-cam-tu-cau', 'Những cụm hoa tròn sum suê mang ý nghĩa lòng biết ơn và chân thành.', 'https://images.unsplash.com/photo-1533616688419-b7a585564566?w=600&auto=format&fit=crop&q=80'),
 (4, 'Hoa Hướng Dương', 'hoa-huong-duong', 'Ánh sáng rực rỡ, năng lượng tích cực cho lời chúc tốt nghiệp và vươn xa.', 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=600&auto=format&fit=crop&q=80'),
 (5, 'Hoa Tulip', 'hoa-tulip', 'Dịu dàng, hiện đại và sang trọng phong cách châu Âu tươi mới.', 'https://images.unsplash.com/photo-1520763185298-1b434c919102?w=600&auto=format&fit=crop&q=80'),
-(6, 'Hoa Baby & Cúc Mẫu Đơn', 'hoa-baby-mau-don', 'Những cánh hoa mềm mại, thuần khiết tạo điểm nhấn tinh tế.', 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&auto=format&fit=crop&q=80');
+(6, 'Hoa Baby & Cúc Mẫu Đơn', 'hoa-baby-mau-don', 'Những cánh hoa mềm mại, thuần khiết tạo điểm nhấn tinh tế.', 'https://images.unsplash.com/photo-1542526259-465a706f89ce?w=600&auto=format&fit=crop&q=80');
 
 -- 2. SẢN PHẨM HOA TƯƠI
 INSERT INTO products (id, category_id, name, slug, image_url, description, price, original_price, stock, is_featured, available) VALUES
@@ -20,7 +20,7 @@ INSERT INTO products (id, category_id, name, slug, image_url, description, price
 (5, 4, 'Bó Hướng Dương Nắng Hạ', 'bo-huong-duong-nang-ha', 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=600&auto=format&fit=crop&q=80', '5 đóa hướng dương bông lớn rực rỡ tượng trưng cho niềm tin, nghị lực và khởi đầu mới thành công rực rỡ.', 299000, 350000, 25, 1, 1),
 (6, 5, 'Bó Tulip Hà Lan Pastel', 'bo-tulip-ha-lan-pastel', 'https://images.unsplash.com/photo-1520763185298-1b434c919102?w=600&auto=format&fit=crop&q=80', '10 cành Tulip hồng phấn nhập khẩu trực tiếp Hà Lan, phối giấy lụa mờ kiêu sa dành riêng cho nàng thơ.', 580000, 680000, 10, 1, 1),
 (7, 1, 'Giỏ Hoa Khai Trương Phát Tài', 'gio-hoa-khai-truong-phat-tai', 'https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=600&auto=format&fit=crop&q=80', 'Giỏ hoa tone đỏ - cam - vàng kết hợp hoa hồng, đồng tiền và cúc mẫu đơn, mang tài lộc và may mắn đến doanh nghiệp.', 850000, 990000, 6, 1, 1),
-(8, 6, 'Bó Hoa Baby Trắng Bồng Bềnh', 'bo-hoa-baby-trang-bong-benh', 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&auto=format&fit=crop&q=80', 'Bó hoa baby khổng lồ như đám mây bồng bềnh, giữ khô được 1-2 năm, món quà lãng mạn được giới trẻ yêu thích.', 380000, 450000, 14, 0, 1);
+(8, 6, 'Bó Hoa Baby Trắng Bồng Bềnh', 'bo-hoa-baby-trang-bong-benh', 'https://images.unsplash.com/photo-1557401584-47eca3a93bfe?w=600&auto=format&fit=crop&q=80', 'Bó hoa baby khổng lồ như đám mây bồng bềnh, giữ khô được 1-2 năm, món quà lãng mạn được giới trẻ yêu thích.', 380000, 450000, 14, 0, 1);
 
 -- 3. MÃ GIẢM GIÁ (COUPONS)
 INSERT INTO coupons (code, description, discount_percent, discount_amount, min_order_value, max_uses, used_count, is_active) VALUES
