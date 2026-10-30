@@ -194,7 +194,7 @@
         <tr>
           <td class="ps-4">
             <div class="d-flex align-items-center gap-3">
-              <img src="${item.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200'}" class="cart-item-img rounded-3" alt="${item.name}">
+              <img src="${item.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200'}" class="cart-item-img rounded-3" alt="${item.name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=200';">
               <div>
                 <a href="/product-detail.html?id=${item.productId}" class="fw-bold text-dark text-decoration-none">${item.name}</a>
                 <div class="small text-muted">Kho: ${item.stock} bó</div>

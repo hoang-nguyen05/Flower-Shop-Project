@@ -38,7 +38,7 @@ chatbotRouter.post('/', async (c) => {
     ) {
       return c.json({
         success: true,
-        reply: '🌸 Dạ xin lỗi bạn, mình là Trợ lý AI hỗ trợ khách hàng mua sắm hoa tươi trên website. Mình không phụ trách và không có quyền truy cập vào khu vực quản trị viên (Admin). Nếu bạn là ban quản lý hoặc đối tác, vui lòng liên hệ trực tiếp qua hotline **1900 8888** hoặc email quản lý shop nhé!',
+        reply: '🌸 Dạ xin lỗi bạn, mình là Trợ lý AI hỗ trợ khách hàng mua sắm hoa tươi trên website. Mình không phụ trách và không có quyền truy cập vào khu vực quản trị viên (Admin). Nếu bạn là ban quản lý hoặc đối tác, vui lòng liên hệ trực tiếp qua hotline **0362843621** hoặc email quản lý shop nhé!',
         provider: 'FlowerShop AI Customer Care'
       });
     }
@@ -58,6 +58,10 @@ chatbotRouter.post('/', async (c) => {
       const prodList = products.map(p => `- ${p.name}: ${p.price.toLocaleString('vi-VN')}đ (còn ${p.stock} bó) - ${p.description || ''}`).join('\n');
 
       productContext = `
+Thông tin cửa hàng:
+- Địa chỉ: Trường Đại học Công Nghệ Thông Tin & Truyền Thông Thái Nguyên (ICTU) - Đường Z115, Quyết Thắng, TP. Thái Nguyên
+- Hotline hỗ trợ & đặt hoa: 0362843621
+
 Danh mục hoa hiện có: ${catList}
 Bảng giá hoa tươi hiện có tại shop:
 ${prodList}

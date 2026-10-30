@@ -260,7 +260,7 @@ cartRouter.post('/coupon', async (c) => {
   try {
     const sessionId = getSessionId(c);
     const body = await c.req.json();
-    const code = (body.code || '').trim().toUpperCase();
+    const code = (body.code || body.couponCode || '').trim().toUpperCase();
 
     if (!code) {
       return c.json({ success: false, error: 'Vui lòng nhập mã giảm giá' }, 400);

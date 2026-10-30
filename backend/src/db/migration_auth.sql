@@ -56,3 +56,4 @@ VALUES (
     'customer',
     'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80'
 );
+

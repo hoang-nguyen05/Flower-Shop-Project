@@ -417,3 +417,4 @@ authRouter.post('/wishlist/toggle', async (c) => {
     return c.json({ success: false, error: error.message }, 500);
   }
 });
+

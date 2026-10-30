@@ -165,7 +165,7 @@ function renderCartDrawer() {
 
   container.innerHTML = currentCart.items.map(item => `
     <div class="cart-drawer-item">
-      <img src="${item.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200'}" class="cart-item-img" alt="${item.name}">
+      <img src="${item.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200'}" class="cart-item-img" alt="${item.name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=200';">
       <div class="flex-grow-1 min-w-0">
         <h6 class="mb-1 text-truncate font-weight-700" title="${item.name}">${item.name}</h6>
         <div class="text-danger fw-bold small mb-2">${formatVND(item.price)}</div>

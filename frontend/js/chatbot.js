@@ -48,7 +48,7 @@ async function sendChatMessage() {
     if (res.success && res.reply) {
       appendChatMessage(res.reply, 'bot', res.provider);
     } else {
-      appendChatMessage('Xin lỗi bạn, trợ lý AI đang bận một chút. Bạn có thể hỏi lại hoặc gọi hotline 1900 8888 để được hỗ trợ ngay nhé! 🌸', 'bot');
+      appendChatMessage('Xin lỗi bạn, trợ lý AI đang bận một chút. Bạn có thể hỏi lại hoặc gọi hotline 0362843621 để được hỗ trợ ngay nhé! 🌸', 'bot');
     }
   } catch (err) {
     setChatbotLoading(false);

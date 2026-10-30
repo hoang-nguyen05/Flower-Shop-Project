@@ -236,8 +236,8 @@
         </div>
         <div class="col-lg-4">
           <h6 class="fw-bold mb-3">Hỗ Trợ & Thanh Toán</h6>
-          <p class="small text-muted mb-2"><i class="fas fa-phone-alt text-danger me-2"></i>Hotline: <strong>1900 8888</strong> (8:00 - 21:00)</p>
-          <p class="small text-muted mb-3"><i class="fas fa-map-marker-alt text-danger me-2"></i>Địa chỉ: 123 Đường Hoa Tươi, Quận 1, TP. Hồ Chí Minh</p>
+          <p class="small text-muted mb-2"><i class="fas fa-phone-alt text-danger me-2"></i>Hotline: <strong>0362843621</strong> (8:00 - 21:00)</p>
+          <p class="small text-muted mb-3"><i class="fas fa-map-marker-alt text-danger me-2"></i>Địa chỉ: Trường ĐH Công Nghệ Thông Tin & Truyền Thông (ICTU) - Đường Z115, Quyết Thắng, TP. Thái Nguyên</p>
           <div class="d-flex align-items-center gap-2">
             <span class="badge bg-light text-dark border p-2"><i class="fas fa-qrcode text-success me-1"></i>VietQR</span>
             <span class="badge bg-light text-dark border p-2"><i class="fas fa-truck text-primary me-1"></i>COD</span>
@@ -396,7 +396,7 @@
             <div class="product-card">
               <div class="product-img-box">
                 <a href="/product-detail.html?id=${p.id}">
-                  <img src="${p.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600'}" alt="${p.name}" loading="lazy">
+                  <img src="${p.image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600'}" alt="${p.name}" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=600';">
                 </a>
                 ${discountBadge}
                 <button class="nav-icon-btn border-0 position-absolute top-0 end-0 m-2 bg-white" onclick="toggleWishlist(${p.id}, this)" title="Yêu thích">
