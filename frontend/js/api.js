@@ -160,7 +160,7 @@ function renderUserNav() {
             </a>
           </li>
           <li>
-            <a class="dropdown-item py-2 small" href="/orders.html">
+            <a class="dropdown-item py-2 small" href="/profile.html#tab-orders">
               <i class="fas fa-receipt me-2 text-success"></i>Đơn hàng của tôi
             </a>
           </li>

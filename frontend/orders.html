@@ -95,7 +95,7 @@
       </div>
       <div class="d-grid gap-2">
         <a href="/cart.html" class="btn btn-outline-danger rounded-pill fw-bold">Xem Chi Tiết Giỏ Hàng</a>
-        <a href="/checkout.html" class="btn btn-danger rounded-pill fw-bold">Tiến Hành Đặt Hàng</a>
+        <a href="javascript:void(0)" onclick="proceedToCheckout()" class="btn btn-danger rounded-pill fw-bold">Tiến Hành Đặt Hàng</a>
       </div>
     </div>
   </div>
@@ -247,14 +247,46 @@
       renderOrderList([order]);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const input = document.getElementById('order-search-input');
       if (initialCode) {
         input.value = initialCode;
         searchOrders();
+        return;
       } else if (initialPhone) {
         input.value = initialPhone;
         searchOrders();
+        return;
+      }
+
+      // Nếu người dùng đã đăng nhập, tự động tải và hiển thị danh sách đơn hàng của họ ngay lập tức
+      const user = getCurrentUser();
+      if (user) {
+        const container = document.getElementById('orders-result-container');
+        container.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-danger"></div><div class="mt-2 text-muted">Đang tải danh sách đơn hàng của bạn...</div></div>';
+        try {
+          const res = await apiRequest('/auth/my-orders');
+          if (res.success && res.orders && res.orders.length > 0) {
+            renderOrderList(res.orders);
+            const titleEl = container.querySelector('h5');
+            if (titleEl) {
+              titleEl.innerHTML = `<i class="fas fa-box text-success me-2"></i>Đơn hàng của bạn (@${user.username}) (${res.orders.length} đơn):`;
+            }
+          } else {
+            container.innerHTML = `
+              <div class="card border-0 shadow-sm rounded-4 p-4 text-center my-3 bg-white">
+                <i class="fas fa-shopping-bag text-muted fs-1 mb-2"></i>
+                <h5 class="fw-bold">Bạn chưa có đơn đặt hoa nào</h5>
+                <p class="text-muted small">Hãy ghé qua cửa hàng để chọn những bó hoa tươi nghệ thuật xinh xắn nhé!</p>
+                <div class="mt-2">
+                  <a href="/products.html" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Khám phá hoa tươi ngay</a>
+                </div>
+              </div>
+            `;
+          }
+        } catch (err) {
+          console.warn('Lỗi auto-load orders:', err);
+        }
       }
     });
   </script>

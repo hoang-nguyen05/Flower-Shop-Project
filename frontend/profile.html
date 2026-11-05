@@ -403,7 +403,24 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', initProfile);
+    function checkHashTab() {
+      const hash = window.location.hash;
+      if (hash === '#tab-orders' || hash === '#orders') {
+        const orderTabBtn = document.querySelector('[data-bs-target="#tab-orders"]');
+        if (orderTabBtn && window.bootstrap) {
+          const tab = bootstrap.Tab.getOrCreateInstance(orderTabBtn);
+          tab.show();
+          loadMyOrders();
+        }
+      }
+    }
+
+    window.addEventListener('hashchange', checkHashTab);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initProfile();
+      checkHashTab();
+    });
   </script>
 </body>
 </html>

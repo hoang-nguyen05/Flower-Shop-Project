@@ -339,10 +339,18 @@ authRouter.get('/my-orders', async (c) => {
              o.shipping_address, o.city, o.notes, o.payment_method, o.payment_status,
              o.status, o.total_amount, o.created_at
       FROM orders o
-      WHERE o.customer_phone = ? OR o.customer_email = ?
+      WHERE o.user_id = ? 
+         OR (o.customer_phone = ? AND ? != 'NONE')
+         OR (o.customer_email = ? AND ? != 'NONE')
       ORDER BY o.id DESC
       LIMIT 50
-    `).bind(user.phone || 'NONE', user.email || 'NONE').all();
+    `).bind(
+      user.id,
+      user.phone || 'NONE',
+      user.phone || 'NONE',
+      user.email || 'NONE',
+      user.email || 'NONE'
+    ).all();
 
     return c.json({
       success: true,

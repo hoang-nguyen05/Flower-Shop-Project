@@ -191,6 +191,23 @@ function openCartDrawer() {
   }
 }
 
+// Chuyển hướng thanh toán an toàn (Bảo vệ: Bắt buộc đăng nhập tài khoản)
+function proceedToCheckout() {
+  if (!currentCart.items || currentCart.items.length === 0) {
+    showToast('Giỏ hàng của bạn đang trống! Hãy chọn hoa trước nhé.', 'warning');
+    return;
+  }
+  const user = getCurrentUser();
+  if (!user) {
+    showToast('Vui lòng đăng nhập tài khoản để tiến hành đặt hoa và lưu vào "Đơn hàng của tôi"!', 'warning');
+    setTimeout(() => {
+      window.location.href = '/login.html?redirect=/checkout.html';
+    }, 900);
+    return;
+  }
+  window.location.href = '/checkout.html';
+}
+
 // Khởi chạy khi load trang
 document.addEventListener('DOMContentLoaded', () => {
   loadCart();

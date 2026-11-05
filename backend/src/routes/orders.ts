@@ -111,12 +111,13 @@ ordersRouter.post('/', async (c) => {
     // 1. Lưu Order vào Cloudflare D1
     const orderResult = await c.env.DB.prepare(`
       INSERT INTO orders (
-        order_code, customer_name, customer_phone, customer_email,
+        order_code, user_id, customer_name, customer_phone, customer_email,
         shipping_address, city, notes, payment_method, payment_status,
         status, subtotal, discount_amount, shipping_fee, total_amount, coupon_code
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
     `).bind(
       orderCode,
+      user ? user.id : null,
       cleanName,
       cleanPhone,
       customer_email || null,

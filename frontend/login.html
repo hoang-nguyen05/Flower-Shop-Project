@@ -95,7 +95,7 @@
 
           <div class="text-center mt-4 pt-3 border-top">
             <span class="text-muted small">Bạn chưa có tài khoản? </span>
-            <a href="/register.html" class="fw-bold text-danger text-decoration-none small">Đăng ký thành viên mới</a>
+            <a href="/register.html" id="link-register" class="fw-bold text-danger text-decoration-none small">Đăng ký thành viên mới</a>
           </div>
         </div>
       </div>
@@ -105,6 +105,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/api.js"></script>
   <script>
+    const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '';
+
     function fillAccount(username, password) {
       document.getElementById('username').value = username;
       document.getElementById('password').value = password;
@@ -136,7 +138,9 @@
           showToast(res.message || 'Đăng nhập thành công!');
 
           setTimeout(() => {
-            if (res.user.role === 'admin') {
+            if (redirectUrl && redirectUrl.startsWith('/')) {
+              window.location.href = redirectUrl;
+            } else if (res.user.role === 'admin') {
               window.location.href = '/admin.html';
             } else {
               window.location.href = '/profile.html';
@@ -156,9 +160,18 @@
 
     // Nếu đã đăng nhập rồi thì tự chuyển hướng
     document.addEventListener('DOMContentLoaded', () => {
+      if (redirectUrl) {
+        const regLink = document.getElementById('link-register');
+        if (regLink) {
+          regLink.href = `/register.html?redirect=${encodeURIComponent(redirectUrl)}`;
+        }
+      }
+
       const user = getCurrentUser();
       if (user) {
-        if (user.role === 'admin') {
+        if (redirectUrl && redirectUrl.startsWith('/')) {
+          window.location.href = redirectUrl;
+        } else if (user.role === 'admin') {
           window.location.href = '/admin.html';
         } else {
           window.location.href = '/profile.html';

@@ -206,6 +206,15 @@
 
     async function handlePlaceOrder(e) {
       e.preventDefault();
+      const user = getCurrentUser();
+      if (!user) {
+        showToast('Vui lòng đăng nhập để tiến hành đặt hoa và lưu vào "Đơn hàng của tôi"!', 'warning');
+        setTimeout(() => {
+          window.location.href = '/login.html?redirect=/checkout.html';
+        }, 800);
+        return;
+      }
+
       const submitBtn = document.getElementById('btn-submit-order');
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý đơn hàng...';
@@ -246,14 +255,22 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadCart();
 
-      // Tự động điền thông tin nếu đã đăng nhập tài khoản
+      // Kiểm tra đăng nhập bắt buộc để bảo vệ đơn hàng và lưu vào "Đơn hàng của tôi"
       const user = getCurrentUser();
-      if (user) {
-        if (user.full_name) document.getElementById('customer-name').value = user.full_name;
-        if (user.phone) document.getElementById('customer-phone').value = user.phone;
-        if (user.email) document.getElementById('customer-email').value = user.email;
-        if (user.address) document.getElementById('shipping-address').value = user.address;
-        if (user.city) document.getElementById('shipping-city').value = user.city;
+      if (!user) {
+        showToast('Vui lòng đăng nhập để tiến hành đặt hoa và theo dõi đơn hàng!', 'warning');
+        setTimeout(() => {
+          window.location.href = '/login.html?redirect=/checkout.html';
+        }, 1000);
+        return;
+      }
+
+      // Tự động điền thông tin nếu đã đăng nhập tài khoản
+      if (user.full_name) document.getElementById('customer-name').value = user.full_name;
+      if (user.phone) document.getElementById('customer-phone').value = user.phone;
+      if (user.email) document.getElementById('customer-email').value = user.email;
+      if (user.address) document.getElementById('shipping-address').value = user.address;
+      if (user.city) document.getElementById('shipping-city').value = user.city;
       }
     });
   </script>

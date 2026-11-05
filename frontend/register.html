@@ -100,7 +100,7 @@
 
           <div class="text-center mt-4 pt-3 border-top">
             <span class="text-muted small">Bạn đã có tài khoản rồi? </span>
-            <a href="/login.html" class="fw-bold text-danger text-decoration-none small">Đăng nhập tại đây</a>
+            <a href="/login.html" id="link-login" class="fw-bold text-danger text-decoration-none small">Đăng nhập tại đây</a>
           </div>
         </div>
       </div>
@@ -110,6 +110,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/api.js"></script>
   <script>
+    const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '';
+
     async function handleRegister(e) {
       e.preventDefault();
       const btn = document.getElementById('btn-submit');
@@ -154,7 +156,11 @@
           showToast(res.message || 'Đăng ký thành công!');
 
           setTimeout(() => {
-            window.location.href = '/profile.html';
+            if (redirectUrl && redirectUrl.startsWith('/')) {
+              window.location.href = redirectUrl;
+            } else {
+              window.location.href = '/profile.html';
+            }
           }, 800);
         } else {
           showToast(res.error || 'Đăng ký không thành công!', 'error');
@@ -167,6 +173,24 @@
         btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Đăng Ký Thành Viên Ngay';
       }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (redirectUrl) {
+        const loginLink = document.getElementById('link-login');
+        if (loginLink) {
+          loginLink.href = `/login.html?redirect=${encodeURIComponent(redirectUrl)}`;
+        }
+      }
+
+      const user = getCurrentUser();
+      if (user) {
+        if (redirectUrl && redirectUrl.startsWith('/')) {
+          window.location.href = redirectUrl;
+        } else {
+          window.location.href = '/profile.html';
+        }
+      }
+    });
   </script>
 </body>
 </html>
