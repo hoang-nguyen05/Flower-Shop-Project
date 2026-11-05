@@ -4,6 +4,6 @@ UPDATE products SET image_url = 'https://images.unsplash.com/photo-1525310072745
 
 -- Cập nhật ảnh Bó Hoa Baby Trắng Bồng Bềnh và Danh mục Hoa Baby chuẩn 100% hoa tươi (thay thế ảnh dimsum/bánh bao cũ)
 UPDATE categories SET image_url = 'https://images.unsplash.com/photo-1542526259-465a706f89ce?w=600&auto=format&fit=crop&q=80' WHERE id = 6;
-UPDATE products SET image_url = 'https://images.unsplash.com/photo-1557401584-47eca3a93bfe?w=600&auto=format&fit=crop&q=80' WHERE id = 8;
+UPDATE products SET image_url = 'https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=600&auto=format&fit=crop&q=80' WHERE id = 8;
 
 
