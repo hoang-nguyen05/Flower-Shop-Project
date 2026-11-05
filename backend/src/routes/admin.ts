@@ -157,12 +157,14 @@ adminRouter.put('/products/:id', async (c) => {
     const body = await c.req.json();
     const { name, category_id, price, original_price, stock, image_url, description, is_featured, available } = body;
 
+    const parsedOrigPrice = (original_price === null || original_price === 0 || original_price === '') ? null : Number(original_price);
+
     await c.env.DB.prepare(`
       UPDATE products
       SET name = COALESCE(?, name),
           category_id = COALESCE(?, category_id),
           price = COALESCE(?, price),
-          original_price = COALESCE(?, original_price),
+          original_price = ?,
           stock = COALESCE(?, stock),
           image_url = COALESCE(?, image_url),
           description = COALESCE(?, description),
@@ -174,7 +176,7 @@ adminRouter.put('/products/:id', async (c) => {
       name || null,
       category_id ? Number(category_id) : null,
       price ? Number(price) : null,
-      original_price ? Number(original_price) : null,
+      parsedOrigPrice,
       stock !== undefined ? Number(stock) : null,
       image_url || null,
       description || null,

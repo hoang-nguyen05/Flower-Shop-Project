@@ -456,6 +456,116 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL CHỈNH SỬA MẪU HOA ==================== -->
+  <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 rounded-4 shadow">
+        <div class="modal-header border-bottom bg-light py-3">
+          <h5 class="modal-title font-serif fw-bold text-dark" id="editProductModalLabel">
+            <i class="fas fa-edit text-danger me-2"></i>Chỉnh Sửa Thông Tin Mẫu Hoa
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="edit-product-form" onsubmit="handleUpdateProduct(event)">
+            <input type="hidden" id="edit-prod-id">
+            
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label small fw-bold">Tên mẫu hoa *</label>
+                <input type="text" class="form-control rounded-pill" id="edit-prod-name" placeholder="Ví dụ: Bó Hồng Tím Thủy Chung" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">Danh mục *</label>
+                <select class="form-select rounded-pill" id="edit-prod-category" required>
+                  <option value="1">Hoa Hồng</option>
+                  <option value="2">Hoa Lan Hồ Điệp</option>
+                  <option value="3">Hoa Cẩm Tú Cầu</option>
+                  <option value="4">Hoa Hướng Dương</option>
+                  <option value="5">Hoa Tulip</option>
+                  <option value="6">Hoa Baby & Cúc Mẫu Đơn</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">Giá bán hiện tại (VNĐ) *</label>
+                <input type="number" class="form-control rounded-pill" id="edit-prod-price" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">Giá gốc / Gạch ngang (VNĐ)</label>
+                <input type="number" class="form-control rounded-pill" id="edit-prod-orig-price" placeholder="Để trống nếu không sale">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">Số lượng tồn kho (bó) *</label>
+                <input type="number" class="form-control rounded-pill" id="edit-prod-stock" required>
+              </div>
+
+              <!-- Khu vực thay đổi hình ảnh -->
+              <div class="col-12">
+                <label class="form-label small fw-bold">Hình ảnh hoa tươi *</label>
+                <div class="card p-3 border rounded-3 bg-light">
+                  <div class="row align-items-center g-3">
+                    <div class="col-sm-8">
+                      <!-- Nút chọn ảnh từ thiết bị cá nhân (PC / Điện thoại) -->
+                      <div class="border border-2 border-danger rounded-4 p-3 text-center bg-white shadow-sm mb-2" 
+                           onclick="document.getElementById('edit-prod-file-upload').click()" 
+                           style="border-style: dashed !important; cursor: pointer;">
+                        <i class="fas fa-camera-retro text-danger fs-3 mb-1 d-block"></i>
+                        <div class="fw-bold small text-dark">Bấm vào đây để chọn ảnh mới từ máy tính / điện thoại</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">Hỗ trợ JPG, PNG, WEBP (Tự động tải lên Cloudflare Storage & đổi ảnh)</div>
+                      </div>
+                      <input type="file" class="d-none" id="edit-prod-file-upload" accept="image/*" onchange="handleEditProductImageFile(this)">
+                      <div id="edit-upload-progress-text" class="small mt-1" style="display: none;"></div>
+
+                      <div class="mt-2">
+                        <label class="form-label small text-muted mb-1"><i class="fas fa-link me-1 text-primary"></i><strong>Hoặc dán URL ảnh trực tiếp:</strong></label>
+                        <input type="url" class="form-control rounded-pill bg-white" id="edit-prod-image" required oninput="document.getElementById('edit-prod-image-preview').src = this.value">
+                      </div>
+                    </div>
+                    <div class="col-sm-4 text-center">
+                      <div class="border rounded-3 p-1 bg-white mx-auto overflow-hidden shadow-sm d-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                        <img id="edit-prod-image-preview" src="https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=200" class="w-100 h-100 object-fit-cover rounded-2" alt="Xem trước" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=200';">
+                      </div>
+                      <small class="text-muted d-block mt-1">Ảnh xem trước</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label small fw-bold">Mô tả hoa tươi (Text)</label>
+                <textarea class="form-control rounded-4" id="edit-prod-desc" rows="3" placeholder="Mô tả số cành, xuất xứ, ý nghĩa hoa..."></textarea>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" id="edit-prod-featured">
+                  <label class="form-check-label small fw-bold" for="edit-prod-featured">Đánh dấu là Hoa nổi bật (Featured)</label>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" id="edit-prod-available" checked>
+                  <label class="form-check-label small fw-bold" for="edit-prod-available">Trạng thái: Đang mở bán</label>
+                </div>
+              </div>
+
+              <div class="col-12 mt-4 text-end border-top pt-3">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold me-2" data-bs-dismiss="modal">
+                  <i class="fas fa-times me-1"></i>Hủy Bỏ
+                </button>
+                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" id="btn-submit-edit-prod">
+                  <i class="fas fa-save me-1"></i>Lưu Thay Đổi (Cập Nhật D1)
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/api.js"></script>
   <script>
@@ -600,12 +710,15 @@
       }
     }
 
-    // 4. QUẢN LÝ SẢN PHẨM (XEM, XÓA)
+    // 4. QUẢN LÝ SẢN PHẨM (XEM, SỬA, XÓA)
+    let currentAdminProducts = [];
+
     async function loadAdminProducts() {
       const tbody = document.getElementById('admin-products-tbody');
       try {
         const res = await apiRequest('/admin/products');
         if (res.success && res.products) {
+          currentAdminProducts = res.products;
           tbody.innerHTML = res.products.map(p => `
             <tr>
               <td class="ps-4">
@@ -620,15 +733,147 @@
               <td><span class="badge ${p.stock > 3 ? 'bg-success' : 'bg-danger'}">${p.stock} bó</span></td>
               <td>${p.is_featured ? '<span class="text-warning"><i class="fas fa-star"></i> Có</span>' : '<span class="text-muted">Không</span>'}</td>
               <td>
-                <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteProduct(${p.id}, '${p.name}')" title="Xóa hoa">
-                  <i class="fas fa-trash-alt me-1"></i>Xóa
-                </button>
+                <div class="d-flex gap-1">
+                  <button class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" onclick="openEditProductModal(${p.id})" title="Chỉnh sửa thông tin hoa">
+                    <i class="fas fa-edit me-1"></i>Sửa
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="deleteProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Xóa hoa">
+                    <i class="fas fa-trash-alt me-1"></i>Xóa
+                  </button>
+                </div>
               </td>
             </tr>
           `).join('');
         }
       } catch (err) {
         tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Lỗi tải danh sách sản phẩm.</td></tr>';
+      }
+    }
+
+    // Mở modal sửa hoa
+    function openEditProductModal(id) {
+      const p = currentAdminProducts.find(item => item.id === id);
+      if (!p) {
+        showToast('Không tìm thấy thông tin mẫu hoa!', 'error');
+        return;
+      }
+
+      document.getElementById('edit-prod-id').value = p.id;
+      document.getElementById('edit-prod-name').value = p.name || '';
+      document.getElementById('edit-prod-category').value = p.category_id || 1;
+      document.getElementById('edit-prod-price').value = p.price || 0;
+      document.getElementById('edit-prod-orig-price').value = p.original_price || '';
+      document.getElementById('edit-prod-stock').value = p.stock !== undefined ? p.stock : 10;
+      document.getElementById('edit-prod-image').value = p.image_url || '';
+      document.getElementById('edit-prod-image-preview').src = p.image_url || 'https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=200';
+      document.getElementById('edit-prod-desc').value = p.description || '';
+      document.getElementById('edit-prod-featured').checked = Boolean(p.is_featured);
+      document.getElementById('edit-prod-available').checked = p.available !== 0;
+
+      const modalEl = document.getElementById('editProductModal');
+      const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      bsModal.show();
+    }
+
+    // Xử lý upload ảnh cho form sửa hoa từ thiết bị cá nhân
+    async function handleEditProductImageFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const preview = document.getElementById('edit-prod-image-preview');
+      const imageInput = document.getElementById('edit-prod-image');
+      const progress = document.getElementById('edit-upload-progress-text');
+
+      // 1. Preview tức thì qua FileReader
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      // 2. Upload file lên Cloudflare R2 / Storage qua /api/storage/upload
+      progress.style.display = 'block';
+      progress.innerHTML = '<i class="fas fa-spinner fa-spin text-danger me-1"></i>Đang tải ảnh từ thiết bị lên Cloudflare...';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/storage/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          imageInput.value = data.url;
+          progress.innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Đã tải ảnh lên Cloudflare thành công!</span>`;
+          showToast('Đã tải ảnh hoa từ máy lên thành công! 🌸');
+        } else {
+          imageInput.value = preview.src;
+          progress.innerHTML = '<span class="text-warning"><i class="fas fa-check-circle me-1"></i>Đã nạp ảnh trực tiếp.</span>';
+        }
+      } catch (err) {
+        imageInput.value = preview.src;
+        progress.innerHTML = '<span class="text-warning"><i class="fas fa-check-circle me-1"></i>Đã nạp ảnh trực tiếp.</span>';
+      }
+    }
+
+    // Xử lý cập nhật thông tin hoa (PUT /api/admin/products/:id)
+    async function handleUpdateProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-prod-id').value;
+      const btn = document.getElementById('btn-submit-edit-prod');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu vào D1...';
+
+      const name = document.getElementById('edit-prod-name').value.trim();
+      const category_id = parseInt(document.getElementById('edit-prod-category').value, 10);
+      const price = parseInt(document.getElementById('edit-prod-price').value, 10);
+      const original_price = parseInt(document.getElementById('edit-prod-orig-price').value || '0', 10);
+      const stock = parseInt(document.getElementById('edit-prod-stock').value || '0', 10);
+      const image_url = document.getElementById('edit-prod-image').value.trim();
+      const description = document.getElementById('edit-prod-desc').value.trim();
+      const is_featured = document.getElementById('edit-prod-featured').checked ? 1 : 0;
+      const available = document.getElementById('edit-prod-available').checked ? 1 : 0;
+
+      try {
+        const res = await apiRequest(`/admin/products/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            name,
+            category_id,
+            price,
+            original_price: original_price || null,
+            stock,
+            image_url,
+            description,
+            is_featured,
+            available
+          })
+        });
+
+        if (res.success) {
+          showToast(`Đã cập nhật mẫu hoa "${name}" thành công! 🌸`);
+          
+          // Đóng modal
+          const modalEl = document.getElementById('editProductModal');
+          const bsModal = bootstrap.Modal.getInstance(modalEl);
+          if (bsModal) bsModal.hide();
+
+          // Tải lại danh sách & dashboard
+          loadAdminProducts();
+          loadDashboardData();
+
+          // Đồng bộ lại Vectorize AI ngầm
+          fetch('/api/sync-vectors', { method: 'POST' }).catch(() => {});
+        } else {
+          showToast(res.error || 'Lỗi khi cập nhật sản phẩm', 'error');
+        }
+      } catch (err) {
+        showToast('Lỗi máy chủ khi cập nhật!', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save me-1"></i>Lưu Thay Đổi (Cập Nhật D1)';
       }
     }
 
