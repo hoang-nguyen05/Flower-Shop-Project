@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
-import { Env, CreateOrderRequest, Order, OrderItem } from '../types';
+import { Env, CreateOrderRequest, Order, OrderItem, Product } from '../types';
 import { calculateCart } from './cart';
+import { getAuthenticatedUser } from './auth';
 
 export const ordersRouter = new Hono<{ Bindings: Env }>();
 
@@ -12,6 +13,24 @@ function generateVietQrUrl(env: Env, orderCode: string, amount: number): string 
   const memo = encodeURIComponent(`THANHTOAN ${orderCode}`);
   const encName = encodeURIComponent(accountName);
   return `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=${encName}`;
+}
+
+// Helper kiểm tra quyền Admin
+async function checkIsAdmin(c: any): Promise<boolean> {
+  const user = await getAuthenticatedUser(c);
+  if (user && user.role === 'admin') return true;
+  const adminKey = c.req.header('x-admin-key');
+  if (adminKey && adminKey === (c.env.ADMIN_SECRET_KEY || 'admin123')) return true;
+  return false;
+}
+
+// Helper che giấu thông tin cá nhân (PII Masking) cho khách vãng lai
+function maskOrderPII(order: any) {
+  return {
+    ...order,
+    customer_phone: order.customer_phone ? order.customer_phone.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2') : '',
+    shipping_address: order.shipping_address ? order.shipping_address.replace(/^[^,]{3,}/, '***') : '***'
+  };
 }
 
 // 1. POST /api/orders: Đặt hàng từ giỏ hàng hiện tại
@@ -68,6 +87,21 @@ ordersRouter.post('/', async (c) => {
       return c.json({ success: false, error: 'Giỏ hàng của bạn đang trống' }, 400);
     }
 
+    // KIỂM TRA TỒN KHO THỰC TẾ TRƯỚC KHI TẠO ĐƠN (Chống âm kho / bán vượt số lượng)
+    for (const item of cart.items) {
+      const prod = await c.env.DB.prepare('SELECT id, name, stock FROM products WHERE id = ?').bind(item.productId).first<Product>();
+      if (!prod || prod.stock < item.quantity) {
+        return c.json({
+          success: false,
+          error: `Mẫu hoa "${item.name}" chỉ còn ${prod ? prod.stock : 0} bó trong kho, không đủ số lượng bạn đặt (${item.quantity} bó). Vui lòng điều chỉnh lại giỏ hàng!`
+        }, 400);
+      }
+    }
+
+    // Chuẩn hóa phương thức thanh toán
+    const validMethods = ['cod', 'vietqr', 'bank_transfer', 'momo'];
+    const chosenMethod = validMethods.includes(payment_method) ? payment_method : 'cod';
+
     // Tạo mã đơn hàng duy nhất
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(100 + Math.random() * 900);
@@ -88,8 +122,8 @@ ordersRouter.post('/', async (c) => {
       cleanAddress,
       cleanCity,
       notes || '',
-      payment_method || 'cod',
-      payment_method === 'cod' ? 'unpaid' : 'unpaid',
+      chosenMethod,
+      'unpaid',
       cart.subtotal,
       cart.discount,
       cart.shippingFee,
@@ -99,7 +133,7 @@ ordersRouter.post('/', async (c) => {
 
     const orderId = orderResult.meta.last_row_id;
 
-    // 2. Lưu các Order Items vào Cloudflare D1 và giảm tồn kho
+    // 2. Lưu các Order Items vào Cloudflare D1 và giảm tồn kho có điều kiện (stock >= quantity)
     for (const item of cart.items) {
       await c.env.DB.prepare(`
         INSERT INTO order_items (order_id, product_id, product_name, price, quantity, image_url)
@@ -113,12 +147,12 @@ ordersRouter.post('/', async (c) => {
         item.image_url || null
       ).run();
 
-      // Trừ tồn kho sản phẩm trong D1
+      // Trừ tồn kho sản phẩm trong D1 có điều kiện bảo vệ
       await c.env.DB.prepare(`
         UPDATE products 
-        SET stock = MAX(0, stock - ?) 
-        WHERE id = ?
-      `).bind(item.quantity, item.productId).run();
+        SET stock = stock - ? 
+        WHERE id = ? AND stock >= ?
+      `).bind(item.quantity, item.productId, item.quantity).run();
     }
 
     // 3. Nếu có dùng coupon, tăng số lần dùng trong D1
@@ -133,9 +167,9 @@ ordersRouter.post('/', async (c) => {
     // 4. Xóa giỏ hàng trong Cloudflare KV
     await c.env.KV.delete(`cart:${sessionId}`);
 
-    // Link VietQR nếu chọn chuyển khoản
+    // Link VietQR nếu chọn chuyển khoản hoặc quét mã MoMo/VietQR
     let vietQrUrl = null;
-    if (payment_method === 'vietqr' || payment_method === 'bank_transfer') {
+    if (chosenMethod === 'vietqr' || chosenMethod === 'bank_transfer' || chosenMethod === 'momo') {
       vietQrUrl = generateVietQrUrl(c.env, orderCode, cart.total);
     }
 
@@ -153,23 +187,29 @@ ordersRouter.post('/', async (c) => {
   }
 });
 
-// 2. GET /api/orders: Danh sách đơn hàng (hỗ trợ lọc theo sđt hoặc admin)
+// 2. GET /api/orders: Danh sách đơn hàng (Bảo vệ thông tin cá nhân & Phân quyền)
 ordersRouter.get('/', async (c) => {
   try {
     const rawPhone = c.req.query('phone')?.trim() || '';
     const status = c.req.query('status')?.trim() || '';
+    const isAdmin = await checkIsAdmin(c);
 
-    // Bảo vệ tra cứu (FS-05): Giới hạn độ dài và chặn chuỗi số 0 kéo dài
-    if (rawPhone.length > 20 || /^0{5,}$/.test(rawPhone)) {
-      return c.json({ success: false, error: 'Số điện thoại tra cứu không hợp lệ' }, 400);
+    // Nếu không phải Admin, BẮT BUỘC phải nhập chính xác số điện thoại đặt hàng 10 chữ số
+    if (!isAdmin) {
+      if (!rawPhone || !/^(0[35789]\d{8})$/.test(rawPhone)) {
+        return c.json({
+          success: false,
+          error: 'Vui lòng nhập chính xác số điện thoại đặt hàng 10 chữ số (VD: 0362843621) để tra cứu đơn'
+        }, 400);
+      }
     }
 
     let sql = 'SELECT * FROM orders WHERE 1=1';
     const params: any[] = [];
 
     if (rawPhone) {
-      sql += ' AND customer_phone LIKE ?';
-      params.push(`%${rawPhone}%`);
+      sql += ' AND customer_phone = ?';
+      params.push(rawPhone);
     }
 
     if (status) {
@@ -181,7 +221,10 @@ ordersRouter.get('/', async (c) => {
 
     const { results } = await c.env.DB.prepare(sql).bind(...params).all<Order>();
 
-    return c.json({ success: true, total: results.length, orders: results });
+    // Nếu là Admin, trả về dữ liệu gốc đầy đủ; nếu là khách, che PII (Số điện thoại, địa chỉ chi tiết)
+    const returnedOrders = isAdmin ? results : results.map(o => maskOrderPII(o));
+
+    return c.json({ success: true, total: returnedOrders.length, orders: returnedOrders });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
@@ -191,6 +234,7 @@ ordersRouter.get('/', async (c) => {
 ordersRouter.get('/:codeOrId', async (c) => {
   try {
     const param = (c.req.param('codeOrId') || '').trim();
+    const isAdmin = await checkIsAdmin(c);
 
     // Giới hạn độ dài và kiểm tra cấu trúc mã đơn / ID (FS-05)
     if (!param || param.length > 35 || /^0{5,}$/.test(param)) {
@@ -200,6 +244,13 @@ ordersRouter.get('/:codeOrId', async (c) => {
     let order: Order | null = null;
 
     if (/^\d{1,8}$/.test(param)) {
+      // Tra cứu theo ID số chỉ cho phép Admin (Chống duyệt vét thứ tự đơn)
+      if (!isAdmin) {
+        return c.json({
+          success: false,
+          error: 'Quý khách vui lòng tra cứu bằng mã đơn hàng (VD: FS-XXXXXX-XXX)'
+        }, 403);
+      }
       order = await c.env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(parseInt(param, 10)).first<Order>();
     } else {
       order = await c.env.DB.prepare('SELECT * FROM orders WHERE order_code = ?').bind(param).first<Order>();
@@ -215,14 +266,16 @@ ordersRouter.get('/:codeOrId', async (c) => {
     ).bind(order.id).all<OrderItem>();
 
     let vietQrUrl = null;
-    if (order.payment_method === 'vietqr' || order.payment_method === 'bank_transfer') {
+    if (order.payment_method === 'vietqr' || order.payment_method === 'bank_transfer' || order.payment_method === 'momo') {
       vietQrUrl = generateVietQrUrl(c.env, order.order_code, order.total_amount);
     }
+
+    const finalOrder = isAdmin ? order : maskOrderPII(order);
 
     return c.json({
       success: true,
       order: {
-        ...order,
+        ...finalOrder,
         items,
         vietQrUrl
       }
@@ -232,12 +285,27 @@ ordersRouter.get('/:codeOrId', async (c) => {
   }
 });
 
-// 4. PATCH /api/orders/:id/status: Cập nhật trạng thái đơn hàng (Dành cho Admin)
+// 4. PATCH /api/orders/:id/status: Cập nhật trạng thái đơn hàng (Chỉ Admin)
 ordersRouter.patch('/:id/status', async (c) => {
   try {
+    const isAdmin = await checkIsAdmin(c);
+    if (!isAdmin) {
+      return c.json({ success: false, error: 'Chỉ Quản trị viên (Admin) mới có quyền cập nhật trạng thái đơn hàng' }, 403);
+    }
+
     const id = parseInt(c.req.param('id'), 10);
     const body = await c.req.json();
     const { status, payment_status } = body;
+
+    const allowedStatus = ['pending', 'approved', 'processing', 'shipping', 'completed', 'cancelled'];
+    const allowedPayment = ['unpaid', 'paid', 'refunded'];
+
+    if (status && !allowedStatus.includes(status)) {
+      return c.json({ success: false, error: 'Trạng thái đơn hàng không hợp lệ' }, 400);
+    }
+    if (payment_status && !allowedPayment.includes(payment_status)) {
+      return c.json({ success: false, error: 'Trạng thái thanh toán không hợp lệ' }, 400);
+    }
 
     await c.env.DB.prepare(`
       UPDATE orders SET

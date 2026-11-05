@@ -40,16 +40,12 @@ async function sendChatMessage() {
   // Bật trạng thái đang suy nghĩ & soạn tin nhắn
   showThinkingIndicator();
 
-  // Lấy API key tuỳ chọn từ localStorage (nếu admin tự nhập thêm)
-  const customApiKey = localStorage.getItem('custom_gemini_api_key') || '';
-
   try {
     const res = await apiRequest('/chatbot', {
       method: 'POST',
       body: JSON.stringify({
         message: text,
-        history: chatHistory.slice(0, -1), // Gửi kèm lịch sử trước đó
-        apiKey: customApiKey
+        history: chatHistory.slice(0, -1) // Gửi kèm lịch sử trước đó
       })
     });
 
@@ -141,7 +137,17 @@ function hideThinkingIndicator() {
   }
 }
 
-// 6. Thêm tin nhắn vào khung chat & Format Markdown
+// Helper chống XSS bằng cách mã hóa ký tự HTML an toàn
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// 6. Thêm tin nhắn vào khung chat & Format Markdown an toàn
 function appendChatMessage(text, sender = 'bot', provider = null, latencyMs = null) {
   const container = document.getElementById('chatbot-messages');
   if (!container) return;
@@ -149,8 +155,11 @@ function appendChatMessage(text, sender = 'bot', provider = null, latencyMs = nu
   const msgDiv = document.createElement('div');
   msgDiv.className = `chat-msg ${sender}`;
 
-  // Format Markdown (Bold, Italic, Code, List, Links)
-  let formatted = text
+  // 1. Chống XSS: Luôn escape HTML trước khi render
+  const safeText = escapeHtml(text);
+
+  // 2. Format Markdown an toàn (Bold, Italic, Code, List, Newline)
+  let formatted = safeText
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code class="bg-light px-1 rounded text-danger">$1</code>')

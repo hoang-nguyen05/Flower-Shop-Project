@@ -14,13 +14,21 @@ async function requireAdmin(c: any): Promise<{ isAdmin: boolean; error?: string 
 
   // Hoặc kiểm tra qua Admin Secret Key nếu có
   const adminKey = c.req.header('x-admin-key');
-  if (adminKey && adminKey === 'admin123') {
+  if (adminKey && adminKey === (c.env.ADMIN_SECRET_KEY || 'admin123')) {
     return { isAdmin: true };
   }
 
-  // Để tiện lợi kiểm tra bài tập nếu chưa đăng nhập, vẫn cho phép đọc nếu có cờ dev
-  return { isAdmin: true }; // Giữ mở để đảm bảo không bị chặn đột ngột khi nộp bài
+  return { isAdmin: false, error: 'Yêu cầu quyền Quản trị viên (Admin)' };
 }
+
+// BẢO VỆ TOÀN BỘ ROUTE ADMIN
+adminRouter.use('*', async (c, next) => {
+  const auth = await requireAdmin(c);
+  if (!auth.isAdmin) {
+    return c.json({ success: false, error: auth.error || 'Yêu cầu quyền Quản trị viên (Admin)' }, 403);
+  }
+  await next();
+});
 
 // 1. GET /api/admin/dashboard: Thống kê số liệu doanh thu và hệ thống
 adminRouter.get('/dashboard', async (c) => {

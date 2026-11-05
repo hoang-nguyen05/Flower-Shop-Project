@@ -71,9 +71,8 @@ chatbotRouter.post('/', async (c) => {
     const userMessage = (body.message || '').trim();
     const conversationHistory: Array<{ role: string; content: string }> = Array.isArray(body.history) ? body.history : [];
 
-    // Nhận diện người dùng nếu đã đăng nhập (RBAC Context)
-    const clientApiKey = body.apiKey || c.req.header('x-gemini-key');
-    const rawApiKey = clientApiKey || c.env.GEMINI_API_KEY || '';
+    // 1. Chỉ sử dụng Secret Key bảo mật phía máy chủ (Cloudflare Workers Secret)
+    const rawApiKey = c.env.GEMINI_API_KEY || '';
 
     // Danh sách API Keys xoay vòng
     const apiKeys = rawApiKey
@@ -136,45 +135,40 @@ chatbotRouter.post('/', async (c) => {
       }
     }
 
-    // 4. AGENT TOOLS: Tra cứu đơn hàng tự động (Order Tracking Tool)
-    // Nếu tin nhắn chứa mã đơn (FS-XXXXXX) hoặc số điện thoại (10 số)
+    // 4. AGENT TOOLS: Tra cứu đơn hàng tự động (Chỉ hỗ trợ khi cung cấp mã đơn FS-...)
     let dynamicToolContext = '';
     const orderCodeMatch = userMessage.toUpperCase().match(/FS-[A-Z0-9-]+/);
-    const phoneMatch = userMessage.match(/(0[35789]\d{8})/);
 
-    if (orderCodeMatch || (phoneMatch && (lowerMsg.includes('đơn') || lowerMsg.includes('hàng') || lowerMsg.includes('kiểm tra') || lowerMsg.includes('tra cứu')))) {
+    if (orderCodeMatch) {
       try {
-        let orderRow: Order | null = null;
-        if (orderCodeMatch) {
-          orderRow = await c.env.DB.prepare('SELECT * FROM orders WHERE order_code = ?').bind(orderCodeMatch[0]).first<Order>();
-        } else if (phoneMatch) {
-          orderRow = await c.env.DB.prepare('SELECT * FROM orders WHERE customer_phone = ? ORDER BY id DESC LIMIT 1').bind(phoneMatch[1]).first<Order>();
-        }
+        const orderRow = await c.env.DB.prepare('SELECT * FROM orders WHERE order_code = ?').bind(orderCodeMatch[0]).first<Order>();
 
         if (orderRow) {
           const statusTextMap: Record<string, string> = {
             pending: 'Chờ xử lý (Đã tiếp nhận đơn)',
             approved: 'Đã duyệt (Thợ đang cắm hoa và đóng gói)',
+            processing: 'Đang cắm hoa',
             shipping: 'Đang giao hoa (Shipper đang trên đường giao tận tay)',
             completed: 'Giao thành công (Đã hoàn thành)',
             cancelled: 'Đã hủy'
           };
           const readableStatus = statusTextMap[orderRow.status] || orderRow.status;
+          const maskedPhone = orderRow.customer_phone ? orderRow.customer_phone.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2') : '';
 
           dynamicToolContext = `
 [KẾT QUẢ TRA CỨU ĐƠN HÀNG TỪ HỆ THỐNG]:
 - Mã đơn hàng: ${orderRow.order_code}
-- Khách hàng: ${orderRow.customer_name} (SĐT: ${orderRow.customer_phone})
-- Địa chỉ nhận hoa: ${orderRow.shipping_address}, ${orderRow.city}
-- Trạng thái hiện tại: ${readableStatus} (Tiến độ: ${orderRow.status})
+- Khách hàng: ${orderRow.customer_name} (SĐT: ${maskedPhone})
+- Khu vực nhận hoa: ${orderRow.city}
+- Trạng thái hiện tại: ${readableStatus}
 - Tổng tiền: ${orderRow.total_amount.toLocaleString('vi-VN')}đ
 - Phương thức thanh toán: ${orderRow.payment_method.toUpperCase()} (${orderRow.payment_status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'})
 - Thời gian đặt: ${orderRow.created_at}
-Hãy trình bày ngắn gọn, lịch sự, chúc khách hàng một ngày tuyệt vời và thông báo rõ trạng thái đơn hàng này cho khách!
+Hãy thông báo lịch sự trạng thái đơn hàng này cho khách, chúc khách một ngày vui vẻ và nhắc khách có thể vào mục "Tra cứu đơn" để xem chi tiết!
 `;
         } else {
           dynamicToolContext = `
-[KẾT QUẢ TRA CỨU]: Không tìm thấy đơn hàng nào khớp với mã "${orderCodeMatch ? orderCodeMatch[0] : phoneMatch ? phoneMatch[1] : ''}". Hãy hướng dẫn khách kiểm tra lại số điện thoại hoặc mã đơn FS-... nhé!
+[KẾT QUẢ TRA CỨU]: Không tìm thấy đơn hàng nào khớp với mã "${orderCodeMatch[0]}". Hãy hướng dẫn khách kiểm tra lại mã đơn FS-... trên hóa đơn hoặc tin nhắn nhé!
 `;
         }
       } catch (toolErr) {
