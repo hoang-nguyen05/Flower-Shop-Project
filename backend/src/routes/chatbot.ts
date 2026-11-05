@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { Env, Product, Category, Coupon, Order } from '../types';
+import { getAuthenticatedUser } from './auth';
 
 export const chatbotRouter = new Hono<{ Bindings: Env }>();
 
@@ -99,20 +100,68 @@ chatbotRouter.post('/', async (c) => {
       });
     }
 
-    // 5. PHÂN QUYỀN RBAC: Chặn hỏi quyền Admin / Tài chính nội bộ
+    // 5. PHÂN QUYỀN RBAC & QUYỀN TRUY VẤN ADMIN
+    const authUser = await getAuthenticatedUser(c);
+    const isAdmin = Boolean(authUser && authUser.role === 'admin');
     const lowerMsg = userMessage.toLowerCase();
+
     const adminRestrictedKeywords = [
-      'doanh thu shop', 'doanh số', 'xóa sản phẩm', 'sửa sản phẩm', 'thêm sản phẩm',
-      'quản trị viên', 'admin dashboard', 'mật khẩu admin', 'tài khoản admin',
-      'truy cập database', 'cơ sở dữ liệu shop'
+      'doanh thu', 'doanh số', 'quản trị', 'admin dashboard', 'mật khẩu admin',
+      'tài khoản admin', 'truy cập database', 'cơ sở dữ liệu shop', 'tồn kho',
+      'báo cáo shop', 'thống kê đơn', 'tình hình đơn'
     ];
-    if (adminRestrictedKeywords.some(kw => lowerMsg.includes(kw))) {
-      return c.json({
-        success: true,
-        reply: '🌸 Dạ xin lỗi bạn, mình là Trợ lý AI phục vụ khách hàng mua sắm hoa tươi trên website. Mình không có quyền truy cập hoặc cung cấp dữ liệu quản trị viên (Admin). Nếu bạn là đối tác hoặc quản lý shop, vui lòng truy cập đúng trang Quản trị hoặc gọi hotline **0362843621** nhé!',
-        provider: 'FlowerShop RBAC Policy',
-        latencyMs: Date.now() - startTime
-      });
+    const isAskingAdminInfo = adminRestrictedKeywords.some(kw => lowerMsg.includes(kw));
+
+    if (isAskingAdminInfo) {
+      if (isAdmin) {
+        // Quản trị viên được quyền truy vấn thống kê dữ liệu thực tế từ D1!
+        const statsRow: any = await c.env.DB.prepare(`
+          SELECT 
+            COUNT(*) as total_orders,
+            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count,
+            SUM(CASE WHEN status = 'approved' OR status = 'processing' THEN 1 ELSE 0 END) as processing_count,
+            SUM(CASE WHEN status = 'shipping' THEN 1 ELSE 0 END) as shipping_count,
+            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
+            SUM(CASE WHEN payment_status = 'paid' THEN total_amount ELSE 0 END) as paid_revenue,
+            SUM(total_amount) as total_revenue
+          FROM orders
+        `).first();
+
+        const lowStockResult = await c.env.DB.prepare(
+          'SELECT name, stock FROM products WHERE stock <= 5 ORDER BY stock ASC'
+        ).all<Product>();
+
+        const lowStockItems = (lowStockResult.results || [])
+          .map(p => `  • **${p.name}**: còn lại **${p.stock}** sản phẩm`)
+          .join('\n') || '  • Hiện tất cả các sản phẩm đều còn tồn kho an toàn (> 5).';
+
+        const adminReply = `👑 **Báo Cáo Tình Hình Cửa Hàng (Dành cho Quản Trị Viên @${authUser!.username}):**\n\n` +
+          `📊 **Thống kê đơn hàng:**\n` +
+          `- Tổng số đơn đã ghi nhận: **${statsRow?.total_orders || 0}** đơn\n` +
+          `- Đơn chờ xử lý: **${statsRow?.pending_count || 0}** đơn ⚠️ (cần duyệt tại [Trang Admin](/admin.html))\n` +
+          `- Đang cắm hoa & giao: **${(statsRow?.processing_count || 0) + (statsRow?.shipping_count || 0)}** đơn\n` +
+          `- Đã giao hoàn thành: **${statsRow?.completed_count || 0}** đơn\n\n` +
+          `💰 **Tài chính & Doanh số:**\n` +
+          `- Doanh thu đã thực thu (Paid): **${Number(statsRow?.paid_revenue || 0).toLocaleString('vi-VN')}₫**\n` +
+          `- Tổng giá trị toàn bộ đơn: **${Number(statsRow?.total_revenue || 0).toLocaleString('vi-VN')}₫**\n\n` +
+          `📦 **Cảnh báo tồn kho hoa tươi (≤ 5 cành/bó):**\n${lowStockItems}\n\n` +
+          `👉 Bạn có thể vào trực tiếp **[Bảng Điều Khiển Quản Trị Hệ Thống](/admin.html)** để thêm hoa từ thiết bị, cập nhật trạng thái đơn hoặc xem báo cáo chi tiết nhé!`;
+
+        return c.json({
+          success: true,
+          reply: adminReply,
+          provider: 'FlowerShop Admin Agent (D1 Analytics)',
+          latencyMs: Date.now() - startTime
+        });
+      } else {
+        // Khách hàng / Guest hỏi thông tin nội bộ: Từ chối bảo mật
+        return c.json({
+          success: true,
+          reply: '🌸 Dạ xin lỗi bạn, các dữ liệu về doanh thu, tồn kho và quản trị hệ thống thuộc phạm vi bảo mật nội bộ của FlowerShop. Nếu bạn là quản lý hoặc chủ tiệm, vui lòng đăng nhập tài khoản Quản trị viên (Admin) hoặc gọi hotline **0362843621** để được hỗ trợ nhé!',
+          provider: 'FlowerShop RBAC Policy',
+          latencyMs: Date.now() - startTime
+        });
+      }
     }
 
     // 7. CACHE: Kiểm tra Cloudflare KV Cache cho các câu hỏi FAQ thường gặp
@@ -256,13 +305,19 @@ TIÊU CHÍ 3: NGÔN NGỮ TRẢ LỜI TỰ NHIÊN, TINH TẾ & ĐA DẠNG NGỮ 
   + Khi khách hỏi MÃ GIẢM GIÁ: Liệt kê rõ các mã FLOWER10, GIAM50K, FREESHIP kèm điều kiện đơn hàng, hướng dẫn nhập ở ô mã giảm giá tại Giỏ hàng.
 - Trình bày trực quan: Sử dụng gạch đầu dòng rõ ràng, in đậm tên hoa và giá tiền (VD: **Bó Hướng Dương Nắng Hạ** - **299.000đ**), dùng emoji hoa lá 🌸🌹🌻🌷 sinh động.
 
+TIÊU CHÍ 4: CHÍNH SÁCH GIAO HÀNG & SHIP TỈNH (ĐIỆN BIÊN, HÀ NỘI, TOÀN QUỐC)
+- Nội thành TP. Thái Nguyên: Giao hỏa tốc 2 giờ, miễn phí giao hàng cho đơn từ 500.000đ.
+- Giao hoa liên tỉnh (Điện Biên, Hà Nội, Bắc Kạn, Cao Bằng, Lạng Sơn, v.v.): FlowerShop CÓ NHẬN GIAO HOA!
+  + Đóng gói chuyên dụng: Mỗi cành hoa đều được cắm ống nước dinh dưỡng giữ ẩm, bọc chống dập cánh và đặt trong hộp carton đứng chuyên dụng.
+  + Phương thức gửi: Gửi qua xe khách liên tỉnh chất lượng cao (tuyến Thái Nguyên - Điện Biên nhận ngay trong ngày) hoặc chuyển phát hỏa tốc.
+  + Cam kết hoa nhận được tươi 100%, nguyên vẹn form dáng thẩm mỹ. Khách nên đặt trước 4-6 tiếng qua hotline/Zalo 0362843621.
+
 ${productContext}
 ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
 `;
 
-    // 1. MODEL SELECTION & MULTI-KEY ROTATION (Gemini 3.1 Flash-Lite / 3.5 Flash-Lite / 3.6 Flash)
-    // Ưu tiên gemini-3.1-flash-lite (tốc độ siêu tốc ~1s) -> gemini-3.5-flash-lite -> gemini-3.6-flash
-    const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'];
+    // 1. MODEL SELECTION & MULTI-KEY ROTATION (Gemini 2.0 Flash / 1.5 Flash)
+    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-flash-8b'];
     let aiResponseText = '';
     let usedModel = '';
 
@@ -374,6 +429,9 @@ ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
       } else if (lowerMsg.includes('địa chỉ') || lowerMsg.includes('ở đâu') || lowerMsg.includes('hotline') || lowerMsg.includes('liên hệ')) {
         aiResponseText = `📍 **Thông tin tiệm hoa FlowerShop:**\n- **Địa chỉ:** Trường Đại học Công Nghệ Thông Tin & Truyền Thông Thái Nguyên (ICTU) - Đường Z115, Xã Quyết Thắng, TP. Thái Nguyên.\n- **Hotline / Zalo:** **0362843621** (Phục vụ 8:00 - 21:00 hàng ngày).\n- **Giao hàng:** Hỏa tốc 2 giờ, cam kết hoa tươi nguyên vẹn đến tận tay!`;
         usedModel = 'Florist Knowledge Engine';
+      } else if (lowerMsg.includes('dien bien') || lowerMsg.includes('điện biên') || lowerMsg.includes('tỉnh khác') || lowerMsg.includes('tinh khac') || lowerMsg.includes('giao xa') || lowerMsg.includes('toan quoc') || lowerMsg.includes('toàn quốc') || lowerMsg.includes('ngoại tỉnh') || lowerMsg.includes('ngoai tinh') || lowerMsg.includes('ha noi') || lowerMsg.includes('hà nội') || lowerMsg.includes('ship')) {
+        aiResponseText = `🌸 **Dạ FlowerShop CÓ nhận giao hoa đến Điện Biên và các tỉnh toàn quốc ạ!**\n\n🚚 **Quy trình vận chuyển hoa đi xa bảo đảm 100% tươi mới:**\n- **Đóng gói chuyên dụng:** Thợ hoa gắn ống nước dinh dưỡng giữ ẩm ở từng cuống hoa, bọc giấy lụa bảo vệ cánh và đặt trong hộp carton đứng chuyên dụng chống xóc, chống dập nát.\n- **Phương thức chuyển:** Gửi xe khách liên tỉnh chất lượng cao (như tuyến Thái Nguyên - Điện Biên nhận hoa ngay trong ngày tại bến xe hoặc gửi tận nơi theo yêu cầu) hoặc chuyển phát nhanh hỏa tốc.\n- **Thời gian chuẩn bị:** Quý khách nên đặt trước **4 - 6 tiếng** để tiệm kịp chọn hoa tươi mới nhất sáng sớm và kịp giờ xe xuất bến nhé!\n\n📞 Quý khách có thể liên hệ trực tiếp Hotline/Zalo: **0362843621** để shop tư vấn mẫu hoa và hỗ trợ đặt xe nhanh nhất ạ!`;
+        usedModel = 'Florist Shipping Engine';
       } else {
         // FS-04: Đa dạng hóa câu trả lời tự nhiên
         aiResponseText = `Dạ em chào anh/chị ạ! 🌸\nTiệm hoa FlowerShop Thái Nguyên luôn sẵn sàng tư vấn giúp mình chọn được bó hoa ưng ý nhất.\nHiện shop có các dòng hoa tươi nhập mới trong ngày: **Hoa Hồng Nhung**, **Lan Hồ Điệp**, **Tulip Hà Lan**, **Hướng Dương**, **Cẩm Tú Cầu** và **Baby Trắng** với mức giá từ 299.000đ.\n\nAnh/chị đang tìm hoa cho dịp nào (sinh nhật, tốt nghiệp, khai trương hay tỏ tình...) để em gửi mẫu đẹp nhất cho mình tham khảo nhé ạ!`;

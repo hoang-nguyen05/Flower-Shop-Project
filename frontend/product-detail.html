@@ -249,8 +249,8 @@
                 Mua Ngay
               </button>
 
-              <button class="nav-icon-btn border-0" onclick="toggleWishlist(${p.id}, this)" title="Yêu thích">
-                <i class="far fa-heart fs-5"></i>
+              <button class="nav-icon-btn border-0" data-wishlist-id="${p.id}" onclick="toggleWishlist(${p.id}, this)" title="Yêu thích">
+                <i class="${(typeof isProductWishlisted === 'function' && isProductWishlisted(p.id)) ? 'fas fa-heart text-danger' : 'far fa-heart'} fs-5"></i>
               </button>
             </div>
 

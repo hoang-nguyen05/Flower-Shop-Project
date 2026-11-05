@@ -67,47 +67,82 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/cart.js"></script>
+  <script src="/js/app.js"></script>
   <script>
     async function loadWishlist() {
       const container = document.getElementById('wishlist-container');
       const token = getAuthToken();
-
-      if (!token) {
-        container.innerHTML = `
-          <div class="col-12 text-center py-5">
-            <i class="fas fa-lock fs-1 text-muted mb-3 opacity-50"></i>
-            <h5 class="fw-bold text-dark">Vui lòng đăng nhập để xem danh sách yêu thích</h5>
-            <p class="text-muted small mb-3">Đăng nhập tài khoản để lưu trữ các bó hoa bạn yêu thích trên mọi thiết bị.</p>
-            <a href="/login.html" class="btn btn-danger rounded-pill px-4 fw-bold">Đăng Nhập Ngay</a>
-          </div>
-        `;
-        return;
-      }
+      let itemsToRender = [];
 
       try {
-        const res = await apiRequest('/auth/wishlist');
-        if (res.success && res.items && res.items.length > 0) {
-          container.innerHTML = res.items.map(item => `
-            <div class="col-6 col-md-4 col-lg-3" id="wishlist-card-${item.id}">
-              <div class="flower-card h-100 bg-white rounded-4 shadow-sm border p-3 position-relative d-flex flex-column">
-                <button class="btn btn-sm btn-light rounded-circle position-absolute top-0 end-0 m-3 shadow-sm text-danger" 
-                        onclick="removeWishlist(${item.id})" title="Bỏ thích">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-                <a href="/product-detail.html?id=${item.id}" class="text-decoration-none">
-                  <div class="flower-card-img-wrap rounded-3 overflow-hidden mb-3" style="height: 200px;">
-                    <img src="${item.image_url}" alt="${item.name}" class="w-100 h-100 object-fit-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=600';">
-                  </div>
-                  <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.7rem;">${item.category_name || 'Hoa tươi'}</div>
-                  <h6 class="fw-bold text-dark text-truncate mb-2" title="${item.name}">${item.name}</h6>
-                  <div class="fw-bold text-danger fs-6 mb-3">${formatVND(item.price)}</div>
-                </a>
-                <button class="btn btn-danger btn-sm rounded-pill w-100 fw-bold mt-auto" onclick="addToCart(${item.id})">
-                  <i class="fas fa-cart-plus me-1"></i>Thêm Vào Giỏ
-                </button>
+        if (token) {
+          // 1. Nếu đã đăng nhập: Lấy từ cơ sở dữ liệu Cloudflare D1
+          const res = await apiRequest('/auth/wishlist');
+          if (res.success && Array.isArray(res.items) && res.items.length > 0) {
+            itemsToRender = res.items;
+            const key = getWishlistStorageKey();
+            localStorage.setItem(key, JSON.stringify(itemsToRender.map(i => Number(i.id))));
+            updateWishlistBadge();
+          } else {
+            // Nếu server chưa có, kiểm tra xem local có hoa đã thả tim không để tự động đồng bộ lên server
+            const localIds = getWishlist();
+            if (localIds.length > 0) {
+              const allProdRes = await apiRequest('/products');
+              if (allProdRes.success && Array.isArray(allProdRes.products)) {
+                itemsToRender = allProdRes.products.filter(p => localIds.includes(Number(p.id)));
+                // Đồng bộ ngầm lên server
+                for (const p of itemsToRender) {
+                  apiRequest('/auth/wishlist/toggle', {
+                    method: 'POST',
+                    body: JSON.stringify({ productId: p.id })
+                  }).catch(() => {});
+                }
+              }
+            }
+          }
+        } else {
+          // 2. Nếu là khách (Guest): Đọc từ danh sách yêu thích của khách
+          const localIds = getWishlist();
+          if (localIds.length > 0) {
+            const allProdRes = await apiRequest('/products');
+            if (allProdRes.success && Array.isArray(allProdRes.products)) {
+              itemsToRender = allProdRes.products.filter(p => localIds.includes(Number(p.id)));
+            }
+          }
+        }
+
+        if (itemsToRender.length > 0) {
+          container.innerHTML = `
+            ${!token ? `
+              <div class="col-12">
+                <div class="alert alert-info border-0 rounded-4 py-2 px-3 small d-flex align-items-center justify-content-between">
+                  <div><i class="fas fa-info-circle me-2"></i>Bạn đang xem danh sách hoa yêu thích trên máy này. Đăng nhập để lưu vĩnh viễn trên mọi thiết bị!</div>
+                  <a href="/login.html" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-bold">Đăng nhập</a>
+                </div>
               </div>
-            </div>
-          `).join('');
+            ` : ''}
+            ${itemsToRender.map(item => `
+              <div class="col-6 col-md-4 col-lg-3" id="wishlist-card-${item.id}">
+                <div class="flower-card h-100 bg-white rounded-4 shadow-sm border p-3 position-relative d-flex flex-column">
+                  <button class="btn btn-sm btn-light rounded-circle position-absolute top-0 end-0 m-3 shadow-sm text-danger" 
+                          onclick="removeWishlist(${item.id})" title="Bỏ thích">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                  <a href="/product-detail.html?id=${item.id}" class="text-decoration-none">
+                    <div class="flower-card-img-wrap rounded-3 overflow-hidden mb-3" style="height: 200px;">
+                      <img src="${item.image_url}" alt="${item.name}" class="w-100 h-100 object-fit-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=600';">
+                    </div>
+                    <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.7rem;">${item.category_name || 'Hoa tươi'}</div>
+                    <h6 class="fw-bold text-dark text-truncate mb-2" title="${item.name}">${item.name}</h6>
+                    <div class="fw-bold text-danger fs-6 mb-3">${formatVND(item.price)}</div>
+                  </a>
+                  <button class="btn btn-danger btn-sm rounded-pill w-100 fw-bold mt-auto" onclick="addToCart(${item.id})">
+                    <i class="fas fa-cart-plus me-1"></i>Thêm Vào Giỏ
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          `;
         } else {
           container.innerHTML = `
             <div class="col-12 text-center py-5">
@@ -119,27 +154,26 @@
           `;
         }
       } catch (err) {
-        container.innerHTML = '<div class="col-12 alert alert-danger">Lỗi tải danh sách yêu thích!</div>';
+        container.innerHTML = '<div class="col-12 alert alert-danger text-center">Lỗi khi tải danh sách hoa yêu thích! Vui lòng thử lại.</div>';
       }
     }
 
     async function removeWishlist(productId) {
-      try {
-        const res = await apiRequest('/auth/wishlist/toggle', {
-          method: 'POST',
-          body: JSON.stringify({ productId })
-        });
-        if (res.success) {
-          showToast('Đã xóa hoa khỏi danh sách yêu thích');
-          const card = document.getElementById(`wishlist-card-${productId}`);
-          if (card) card.remove();
-        }
-      } catch (e) {
-        showToast('Lỗi khi thao tác!', 'error');
+      toggleWishlist(productId);
+      const card = document.getElementById(`wishlist-card-${productId}`);
+      if (card) card.remove();
+
+      const remaining = document.querySelectorAll('[id^="wishlist-card-"]');
+      if (remaining.length === 0) {
+        loadWishlist();
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadWishlist);
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUserNav();
+      loadWishlist();
+    });
+  </script>
   </script>
 </body>
 </html>

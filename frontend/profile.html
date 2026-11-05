@@ -347,14 +347,14 @@
         const res = await apiRequest('/auth/my-orders');
         if (res.success && res.orders && res.orders.length > 0) {
           container.innerHTML = res.orders.map(order => {
-            let statusBadge = '<span class="badge bg-warning text-dark">Chờ xác nhận</span>';
-            if (order.status === 'processing') statusBadge = '<span class="badge bg-info text-dark">Đang cắm hoa</span>';
-            if (order.status === 'shipping') statusBadge = '<span class="badge bg-primary">Đang giao hàng</span>';
-            if (order.status === 'completed') statusBadge = '<span class="badge bg-success">Hoàn thành</span>';
-            if (order.status === 'cancelled') statusBadge = '<span class="badge bg-danger">Đã hủy</span>';
+            let statusBadge = '<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Chờ xử lý</span>';
+            if (order.status === 'approved' || order.status === 'processing') statusBadge = '<span class="badge bg-info text-dark"><i class="fas fa-spa me-1"></i>Đang cắm hoa</span>';
+            if (order.status === 'shipping') statusBadge = '<span class="badge bg-primary"><i class="fas fa-truck me-1"></i>Đang giao hoa</span>';
+            if (order.status === 'completed') statusBadge = '<span class="badge bg-success"><i class="fas fa-check-double me-1"></i>Hoàn thành</span>';
+            if (order.status === 'cancelled') statusBadge = '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>Đã hủy</span>';
 
             return `
-              <div class="card border rounded-4 mb-3 p-3">
+              <div class="card border rounded-4 mb-3 p-3 shadow-sm">
                 <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2 mb-2 gap-2">
                   <div>
                     <span class="fw-bold font-monospace text-danger">${order.order_code}</span>
@@ -363,13 +363,18 @@
                   <div>${statusBadge}</div>
                 </div>
                 <div class="row g-2 small">
-                  <div class="col-sm-6">
+                  <div class="col-sm-7">
                     <div><i class="fas fa-map-marker-alt text-muted me-1"></i><strong>Giao đến:</strong> ${order.shipping_address}, ${order.city}</div>
                     <div><i class="fas fa-phone text-muted me-1"></i><strong>SĐT:</strong> ${order.customer_phone}</div>
                   </div>
-                  <div class="col-sm-6 text-sm-end">
+                  <div class="col-sm-5 text-sm-end">
                     <div><strong>Tổng tiền:</strong> <span class="fw-bold text-danger fs-6">${formatVND(order.total_amount)}</span></div>
-                    <div class="text-muted">Phương thức: ${order.payment_method === 'vietqr' ? 'Chuyển khoản VietQR' : 'Tiền mặt (COD)'}</div>
+                    <div class="text-muted">Phương thức: ${order.payment_method === 'vietqr' ? 'Chuyển khoản VietQR' : (order.payment_method === 'momo' ? 'Ví MoMo' : 'Tiền mặt (COD)')}</div>
+                    <div class="mt-2">
+                      <a href="/order-success.html?code=${order.order_code}" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1">
+                        <i class="fas fa-eye me-1"></i>Chi tiết & Mã QR
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

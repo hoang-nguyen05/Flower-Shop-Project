@@ -155,7 +155,29 @@ a {
   border: 2px solid white;
 }
 
-/* Tối ưu riêng cho màn hình Laptop (992px - 1399px) tránh vỡ chữ / xuống dòng lộn xộn */
+/* ========================================================
+   PROFILE & PILL TABS
+   ======================================================== */
+#profile-pill-tabs .nav-link {
+  color: var(--gray-700) !important;
+  background-color: transparent !important;
+  transition: all 0.2s ease;
+}
+
+#profile-pill-tabs .nav-link:hover {
+  background-color: var(--gray-100) !important;
+  color: var(--primary) !important;
+}
+
+#profile-pill-tabs .nav-link.active {
+  background: linear-gradient(135deg, #e11d48, #be123c) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+}
+
+#profile-pill-tabs .nav-link.active i {
+  color: #ffffff !important;
+}
 @media (min-width: 992px) and (max-width: 1399px) {
   .navbar-brand {
     font-size: 1.35rem !important;

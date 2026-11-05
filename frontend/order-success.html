@@ -48,6 +48,17 @@
     const urlParams = new URLSearchParams(window.location.search);
     const orderCode = urlParams.get('code');
 
+    function getOrderStatusBadge(status) {
+      switch (status) {
+        case 'pending': return '<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Chờ xử lý</span>';
+        case 'approved': return '<span class="badge bg-info text-dark"><i class="fas fa-check me-1"></i>Đã duyệt (Đang cắm hoa)</span>';
+        case 'shipping': return '<span class="badge bg-primary"><i class="fas fa-truck me-1"></i>Đang giao hoa</span>';
+        case 'completed': return '<span class="badge bg-success"><i class="fas fa-check-double me-1"></i>Hoàn thành</span>';
+        case 'cancelled': return '<span class="badge bg-secondary"><i class="fas fa-times me-1"></i>Đã hủy</span>';
+        default: return `<span class="badge bg-light text-dark">${status}</span>`;
+      }
+    }
+
     async function loadSuccessOrder() {
       const container = document.getElementById('order-success-container');
       if (!orderCode) {
@@ -64,6 +75,19 @@
       const order = res.order;
       const isVietQr = order.payment_method === 'vietqr' || order.payment_method === 'bank_transfer';
       const isMomo = order.payment_method === 'momo';
+      const isCod = order.payment_method === 'cod';
+      const isPaid = order.payment_status === 'paid';
+
+      let paymentBadge = '';
+      if (isCod) {
+        paymentBadge = isPaid 
+          ? '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Đã thu tiền COD</span>' 
+          : '<span class="badge bg-secondary text-white"><i class="fas fa-truck me-1"></i>COD (Thanh toán khi nhận hoa)</span>';
+      } else {
+        paymentBadge = isPaid 
+          ? '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Đã thanh toán</span>' 
+          : '<span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i>Chờ chuyển khoản (Giữ hoa 2H)</span>';
+      }
 
       let paymentSection = '';
       const isPaid = order.payment_status === 'paid';
@@ -203,12 +227,12 @@
           <div class="card bg-light border-0 rounded-3 p-3 my-3">
             <div class="row g-2 text-start small">
               <div class="col-sm-6"><strong>Mã đơn hàng:</strong> <span class="badge bg-danger fs-6">${order.order_code}</span></div>
-              <div class="col-sm-6"><strong>Trạng thái đơn:</strong> <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Chờ xử lý</span></div>
-              <div class="col-sm-6"><strong>Thanh toán:</strong> ${isPaid ? '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Đã thanh toán</span>' : '<span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i>Chờ chuyển khoản (Giữ hoa 2H)</span>'}</div>
+              <div class="col-sm-6"><strong>Trạng thái đơn:</strong> ${getOrderStatusBadge(order.status)}</div>
+              <div class="col-sm-6"><strong>Thanh toán:</strong> ${paymentBadge}</div>
               <div class="col-sm-6"><strong>Phương thức:</strong> ${order.payment_method ? order.payment_method.toUpperCase() : 'VIETQR'}</div>
               <div class="col-sm-6"><strong>Người nhận:</strong> ${order.customer_name} (${order.customer_phone})</div>
               <div class="col-sm-6"><strong>Địa chỉ giao:</strong> ${order.shipping_address}, ${order.city}</div>
-              ${order.notes ? `<div class="col-12"><strong>Lời chúc / Ghi chú:</strong> "${order.notes}"</div>` : ''}
+              ${order.notes ? `<div class="col-12"><strong>Lời chúc / Ghi chúc:</strong> "${order.notes}"</div>` : ''}
             </div>
           </div>
 
