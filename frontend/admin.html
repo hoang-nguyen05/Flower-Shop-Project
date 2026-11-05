@@ -886,6 +886,7 @@
           showToast(`Đã xóa mẫu hoa "${name}" thành công!`);
           loadAdminProducts();
           loadDashboardData();
+          fetch('/api/sync-vectors', { method: 'POST' }).catch(() => {});
         } else {
           showToast(res.error || 'Lỗi khi xóa', 'error');
         }
@@ -988,8 +989,13 @@
       if (res.success) {
         showToast(`Đã thêm "${name}" vào Cloudflare D1 thành công! 🌸`);
         document.getElementById('add-product-form').reset();
+        const preview = document.getElementById('prod-image-preview');
+        if (preview) preview.src = 'https://images.unsplash.com/photo-1561181286-d3fee7d55364?auto=format&fit=crop&w=400&q=80';
+        const progress = document.getElementById('upload-progress-text');
+        if (progress) progress.style.display = 'none';
         loadDashboardData();
         loadAdminProducts();
+        fetch('/api/sync-vectors', { method: 'POST' }).catch(() => {});
         document.querySelector('[data-bs-target="#tab-products-list"]').click();
       } else {
         showToast(res.error || 'Lỗi khi lưu sản phẩm', 'error');
