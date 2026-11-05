@@ -1,12 +1,14 @@
 // ========================================================
 // FlowerShop - Florist AI Chatbot
-// Tích hợp AI Trợ Lý Tư Vấn qua Cloudflare Worker Backend
+// Tích hợp Kiến Trúc Enterprise AI (8 Trụ Cột)
+// Model: Google Gemini 3.6 Flash / 3.5 Flash + Cloudflare RAG
 // ========================================================
 
 let chatHistory = [];
 let isChatbotBusy = false;
+let thinkingInterval = null;
 
-// Bật / tắt cửa sổ Chatbot
+// 1. Bật / tắt cửa sổ Chatbot
 function toggleChatbot() {
   const win = document.getElementById('chatbot-window');
   if (!win) return;
@@ -14,10 +16,11 @@ function toggleChatbot() {
   win.style.display = isFlex ? 'none' : 'flex';
   if (!isFlex) {
     document.getElementById('chatbot-input')?.focus();
+    scrollChatToBottom();
   }
 }
 
-// Gửi tin nhắn từ người dùng
+// 2. Gửi tin nhắn từ người dùng
 async function sendChatMessage() {
   const input = document.getElementById('chatbot-input');
   if (!input) return;
@@ -28,10 +31,16 @@ async function sendChatMessage() {
   appendChatMessage(text, 'user');
   input.value = '';
 
-  // Bật trạng thái đang trả lời
-  setChatbotLoading(true);
+  // Thêm vào lịch sử hội thoại
+  chatHistory.push({ role: 'user', content: text });
+  if (chatHistory.length > 8) {
+    chatHistory = chatHistory.slice(-8); // Giữ 4-8 lượt gần nhất
+  }
 
-  // Lấy API key tuỳ chọn từ localStorage nếu có
+  // Bật trạng thái đang suy nghĩ & soạn tin nhắn
+  showThinkingIndicator();
+
+  // Lấy API key tuỳ chọn từ localStorage (nếu admin tự nhập thêm)
   const customApiKey = localStorage.getItem('custom_gemini_api_key') || '';
 
   try {
@@ -39,24 +48,26 @@ async function sendChatMessage() {
       method: 'POST',
       body: JSON.stringify({
         message: text,
+        history: chatHistory.slice(0, -1), // Gửi kèm lịch sử trước đó
         apiKey: customApiKey
       })
     });
 
-    setChatbotLoading(false);
+    hideThinkingIndicator();
 
     if (res.success && res.reply) {
-      appendChatMessage(res.reply, 'bot', res.provider);
+      appendChatMessage(res.reply, 'bot', res.provider, res.latencyMs);
+      chatHistory.push({ role: 'model', content: res.reply });
     } else {
-      appendChatMessage('Xin lỗi bạn, trợ lý AI đang bận một chút. Bạn có thể hỏi lại hoặc gọi hotline 0362843621 để được hỗ trợ ngay nhé! 🌸', 'bot');
+      appendChatMessage('Xin lỗi bạn, trợ lý Florist AI đang bận một chút. Bạn có thể hỏi lại hoặc gọi hotline 0362843621 để được thợ hoa hỗ trợ ngay nhé! 🌸', 'bot');
     }
   } catch (err) {
-    setChatbotLoading(false);
-    appendChatMessage('⚠️ Không thể kết nối đến Trợ lý AI. Vui lòng thử lại sau giây lát!', 'bot');
+    hideThinkingIndicator();
+    appendChatMessage('⚠️ Không thể kết nối đến Trợ lý AI. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau giây lát!', 'bot');
   }
 }
 
-// Gửi câu hỏi nhanh từ gợi ý (Chip)
+// 3. Gửi câu hỏi nhanh từ gợi ý (Chip)
 function sendQuickPrompt(promptText) {
   const input = document.getElementById('chatbot-input');
   if (input) {
@@ -65,47 +76,117 @@ function sendQuickPrompt(promptText) {
   }
 }
 
-// Thêm tin nhắn vào khung chat
-function appendChatMessage(text, sender = 'bot', provider = null) {
+// 4. Hiển thị Trạng thái Đang Suy Nghĩ / Đang Soạn Tin (Thinking Indicator)
+function showThinkingIndicator() {
+  isChatbotBusy = true;
+  const container = document.getElementById('chatbot-messages');
+  const sendBtn = document.getElementById('chatbot-send');
+  const input = document.getElementById('chatbot-input');
+
+  if (sendBtn) sendBtn.disabled = true;
+  if (input) input.disabled = true;
+
+  // Xóa thinking cũ nếu có
+  const oldIndicator = document.getElementById('chatbot-thinking-indicator');
+  if (oldIndicator) oldIndicator.remove();
+
+  if (!container) return;
+
+  const thinkingDiv = document.createElement('div');
+  thinkingDiv.className = 'chat-msg bot thinking';
+  thinkingDiv.id = 'chatbot-thinking-indicator';
+  thinkingDiv.innerHTML = `
+    <div class="typing-indicator">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="thinking-status" id="thinking-status-text">
+      🌸 Florist AI đang đọc tin nhắn...
+    </div>
+  `;
+  container.appendChild(thinkingDiv);
+  scrollChatToBottom();
+
+  // Chu kỳ đổi trạng thái để người dùng biết AI đang làm gì (RAG / Suy luận)
+  const statusTexts = [
+    '🌸 Florist AI đang đọc tin nhắn...',
+    '🔍 Đang tra cứu danh mục & giá hoa...',
+    '🌿 Kiểm tra tình trạng tồn kho & ưu đãi...',
+    '✍️ Đang soạn câu trả lời cho bạn...'
+  ];
+  let step = 0;
+  if (thinkingInterval) clearInterval(thinkingInterval);
+  thinkingInterval = setInterval(() => {
+    step = (step + 1) % statusTexts.length;
+    const label = document.getElementById('thinking-status-text');
+    if (label) label.textContent = statusTexts[step];
+  }, 1400);
+}
+
+// 5. Tắt Trạng thái Đang Suy Nghĩ
+function hideThinkingIndicator() {
+  isChatbotBusy = false;
+  if (thinkingInterval) {
+    clearInterval(thinkingInterval);
+    thinkingInterval = null;
+  }
+  const indicator = document.getElementById('chatbot-thinking-indicator');
+  if (indicator) indicator.remove();
+
+  const sendBtn = document.getElementById('chatbot-send');
+  const input = document.getElementById('chatbot-input');
+  if (sendBtn) sendBtn.disabled = false;
+  if (input) {
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+// 6. Thêm tin nhắn vào khung chat & Format Markdown
+function appendChatMessage(text, sender = 'bot', provider = null, latencyMs = null) {
   const container = document.getElementById('chatbot-messages');
   if (!container) return;
 
   const msgDiv = document.createElement('div');
   msgDiv.className = `chat-msg ${sender}`;
 
-  // Format Markdown đơn giản
+  // Format Markdown (Bold, Italic, Code, List, Links)
   let formatted = text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code class="bg-light px-1 rounded text-danger">$1</code>')
+    .replace(/^- (.*$)/gim, '• $1')
     .replace(/\n/g, '<br>');
 
   let meta = '';
-  if (sender === 'bot' && provider) {
-    meta = `<div class="text-muted mt-1" style="font-size: 0.68rem;"><i class="fas fa-sparkles text-warning me-1"></i>${provider}</div>`;
+  if (sender === 'bot') {
+    const timeStr = latencyMs ? `${(latencyMs / 1000).toFixed(1)}s` : '';
+    const provStr = provider || 'Florist AI';
+    meta = `
+      <div class="latency-badge">
+        <i class="fas fa-bolt text-warning"></i>
+        ${timeStr ? `<span>${timeStr}</span> • ` : ''}
+        <span>${provStr}</span>
+      </div>
+    `;
   }
 
   msgDiv.innerHTML = formatted + meta;
   container.appendChild(msgDiv);
-  container.scrollTop = container.scrollHeight;
+  scrollChatToBottom();
 }
 
-// Hiệu ứng đang gõ
-function setChatbotLoading(loading) {
-  isChatbotBusy = loading;
-  const sendBtn = document.getElementById('chatbot-send');
-  const input = document.getElementById('chatbot-input');
-  const loadingIndicator = document.getElementById('chatbot-loading-dots');
-
-  if (sendBtn) sendBtn.disabled = loading;
-  if (input) input.disabled = loading;
-
-  if (loadingIndicator) {
-    loadingIndicator.style.display = loading ? 'block' : 'none';
+// 7. Cuộn mượt mà xuống cuối khung chat
+function scrollChatToBottom() {
+  const container = document.getElementById('chatbot-messages');
+  if (container) {
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth'
+    });
   }
 }
 
-// Hỗ trợ gõ Enter để gửi
+// 8. Lắng nghe phím Enter
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('chatbot-input');
   if (input) {
@@ -117,4 +198,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-
