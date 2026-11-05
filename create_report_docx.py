@@ -220,10 +220,17 @@ def create_report():
     add_bullet("Quản lý đơn hàng & xác nhận thanh toán: Xem danh sách đơn, lọc theo trạng thái, chuyển đổi thanh toán VietQR từ 'Chưa thanh toán' sang 'Đã thanh toán', điều hướng trạng thái sang 'Đang cắm hoa', 'Đang giao' hoặc 'Hủy đơn' (tự động hoàn trả kho).", "• ")
 
     add_h2("1.3. Trợ lý Trí tuệ Nhân tạo Florist AI (Chatbot RAG Toàn Năng)")
-    add_bullet("Tư vấn chọn hoa thông minh: Đóng vai thợ cắm hoa lành nghề (Florist), gợi ý hoa phù hợp ngân sách và hoàn cảnh người nhận.", "• ")
+    add_bullet("Tư vấn chọn hoa thông minh: Đóng vai thợ cắm hoa lành nghề (Florist), giàu cảm xúc thẩm mỹ, gợi ý hoa phù hợp ngân sách và hoàn cảnh người nhận (tốt nghiệp, sinh nhật, khai trương, tỏ tình).", "• ")
+    add_bullet("Giải đáp chính xác nguồn gốc xuất xứ: Tự hào khẳng định nguồn hoa nội địa cắt mới mỗi sáng từ nhà vườn công nghệ cao tại Đà Lạt và nguồn hoa nhập khẩu Châu Âu chính ngạch (Tulip Hà Lan, Hồng Ecuador cành dài 80-100cm, New Zealand, Lan Hồ Điệp Đài Loan).", "• ")
     add_bullet("Giải đáp chính sách vận chuyển: Tư vấn chính xác dịch vụ giao hỏa tốc 2 giờ nội thành Thái Nguyên và dịch vụ đóng gói chuyên dụng bảo quản ống nước giữ ẩm gửi xe khách đi Điện Biên, Hà Nội và toàn quốc.", "• ")
     add_bullet("Tra cứu đơn hàng tự động: Nhận diện mã đơn FS-XXXXXX và trích xuất tiến độ giao hàng trực tiếp từ database D1.", "• ")
     add_bullet("Phân quyền Quản trị viên (Admin AI Agent): Khi Quản trị viên đăng nhập, Chatbot nhận diện vai trò @admin và xuất báo cáo tổng quan về doanh thu thực thu, đơn chờ xử lý và cảnh báo hoa sắp hết kho (stock <= 5).", "• ")
+
+    add_h2("1.4. Quản lý Đơn hàng & Cơ chế Xác thực Thành viên (Authentication & Order Ownership)")
+    add_bullet("Thêm vào giỏ hàng linh hoạt: Khách vãng lai chưa đăng nhập vẫn thoải mái duyệt hoa, thêm hoa vào giỏ hàng và xem trước phí ship cùng ưu đãi mà không bị chặn.", "• ")
+    add_bullet("Bảo vệ đặt hàng & Chống đơn rác: Khi khách bấm 'Tiến Hành Đặt Hàng' hoặc 'Mua Ngay', hệ thống yêu cầu Đăng nhập hoặc Đăng ký thành viên, ngăn chặn triệt để tình trạng spam đơn ảo từ người dùng nặc danh.", "• ")
+    add_bullet("Gắn kết đơn hàng với tài khoản (user_id): Mọi đơn hàng sau khi xác nhận đều được gắn trực tiếp mã user_id, đảm bảo người dùng truy cập mục 'Đơn hàng của tôi' luôn thấy 100% lịch sử đơn hoa của mình.", "• ")
+    add_bullet("Trang Tra cứu đơn thông minh (/orders.html): Khi người dùng đã đăng nhập, hệ thống tự động nhận diện và hiển thị sẵn toàn bộ danh sách đơn hàng gần đây của họ lên đầu trang, không bắt khách phải gõ lại số điện thoại hay mã đơn.", "• ")
 
     add_h1("CHƯƠNG 2: CÔNG NGHỆ & NỀN TẢNG TRIỂN KHAI (WEB DÙNG GÌ)")
 
@@ -313,10 +320,10 @@ def create_report():
     add_body("Cơ sở dữ liệu bao gồm 9 bảng quan hệ chặt chẽ:")
     add_bullet("categories (id, name, slug, description, image_url): Danh mục hoa (Hoa Hồng, Lan Hồ Điệp, Hướng Dương, Tulip, Cẩm Tú Cầu, Hoa Baby...).", "1. ")
     add_bullet("products (id, category_id, name, slug, image_url, description, price, original_price, stock, is_featured, available): Thông tin sản phẩm hoa tươi, mức giá và số lượng tồn kho.", "2. ")
-    add_bullet("policies (id, title, slug, content): Các chính sách dịch vụ của cửa hàng (Giao hàng hỏa tốc/liên tỉnh, bảo hành đổi trả 24h, thanh toán VietQR, bảo quản hoa) phục vụ nạp vào Vector Database.", "3. ")
+    add_bullet("policies (id, title, slug, content): Gồm 6 chính sách dịch vụ cốt lõi: Vận chuyển hỏa tốc & gửi xe toàn quốc, Đổi trả bảo hành 24h, Thanh toán VietQR, Bí quyết bảo quản hoa, Quà tặng thiệp/banner, và Nguồn gốc xuất xứ hoa tươi (Đà Lạt & Nhập khẩu Châu Âu) phục vụ RAG.", "3. ")
     add_bullet("coupons (id, code, description, discount_percent, discount_amount, min_order_value, is_member_only, is_active): Mã giảm giá phân quyền (Guest vs Member VIP).", "4. ")
     add_bullet("users (id, username, email, password_hash, full_name, phone, address, city, role, avatar_url): Thông tin người dùng phân quyền (admin / customer).", "5. ")
-    add_bullet("orders (id, order_code, user_id, customer_name, customer_phone, shipping_address, city, notes, total_amount, payment_method, payment_status, status): Quản lý vòng đời đơn hàng.", "6. ")
+    add_bullet("orders (id, order_code, user_id, customer_name, customer_phone, shipping_address, city, notes, total_amount, payment_method, payment_status, status): Quản lý vòng đời đơn hàng, liên kết chặt chẽ với tài khoản người dùng qua trường user_id.", "6. ")
     add_bullet("order_items (id, order_id, product_id, product_name, price, quantity, image_url): Chi tiết các mặt hàng trong đơn.", "7. ")
     add_bullet("wishlists (id, user_id, product_id): Danh sách hoa yêu thích theo từng tài khoản.", "8. ")
     add_bullet("reviews (id, product_id, user_id, rating, comment): Đánh giá nhận xét của khách hàng.", "9. ")
@@ -412,38 +419,49 @@ npx wrangler deploy"""
 }"""
     add_code_block(health_resp)
 
-    add_body("2. Phản hồi thực tế từ endpoint /api/sync-vectors:")
+    add_body("2. Phản hồi thực tế từ endpoint /api/sync-vectors (Đồng bộ 22 vector):")
     sync_resp = """{
   "ok": true,
   "message": "Đã đồng bộ dữ liệu vào Cloudflare Vectorize thành công!",
-  "total_indexed": 21,
+  "total_indexed": 22,
   "products_count": 16,
-  "policies_count": 5,
+  "policies_count": 6,
   "embedding_model": "@cf/baai/bge-m3",
   "index_name": "flower-shop-index",
   "dimensions": 1024,
-  "latencyMs": 2966
+  "latencyMs": 2229
 }"""
     add_code_block(sync_resp)
 
-    add_body("3. Phản hồi từ Chatbot AI RAG (/api/chatbot):")
-    chat_resp = """Provider: ⚡ Cloudflare Vectorize RAG
-Latency: 6089 ms
+    add_body("3. Phản hồi từ Chatbot AI RAG (/api/chatbot) khi hỏi về nguồn gốc xuất xứ hoa:")
+    chat_resp = """Khách hàng hỏi: "hoa được nhập ở đâu vậy shop"
+Provider: ⚡ Cloudflare Vectorize RAG
+Model: Cloudflare Workers AI (Llama 70B)
+Latency: 5923 ms
 Reply:
-"Dạ, chính sách đổi trả hoa tươi của FlowerShop như sau:
-Chúng tôi cam kết 100% hoa tươi mới cắt mỗi sớm mai. Nếu hoa bị dập nát,
-héo úa hoặc cắm sai mẫu yêu cầu khi nhận hàng, quý khách được đổi bó hoa
-mới hoàn toàn miễn phí hoặc nhận lại 100% tiền trong vòng 24 giờ.
-Để thực hiện đổi trả, vui lòng chụp ảnh và gọi hotline 0362843621." """
+"Dạ vâng ạ, hoa tại FlowerShop được nhập từ 2 nguồn chính ạ:
+1. Nguồn nội địa: Hoa được cắt mới mỗi sớm mai từ các nhà vườn công nghệ cao tại Đà Lạt.
+   Các loại hoa từ Đà Lạt bao gồm: Hoa Hồng Nhung, Hoa Hướng Dương, Cẩm Tú Cầu, Hoa Baby Trắng...
+2. Nguồn nhập khẩu Châu Âu: Hoa được nhập khẩu chính ngạch đường hàng không bảo quản lạnh từ các nước
+   như Hà Lan (Hoa Tulip Hà Lan Pastel), Ecuador (Hoa Hồng Ecuador cành dài 80-100cm bông to cánh dày),
+   New Zealand và Đài Loan (Lan Hồ Điệp vương giả loại 1).
+Mỗi cành hoa đều được chúng tôi tuyển chọn khắt khe và dưỡng nước dinh dưỡng chuyên dụng để giữ độ tươi bền 5-7 ngày ạ. 💐🌸" """
     add_code_block(chat_resp)
 
     add_h1("KẾT LUẬN")
     add_body("Đồ án 'Website Thương Mại Điện Tử Hoa Tươi FlowerShop Tích Hợp AI RAG Trên Cloudflare' là một minh chứng xuất sắc cho việc áp dụng kiến trúc Serverless hiện đại vào bài toán thực tế. Hệ thống không chỉ thỏa mãn trọn vẹn 100% các tiêu chuẩn kỹ thuật nghiêm ngặt của giảng viên (Cloudflare Workers, Hono.js, D1, Vectorize, Workers AI, RAG Semantic Search) mà còn hoàn thiện xuất sắc về mặt trải nghiệm người dùng, thiết kế giao diện sang trọng, thanh toán tự động VietQR và khả năng vận hành bền bỉ trên nền tảng đám mây toàn cầu.")
 
-    # Save to root
-    filename = "c:\\web hoa 05\\BAO_CAO_DU_AN_FLOWERSHOP_CLOUDFLARE_AI.docx"
-    doc.save(filename)
-    print(f"Report generated successfully: {filename}")
+    # Save to both latest and main
+    filename_latest = "c:\\web hoa 05\\BAO_CAO_DU_AN_FLOWERSHOP_CLOUDFLARE_AI_MOI_NHAT.docx"
+    doc.save(filename_latest)
+    print(f"Report generated successfully: {filename_latest}")
+
+    filename_main = "c:\\web hoa 05\\BAO_CAO_DU_AN_FLOWERSHOP_CLOUDFLARE_AI.docx"
+    try:
+        doc.save(filename_main)
+        print(f"Main report updated: {filename_main}")
+    except PermissionError:
+        print(f"Warning: {filename_main} is currently open in Word. Saved to {filename_latest} instead.")
 
 if __name__ == "__main__":
     create_report()
