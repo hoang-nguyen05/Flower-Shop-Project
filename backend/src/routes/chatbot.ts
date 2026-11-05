@@ -277,6 +277,72 @@ CHÍNH SÁCH DỊCH VỤ CỐT LÕI:
       console.error('Lỗi RAG context D1:', dbErr);
     }
 
+    // 4b. CLOUDFLARE VECTORIZE SEMANTIC VECTOR SEARCH (BGE-M3 + Top 4 Matches)
+    let vectorContext = '';
+    let isVectorizeRag = false;
+
+    if (c.env.AI && c.env.VECTORIZE) {
+      try {
+        const queryEmbed: any = await c.env.AI.run('@cf/baai/bge-m3', {
+          text: [userMessage]
+        });
+        const qVector = queryEmbed?.data?.[0];
+        if (qVector && Array.isArray(qVector)) {
+          const vResults: any = await c.env.VECTORIZE.query(qVector, {
+            topK: 4,
+            returnMetadata: true
+          });
+
+          if (vResults && Array.isArray(vResults.matches) && vResults.matches.length > 0) {
+            const matchedProductIds: number[] = [];
+            const matchedPolicyIds: number[] = [];
+
+            for (const m of vResults.matches) {
+              if (m.metadata?.type === 'product' && m.metadata?.id) {
+                matchedProductIds.push(Number(m.metadata.id));
+              } else if (m.metadata?.type === 'policy' && m.metadata?.id) {
+                matchedPolicyIds.push(Number(m.metadata.id));
+              }
+            }
+
+            let vecProdText = '';
+            if (matchedProductIds.length > 0) {
+              const placeholders = matchedProductIds.map(() => '?').join(',');
+              const pRows = await c.env.DB.prepare(
+                `SELECT p.id, p.name, p.price, p.stock, p.description, c.name as category_name
+                 FROM products p LEFT JOIN categories c ON p.category_id = c.id
+                 WHERE p.id IN (${placeholders})`
+              ).bind(...matchedProductIds).all<any>();
+
+              vecProdText = (pRows.results || []).map(p => 
+                `- [Sản Phẩm Khớp] ${p.name} (${p.category_name}): ${Number(p.price).toLocaleString('vi-VN')}₫ (Kho: ${p.stock}). ${p.description || ''}`
+              ).join('\n');
+            }
+
+            let vecPolText = '';
+            if (matchedPolicyIds.length > 0) {
+              const placeholders = matchedPolicyIds.map(() => '?').join(',');
+              const polRows = await c.env.DB.prepare(
+                `SELECT title, content FROM policies WHERE id IN (${placeholders})`
+              ).bind(...matchedPolicyIds).all<any>();
+
+              vecPolText = (polRows.results || []).map(pol => 
+                `- [Chính Sách Khớp] ${pol.title}: ${pol.content}`
+              ).join('\n');
+            }
+
+            if (vecProdText || vecPolText) {
+              vectorContext = `\n⚡ [TRÍCH XUẤT TƯƠNG ĐỒNG NGỮ NGHĨA CLOUDFLARE VECTORIZE]:\n` +
+                (vecProdText ? `* SẢN PHẨM KHỚP NHẤT:\n${vecProdText}\n` : '') +
+                (vecPolText ? `* CHÍNH SÁCH KHỚP NHẤT:\n${vecPolText}\n` : '');
+            }
+          }
+        }
+      } catch (vectorErr) {
+        console.warn('Lỗi Semantic Vectorize search:', vectorErr);
+      }
+    }
+
     // 2. SYSTEM PROMPT & PERSONA ENGINEERING (3 TIÊU CHÍ VÀNG & RAG GROUNDING)
     const systemInstruction = `Bạn là "Florist AI" - Trợ lý tư vấn hoa tươi nghệ thuật ĐỘC QUYỀN của tiệm FlowerShop Thái Nguyên.
 
@@ -313,15 +379,52 @@ TIÊU CHÍ 4: CHÍNH SÁCH GIAO HÀNG & SHIP TỈNH (ĐIỆN BIÊN, HÀ NỘI, T
   + Cam kết hoa nhận được tươi 100%, nguyên vẹn form dáng thẩm mỹ. Khách nên đặt trước 4-6 tiếng qua hotline/Zalo 0362843621.
 
 ${productContext}
+${vectorContext ? `\n${vectorContext}\n` : ''}
 ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
 `;
 
-    // 1. MODEL SELECTION & MULTI-KEY ROTATION (Gemini 2.0 Flash / 1.5 Flash)
-    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-flash-8b'];
     let aiResponseText = '';
     let usedModel = '';
 
-    if (apiKeys.length > 0) {
+    // 1. NATIVE CLOUDFLARE WORKERS AI (Gemma 26B / Llama 3.1 Instruct)
+    if (c.env.AI && !aiResponseText) {
+      try {
+        const cfMessages = [
+          { role: 'system', content: systemInstruction },
+          ...conversationHistory.slice(-4).map(t => ({
+            role: t.role === 'user' ? 'user' : 'assistant',
+            content: t.content
+          })),
+          { role: 'user', content: userMessage }
+        ];
+
+        const aiRes: any = await c.env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+          messages: cfMessages,
+          max_tokens: 800,
+          temperature: 0.7
+        }).catch(async () => {
+          return await c.env.AI.run('@cf/meta/llama-3-8b-instruct', {
+            messages: cfMessages,
+            max_tokens: 800,
+            temperature: 0.7
+          });
+        });
+
+        const reply = aiRes?.response || aiRes?.content;
+        if (reply && reply.trim()) {
+          aiResponseText = reply.trim();
+          usedModel = 'Cloudflare Workers AI (Llama 70B)';
+          isVectorizeRag = true;
+        }
+      } catch (cfErr: any) {
+        console.warn('Lỗi gọi Cloudflare Workers AI:', cfErr.message);
+      }
+    }
+
+    // 1b. GOOGLE GEMINI BACKUP ENGINE
+    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-flash-8b'];
+
+    if (!aiResponseText && apiKeys.length > 0) {
       // Xây dựng contents kèm lịch sử hội thoại gần nhất (Multi-turn Context)
       const formattedContents: any[] = [];
 
@@ -456,7 +559,7 @@ ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
     return c.json({
       success: true,
       reply: sanitizedReply,
-      provider: `Florist AI (${usedModel})`,
+      provider: isVectorizeRag ? '⚡ Cloudflare Vectorize RAG' : `Florist AI (${usedModel})`,
       latencyMs: totalLatency,
       model: usedModel,
       cached: false

@@ -2,12 +2,23 @@ export interface Env {
   DB: D1Database;
   KV: KVNamespace;
   R2?: R2Bucket;
+  AI?: any; // Cloudflare Workers AI
+  VECTORIZE?: any; // Cloudflare Vectorize
   ASSETS: Fetcher;
   GEMINI_API_KEY?: string;
   VIETQR_BANK_ID?: string;
   VIETQR_ACCOUNT_NO?: string;
   VIETQR_ACCOUNT_NAME?: string;
   APP_NAME?: string;
+}
+
+export interface Policy {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Category {

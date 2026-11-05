@@ -8,6 +8,15 @@
     "directory": "./frontend",
     "binding": "ASSETS"
   },
+  "ai": {
+    "binding": "AI"
+  },
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "flower-shop-index"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
