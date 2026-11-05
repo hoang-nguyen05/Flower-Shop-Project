@@ -240,13 +240,74 @@
         discountRow.style.setProperty('display', 'none', 'important');
         couponBox.innerHTML = `
           <div class="input-group mb-2">
-            <input type="text" id="coupon-input" class="form-control rounded-pill-start text-uppercase" placeholder="Nhập mã (VD: FLOWER10)">
+            <input type="text" id="coupon-input" class="form-control rounded-pill-start text-uppercase" placeholder="Nhập mã (VD: FLOWER10, VIP20)">
             <button class="btn btn-danger rounded-pill-end fw-bold px-3" onclick="handleApplyCoupon()">Áp Dụng</button>
           </div>
-          <div class="small text-muted">
-            💡 Gợi ý mã: <span class="badge bg-light text-dark border">FLOWER10</span>, <span class="badge bg-light text-dark border">GIAM50K</span>, <span class="badge bg-light text-dark border">FREESHIP</span>
+          <div id="dynamic-coupons-list" class="small mt-2">
+            <div class="spinner-border spinner-border-sm text-danger me-1"></div>Đang tải ưu đãi...
           </div>
         `;
+        renderCouponSuggestions();
+      }
+    }
+
+    async function renderCouponSuggestions() {
+      const container = document.getElementById('dynamic-coupons-list');
+      if (!container) return;
+
+      try {
+        const res = await apiRequest('/cart/coupons');
+        if (res.success && res.coupons) {
+          if (res.is_logged_in) {
+            // Đã đăng nhập: hiển thị đầy đủ đặc quyền thành viên
+            container.innerHTML = `
+              <div class="p-2 rounded-3 bg-danger-subtle text-danger mb-2 small fw-bold">
+                <i class="fas fa-crown me-1 text-warning"></i>Đặc quyền thành viên (${res.user_name || 'VIP'}):
+              </div>
+              <div class="d-flex flex-wrap gap-1 mb-2">
+                ${res.coupons.map(c => `
+                  <button type="button" class="btn btn-sm ${c.is_member_only ? 'btn-outline-danger' : 'btn-outline-secondary'} rounded-pill py-0 px-2 small" onclick="fillCoupon('${c.code}')" title="${c.description}">
+                    ${c.is_member_only ? '⭐ ' : ''}<strong>${c.code}</strong> (${c.discount_percent ? c.discount_percent + '%' : formatVND(c.discount_amount)})
+                  </button>
+                `).join('')}
+              </div>
+              <div class="text-muted" style="font-size: 0.75rem;">(Bấm vào mã để tự động áp dụng)</div>
+            `;
+          } else {
+            // Khách vãng lai (Guest): hiển thị mã công khai + kêu gọi đăng nhập để mở khóa VIP
+            const publicCoupons = res.coupons.filter(c => !c.is_member_only);
+            const vipCoupons = res.coupons.filter(c => c.is_member_only);
+            container.innerHTML = `
+              <div class="mb-2">
+                <span class="text-muted">Ưu đãi khách vãng lai:</span><br>
+                <div class="d-flex flex-wrap gap-1 mt-1">
+                  ${publicCoupons.map(c => `
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small" onclick="fillCoupon('${c.code}')" title="${c.description}">
+                      <strong>${c.code}</strong>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+              <div class="alert alert-warning border-0 rounded-3 p-2 mb-0 small" style="font-size: 0.78rem;">
+                <div class="fw-bold text-dark mb-1"><i class="fas fa-lock text-danger me-1"></i>Ưu đãi riêng cho Thành viên:</div>
+                <div class="text-muted mb-1">Mã VIP: <code>${vipCoupons.map(c => c.code).join(', ')}</code> (Giảm tới 20%)</div>
+                <a href="/login.html?redirect=/cart.html" class="btn btn-danger btn-sm rounded-pill py-0 px-3 fw-bold">
+                  <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập để nhận mã VIP
+                </a>
+              </div>
+            `;
+          }
+        }
+      } catch (err) {
+        container.innerHTML = `💡 Gợi ý mã: <span class="badge bg-light text-dark border">FLOWER10</span>, <span class="badge bg-light text-dark border">GIAM50K</span>, <span class="badge bg-light text-dark border">FREESHIP</span>`;
+      }
+    }
+
+    function fillCoupon(code) {
+      const input = document.getElementById('coupon-input');
+      if (input) {
+        input.value = code;
+        handleApplyCoupon();
       }
     }
 

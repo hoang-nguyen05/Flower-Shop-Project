@@ -80,8 +80,9 @@ ordersRouter.post('/', async (c) => {
       return c.json({ success: false, error: 'Vui lòng chọn hoặc nhập Tỉnh/Thành phố nhận hàng' }, 400);
     }
 
-    // Lấy giỏ hàng từ Cloudflare D1 + KV
-    const { cart } = await calculateCart(c.env.DB, c.env.KV, sessionId);
+    // Lấy giỏ hàng từ Cloudflare D1 + KV (xét phân quyền Guest vs Thành viên)
+    const user = await getAuthenticatedUser(c);
+    const { cart } = await calculateCart(c.env.DB, c.env.KV, sessionId, user);
 
     if (!cart.items || cart.items.length === 0) {
       return c.json({ success: false, error: 'Giỏ hàng của bạn đang trống' }, 400);

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { Env, CartSessionData, CartResponse, HydratedCartItem, Product, Coupon } from '../types';
+import { getAuthenticatedUser } from './auth';
 
 export const cartRouter = new Hono<{ Bindings: Env }>();
 
@@ -30,7 +31,7 @@ async function saveCartToKV(kv: KVNamespace, sessionId: string, data: CartSessio
 }
 
 // Helper tính toán giỏ hàng hoàn chỉnh từ Cloudflare D1 + KV
-export async function calculateCart(db: D1Database, kv: KVNamespace, sessionId: string): Promise<{ cart: CartResponse; sessionId: string; sessionData: CartSessionData }> {
+export async function calculateCart(db: D1Database, kv: KVNamespace, sessionId: string, user: any = null): Promise<{ cart: CartResponse; sessionId: string; sessionData: CartSessionData }> {
   const sessionData = await getCartFromKV(kv, sessionId);
   const hydratedItems: HydratedCartItem[] = [];
   let subtotal = 0;
@@ -75,14 +76,18 @@ export async function calculateCart(db: D1Database, kv: KVNamespace, sessionId: 
   let discount = 0;
   let couponInfo: any = null;
 
-  // Xử lý mã giảm giá (truy xuất từ Cloudflare D1)
+  // Xử lý mã giảm giá (truy xuất từ Cloudflare D1, phân quyền Guest vs Thành viên)
   if (sessionData.couponCode && subtotal > 0) {
     const coupon = await db.prepare(
       'SELECT * FROM coupons WHERE code = ? AND is_active = 1'
-    ).bind(sessionData.couponCode).first<Coupon>();
+    ).bind(sessionData.couponCode).first<Coupon & { is_member_only?: number }>();
 
     if (coupon) {
-      if (subtotal >= coupon.min_order_value) {
+      // Nếu mã ưu đãi dành riêng cho thành viên nhưng khách chưa đăng nhập -> Hủy áp dụng
+      if (coupon.is_member_only === 1 && !user) {
+        sessionData.couponCode = null;
+        await saveCartToKV(kv, sessionId, sessionData);
+      } else if (subtotal >= coupon.min_order_value) {
         if (coupon.discount_percent > 0) {
           discount = Math.round((subtotal * coupon.discount_percent) / 100);
         } else if (coupon.discount_amount > 0) {
@@ -133,7 +138,8 @@ export async function calculateCart(db: D1Database, kv: KVNamespace, sessionId: 
 cartRouter.get('/', async (c) => {
   try {
     const sessionId = getSessionId(c);
-    const { cart } = await calculateCart(c.env.DB, c.env.KV, sessionId);
+    const user = await getAuthenticatedUser(c);
+    const { cart } = await calculateCart(c.env.DB, c.env.KV, sessionId, user);
 
     // Gán Cookie cart_session vào response header
     c.header('Set-Cookie', `cart_session=${sessionId}; Path=/; Max-Age=604800; SameSite=Lax`);
@@ -255,7 +261,7 @@ cartRouter.delete('/', async (c) => {
   }
 });
 
-// 6. POST /api/cart/coupon: Áp dụng mã giảm giá
+// 6. POST /api/cart/coupon: Áp dụng mã giảm giá (Phân quyền Guest vs Thành viên)
 cartRouter.post('/coupon', async (c) => {
   try {
     const sessionId = getSessionId(c);
@@ -269,17 +275,26 @@ cartRouter.post('/coupon', async (c) => {
     // Kiểm tra mã trong Cloudflare D1
     const coupon = await c.env.DB.prepare(
       'SELECT * FROM coupons WHERE code = ? AND is_active = 1'
-    ).bind(code).first<Coupon>();
+    ).bind(code).first<Coupon & { is_member_only?: number }>();
 
     if (!coupon) {
       return c.json({ success: false, error: 'Mã giảm giá không tồn tại hoặc đã hết hiệu lực' }, 404);
+    }
+
+    // KIỂM TRA PHÂN QUYỀN: Mã ưu đãi dành riêng cho Thành viên đã đăng nhập
+    const user = await getAuthenticatedUser(c);
+    if (coupon.is_member_only === 1 && !user) {
+      return c.json({
+        success: false,
+        error: `Mã ưu đãi độc quyền "${code}" chỉ dành riêng cho thành viên đã đăng nhập. Quý khách vui lòng Đăng nhập hoặc Đăng ký tài khoản để áp dụng mã này!`
+      }, 403);
     }
 
     const sessionData = await getCartFromKV(c.env.KV, sessionId);
     sessionData.couponCode = code;
     await saveCartToKV(c.env.KV, sessionId, sessionData);
 
-    const { cart } = await calculateCart(c.env.DB, c.env.KV, sessionId);
+    const { cart } = await calculateCart(c.env.DB, c.env.KV, sessionId, user);
 
     if (!cart.coupon) {
       return c.json({
@@ -288,21 +303,52 @@ cartRouter.post('/coupon', async (c) => {
       }, 400);
     }
 
-    return c.json({ success: true, message: `Áp dụng thành công mã ${code}`, cart });
+    return c.json({ success: true, message: `Áp dụng thành công mã ưu đãi ${code}`, cart });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
 });
 
-// 7. DELETE /api/cart/coupon: Hủy mã giảm giá
+// 7. GET /api/cart/coupons: Danh sách ưu đãi (Phân biệt Guest vs Thành viên)
+cartRouter.get('/coupons', async (c) => {
+  try {
+    const user = await getAuthenticatedUser(c);
+    const { results } = await c.env.DB.prepare(
+      'SELECT code, description, discount_percent, discount_amount, min_order_value, is_member_only FROM coupons WHERE is_active = 1 ORDER BY is_member_only DESC, id ASC'
+    ).all<any>();
+
+    const coupons = results.map(cp => ({
+      code: cp.code,
+      description: cp.description,
+      discount_percent: cp.discount_percent,
+      discount_amount: cp.discount_amount,
+      min_order_value: cp.min_order_value,
+      is_member_only: cp.is_member_only === 1,
+      is_locked: cp.is_member_only === 1 && !user,
+      lock_message: cp.is_member_only === 1 && !user ? 'Đăng nhập để mở khóa' : null
+    }));
+
+    return c.json({
+      success: true,
+      is_logged_in: !!user,
+      user_name: user?.full_name || null,
+      coupons
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// 8. DELETE /api/cart/coupon: Hủy mã giảm giá
 cartRouter.delete('/coupon', async (c) => {
   try {
     const sessionId = getSessionId(c);
+    const user = await getAuthenticatedUser(c);
     const sessionData = await getCartFromKV(c.env.KV, sessionId);
     sessionData.couponCode = null;
     await saveCartToKV(c.env.KV, sessionId, sessionData);
 
-    const { cart } = await calculateCart(c.env.DB, c.env.KV, sessionId);
+    const { cart } = await calculateCart(c.env.DB, c.env.KV, sessionId, user);
     return c.json({ success: true, message: 'Đã hủy mã giảm giá', cart });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
