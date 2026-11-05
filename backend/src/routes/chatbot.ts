@@ -378,6 +378,13 @@ TIÊU CHÍ 4: CHÍNH SÁCH GIAO HÀNG & SHIP TỈNH (ĐIỆN BIÊN, HÀ NỘI, T
   + Phương thức gửi: Gửi qua xe khách liên tỉnh chất lượng cao (tuyến Thái Nguyên - Điện Biên nhận ngay trong ngày) hoặc chuyển phát hỏa tốc.
   + Cam kết hoa nhận được tươi 100%, nguyên vẹn form dáng thẩm mỹ. Khách nên đặt trước 4-6 tiếng qua hotline/Zalo 0362843621.
 
+TIÊU CHÍ 5: NGUỒN GỐC & XUẤT XỨ HOA TƯƠI (ĐÀ LẠT & CHÂU ÂU)
+- Khi khách hỏi hoa nhập từ đâu, nguồn gốc xuất xứ hoa, hoa có tươi không:
+  + Tự hào tư vấn ấm áp: Hoa tại FlowerShop được tuyển chọn kỹ lưỡng từ 2 nguồn chất lượng:
+    1. Hoa nội địa Đà Lạt: Cắt mới mỗi sáng từ nhà vườn công nghệ cao tại Đà Lạt (Lâm Đồng) gồm Hồng Nhung, Hướng Dương Nắng Hạ, Baby Trắng, Cẩm Tú Cầu.
+    2. Hoa nhập khẩu Châu Âu: Nhập chính ngạch đường hàng không bảo quản lạnh từ Hà Lan (Tulip Pastel), Ecuador (Hoa Hồng Ecuador cành dài 80-100cm), New Zealand và Đài Loan (Lan Hồ Điệp).
+  + Cam kết hoa tươi mới 100%, được dưỡng dung dịch dinh dưỡng chuyên dụng bền đẹp 5-7 ngày và luôn tặng kèm thiệp viết tay nắn nót.
+
 ${productContext}
 ${vectorContext ? `\n${vectorContext}\n` : ''}
 ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
@@ -529,7 +536,28 @@ ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
         // FS-03: Trả lời chuẩn xác thông tin mã giảm giá
         aiResponseText = `🎟️ **Mã giảm giá đang áp dụng tại FlowerShop hôm nay:**\n- \`FLOWER10\`: Giảm ngay 10% cho đơn từ 300.000đ.\n- \`GIAM50K\`: Giảm trực tiếp 50.000đ cho đơn từ 500.000đ.\n- \`FREESHIP\`: Miễn phí giao hàng hỏa tốc toàn quốc.\n\n💡 Bạn chỉ cần nhập mã này ở ô **Mã Giảm Giá** tại trang Giỏ Hàng rồi bấm Áp dụng nhé!`;
         usedModel = 'Florist Knowledge Engine';
-      } else if (lowerMsg.includes('địa chỉ') || lowerMsg.includes('ở đâu') || lowerMsg.includes('hotline') || lowerMsg.includes('liên hệ')) {
+      } else if (
+        lowerMsg.includes('nguồn gốc') || lowerMsg.includes('nguon goc') ||
+        lowerMsg.includes('xuất xứ') || lowerMsg.includes('xuat xu') ||
+        lowerMsg.includes('nhập ở đâu') || lowerMsg.includes('nhap o dau') ||
+        lowerMsg.includes('nhập từ đâu') || lowerMsg.includes('nhap tu dau') ||
+        lowerMsg.includes('nhập khẩu') || lowerMsg.includes('nhap khau') ||
+        lowerMsg.includes('hoa từ đâu') || lowerMsg.includes('hoa tu dau') ||
+        lowerMsg.includes('hoa ở đâu') || lowerMsg.includes('hoa o dau')
+      ) {
+        aiResponseText = `🌸 **Dạ chào bạn, hoa tại FlowerShop được tuyển chọn kỹ lưỡng từ 2 nguồn chất lượng nhất ạ:**\n\n` +
+          `1. 🌿 **Nguồn nội địa:** Hoa được cắt mới mỗi sớm mai từ các nhà vườn công nghệ cao tại **Đà Lạt** (Hoa Hồng Nhung, Hướng Dương Nắng Hạ, Cẩm Tú Cầu, Hoa Baby Trắng...), bông to dày cánh và hương thơm thanh khiết.\n` +
+          `2. ✈️ **Nguồn nhập khẩu Châu Âu:** Nhập khẩu chính ngạch đường hàng không bảo quản lạnh từ **Hà Lan** (Hoa Tulip Hà Lan Pastel), **Ecuador** (Hoa Hồng Ecuador cành dài 80-100cm bông nở rực rỡ), **New Zealand** và **Đài Loan** (Lan Hồ Điệp hoàng gia loại 1).\n\n` +
+          `💐 Mọi cành hoa khi về tiệm đều được thợ hoa sơ chế, cắt vát chéo và dưỡng dung dịch nước dinh dưỡng chuyên dụng, cam kết **100% tươi mới** từ 5-7 ngày và tặng kèm thiệp viết tay chân thành bạn nhé!`;
+        usedModel = 'Florist Origin Engine';
+      } else if (
+        lowerMsg.includes('địa chỉ') || lowerMsg.includes('dia chi') ||
+        lowerMsg.includes('tiệm ở đâu') || lowerMsg.includes('tiem o dau') ||
+        lowerMsg.includes('shop ở đâu') || lowerMsg.includes('shop o dau') ||
+        lowerMsg.includes('cửa hàng ở đâu') || lowerMsg.includes('cua hang o dau') ||
+        lowerMsg.includes('hotline') || lowerMsg.includes('liên hệ') || lowerMsg.includes('lien he') ||
+        lowerMsg.includes('sđt') || lowerMsg.includes('sdt') || lowerMsg.includes('zalo')
+      ) {
         aiResponseText = `📍 **Thông tin tiệm hoa FlowerShop:**\n- **Địa chỉ:** Trường Đại học Công Nghệ Thông Tin & Truyền Thông Thái Nguyên (ICTU) - Đường Z115, Xã Quyết Thắng, TP. Thái Nguyên.\n- **Hotline / Zalo:** **0362843621** (Phục vụ 8:00 - 21:00 hàng ngày).\n- **Giao hàng:** Hỏa tốc 2 giờ, cam kết hoa tươi nguyên vẹn đến tận tay!`;
         usedModel = 'Florist Knowledge Engine';
       } else if (lowerMsg.includes('dien bien') || lowerMsg.includes('điện biên') || lowerMsg.includes('tỉnh khác') || lowerMsg.includes('tinh khac') || lowerMsg.includes('giao xa') || lowerMsg.includes('toan quoc') || lowerMsg.includes('toàn quốc') || lowerMsg.includes('ngoại tỉnh') || lowerMsg.includes('ngoai tinh') || lowerMsg.includes('ha noi') || lowerMsg.includes('hà nội') || lowerMsg.includes('ship')) {
