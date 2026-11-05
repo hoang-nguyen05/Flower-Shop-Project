@@ -7,3 +7,11 @@ __pycache__/
 *.sqlite3
 .env
 
+# Word temporary lock files
+~$*
+
+# Markdown files (Keep ONLY README.md on Git)
+*.md
+!README.md
+
+
