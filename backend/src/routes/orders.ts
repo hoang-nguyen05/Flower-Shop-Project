@@ -30,8 +30,35 @@ ordersRouter.post('/', async (c) => {
     const body = await c.req.json<CreateOrderRequest>();
     const { customer_name, customer_phone, customer_email, shipping_address, city, notes, payment_method } = body;
 
-    if (!customer_name || !customer_phone || !shipping_address || !city) {
-      return c.json({ success: false, error: 'Vui lòng điền đầy đủ tên, số điện thoại và địa chỉ nhận hàng' }, 400);
+    // VALIDATION P0: Xác thực phía server theo tiêu chuẩn chống dữ liệu rác (FS-06, FS-07, FS-08)
+    const cleanName = (customer_name || '').trim().replace(/<[^>]*>?/gm, '');
+    const cleanPhone = (customer_phone || '').trim().replace(/\s+/g, '');
+    const cleanAddress = (shipping_address || '').trim().replace(/<[^>]*>?/gm, '');
+    const cleanCity = (city || '').trim().replace(/<[^>]*>?/gm, '');
+
+    if (!cleanName || cleanName.length < 2 || cleanName.length > 70) {
+      return c.json({ success: false, error: 'Họ và tên người nhận phải từ 2 đến 70 ký tự hợp lệ' }, 400);
+    }
+    // Chặn tên spam/vô nghĩa (chỉ toàn số hoặc ký tự lặp)
+    if (/^\d+$/.test(cleanName) || /^([a-zA-Z0-9])\1{4,}$/.test(cleanName)) {
+      return c.json({ success: false, error: 'Vui lòng nhập họ và tên thật của người nhận' }, 400);
+    }
+
+    // Chuẩn số điện thoại di động Việt Nam: 10 chữ số bắt đầu bằng 03, 05, 07, 08, 09
+    const vnPhoneRegex = /^(0[35789]\d{8})$/;
+    if (!vnPhoneRegex.test(cleanPhone) || /^0+(\d)\1{7,}$/.test(cleanPhone)) {
+      return c.json({ success: false, error: 'Số điện thoại không hợp lệ. Vui lòng nhập số di động 10 chữ số (VD: 0362843621, 0912345678)' }, 400);
+    }
+
+    if (!cleanAddress || cleanAddress.length < 5 || cleanAddress.length > 200) {
+      return c.json({ success: false, error: 'Địa chỉ giao hàng phải từ 5 ký tự trở lên (VD: Số nhà, ngõ/đường, phường/xã)' }, 400);
+    }
+    if (/^\d+$/.test(cleanAddress)) {
+      return c.json({ success: false, error: 'Địa chỉ giao hàng không hợp lệ, vui lòng ghi rõ tên đường/khu phố' }, 400);
+    }
+
+    if (!cleanCity || cleanCity.length < 2) {
+      return c.json({ success: false, error: 'Vui lòng chọn hoặc nhập Tỉnh/Thành phố nhận hàng' }, 400);
     }
 
     // Lấy giỏ hàng từ Cloudflare D1 + KV
@@ -55,11 +82,11 @@ ordersRouter.post('/', async (c) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
     `).bind(
       orderCode,
-      customer_name,
-      customer_phone,
+      cleanName,
+      cleanPhone,
       customer_email || null,
-      shipping_address,
-      city,
+      cleanAddress,
+      cleanCity,
       notes || '',
       payment_method || 'cod',
       payment_method === 'cod' ? 'unpaid' : 'unpaid',
@@ -129,15 +156,20 @@ ordersRouter.post('/', async (c) => {
 // 2. GET /api/orders: Danh sách đơn hàng (hỗ trợ lọc theo sđt hoặc admin)
 ordersRouter.get('/', async (c) => {
   try {
-    const phone = c.req.query('phone')?.trim();
-    const status = c.req.query('status')?.trim();
+    const rawPhone = c.req.query('phone')?.trim() || '';
+    const status = c.req.query('status')?.trim() || '';
+
+    // Bảo vệ tra cứu (FS-05): Giới hạn độ dài và chặn chuỗi số 0 kéo dài
+    if (rawPhone.length > 20 || /^0{5,}$/.test(rawPhone)) {
+      return c.json({ success: false, error: 'Số điện thoại tra cứu không hợp lệ' }, 400);
+    }
 
     let sql = 'SELECT * FROM orders WHERE 1=1';
     const params: any[] = [];
 
-    if (phone) {
+    if (rawPhone) {
       sql += ' AND customer_phone LIKE ?';
-      params.push(`%${phone}%`);
+      params.push(`%${rawPhone}%`);
     }
 
     if (status) {
@@ -158,10 +190,16 @@ ordersRouter.get('/', async (c) => {
 // 3. GET /api/orders/:codeOrId: Chi tiết đơn hàng + sản phẩm bên trong
 ordersRouter.get('/:codeOrId', async (c) => {
   try {
-    const param = c.req.param('codeOrId');
+    const param = (c.req.param('codeOrId') || '').trim();
+
+    // Giới hạn độ dài và kiểm tra cấu trúc mã đơn / ID (FS-05)
+    if (!param || param.length > 35 || /^0{5,}$/.test(param)) {
+      return c.json({ success: false, error: 'Mã đơn hàng không hợp lệ' }, 400);
+    }
+
     let order: Order | null = null;
 
-    if (/^\d+$/.test(param)) {
+    if (/^\d{1,8}$/.test(param)) {
       order = await c.env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(parseInt(param, 10)).first<Order>();
     } else {
       order = await c.env.DB.prepare('SELECT * FROM orders WHERE order_code = ?').bind(param).first<Order>();

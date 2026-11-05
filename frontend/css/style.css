@@ -595,10 +595,12 @@ a {
   flex-grow: 1;
   padding: 16px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 12px;
   background: #fdfbf7;
+  scroll-behavior: smooth;
 }
 
 .chat-msg {
@@ -704,9 +706,22 @@ a {
   display: flex;
   gap: 6px;
   overflow-x: auto;
+  overflow-y: hidden;
   padding: 8px 12px;
   background: white;
   border-top: 1px solid var(--gray-200);
+  scrollbar-width: thin;
+  scrollbar-color: #fda4af transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-chips::-webkit-scrollbar {
+  height: 4px;
+}
+
+.chat-chips::-webkit-scrollbar-thumb {
+  background: #fda4af;
+  border-radius: 4px;
 }
 
 .chat-chip {

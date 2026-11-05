@@ -234,22 +234,33 @@ CHÍNH SÁCH DỊCH VỤ CỐT LÕI:
       console.error('Lỗi RAG context D1:', dbErr);
     }
 
-    // 2. SYSTEM PROMPT & PERSONA ENGINEERING
-    const systemInstruction = `Bạn là "Florist AI" - Chuyên gia tư vấn hoa nghệ thuật và chăm sóc khách hàng của tiệm hoa tươi FlowerShop Thái Nguyên.
+    // 2. SYSTEM PROMPT & PERSONA ENGINEERING (3 TIÊU CHÍ VÀNG & RAG GROUNDING)
+    const systemInstruction = `Bạn là "Florist AI" - Trợ lý tư vấn hoa tươi nghệ thuật ĐỘC QUYỀN của tiệm FlowerShop Thái Nguyên.
 
-NHIỆM VỤ CỦA BẠN:
-1. Tư vấn tận tâm:
-   - Giúp khách hàng chọn mẫu hoa tươi đúng dịp: Sinh nhật, Tỏ tình / Tình yêu, Khai trương / Tân gia, Kỷ niệm, Chúc mừng tốt nghiệp, Tri ân thầy cô / cha mẹ...
-   - Phân tích ý nghĩa biểu trưng của từng sắc hoa (hoa hồng: tình yêu; hướng dương: khát vọng vươn xa; lan hồ điệp: vương giả tài lộc; cẩm tú cầu: lòng biết ơn; tulip: duyên dáng thanh lịch; baby trắng: thuần khiết bồng bềnh).
-   - Báo giá CHÍNH XÁC theo bảng giá thực tế từ FlowerShop, gợi ý mã giảm giá (FLOWER10, GIAM50K, FREESHIP) để khách tiết kiệm chi phí.
-2. Hướng dẫn tính năng web:
-   - Hướng dẫn cách bấm "Thêm Vào Giỏ", nhập mã coupon tại trang Giỏ hàng.
-   - Hướng dẫn thanh toán quét mã VietQR tự động hoặc thanh toán khi nhận hoa (COD).
-   - Hướng dẫn tra cứu đơn hàng qua mục "Tra cứu đơn" trên thanh menu.
-3. Phong cách giao tiếp:
-   - Giọng điệu ấm áp, lịch thiệp, tinh tế và giàu cảm xúc.
-   - Định dạng câu trả lời rõ ràng: sử dụng gạch đầu dòng, in đậm tên hoa và giá tiền, kèm emoji hoa lá 🌸💐🌹🌻🌷 tươi tắn.
-   - Trả lời súc tích, đi thẳng vào câu hỏi của khách, không lan man.
+3 NGUYÊN TẮC CỐT LÕI BẠN PHẢI TUÂN THỦ TUYỆT ĐỐI (KHÔNG ĐƯỢC PHÁ VỠ):
+
+TIÊU CHÍ 1: CHATBOT RIÊNG BIỆT CHO FLOWERSHOP
+- Bạn là trợ lý ảo được tích hợp trực tiếp trong hệ sinh thái website FlowerShop Thái Nguyên.
+- Tuyệt đối không xưng là ChatGPT, Gemini, OpenAI hay bất kỳ công cụ của bên thứ ba nào. Tên của bạn duy nhất là: "Florist AI - Trợ lý FlowerShop".
+- Mọi thông tin tư vấn phải gắn liền với cửa hàng: Hotline 0362843621, địa chỉ tại Trường ĐH Công Nghệ Thông Tin & Truyền Thông Thái Nguyên (ICTU - Z115 Quyết Thắng), thanh toán VietQR MB Bank (Chủ TK: NGUYEN DAC HOANG).
+
+TIÊU CHÍ 2: KHÔNG ĐƯỢC BỊA THÔNG TIN NGOÀI (GROUNDED RAG / ANTI-HALLUCINATION)
+- Bạn CHỈ ĐƯỢC PHÉP báo giá, mô tả sản phẩm và mã khuyến mãi dựa trên "DỮ LIỆU CỬA HÀNG THỰC TẾ (CLOUDFLARE D1)" được cung cấp dưới đây.
+- NẾU KHÁCH HỎI LOÀI HOA HOẶC SẢN PHẨM MÀ SHOP KHÔNG CÓ TRONG DANH SÁCH D1 (ví dụ: hoa sen, hoa súng, hoa cẩm chướng cành rời, bánh sinh nhật, trà sữa...):
+  + BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC BỊA LÀ SHOP CÓ VÀ KHÔNG ĐƯỢC TỰ BỊA RA GIÁ TIỀN!
+  + Phải trung thực giải thích: "Dạ hiện tại FlowerShop chưa kinh doanh [loại hoa/sản phẩm đó] ạ. Tiệm em chuyên sâu các dòng hoa tươi nghệ thuật thiết kế sẵn: Hoa Hồng, Hoa Tulip Hà Lan, Hướng Dương, Lan Hồ Điệp, Cẩm Tú Cầu và Hoa Baby..."
+  + Sau đó khéo léo gợi ý 1-2 mẫu hoa tươi có sẵn phù hợp với cùng mục đích tặng để khách tham khảo.
+- VỀ MÃ GIẢM GIÁ: CHỈ cung cấp đúng các mã đang có trong hệ thống D1 (FLOWER10, GIAM50K, FREESHIP). Không được tự bịa ra mã giảm giá ảo (như GIAM99, SALE70...).
+- VỀ TIẾN ĐỘ ĐƠN HÀNG: Chỉ phản hồi trạng thái khi có thông tin tra cứu thực tế từ công cụ tra cứu D1.
+
+TIÊU CHÍ 3: NGÔN NGỮ TRẢ LỜI TỰ NHIÊN, TINH TẾ & ĐA DẠNG NGỮ CẢNH
+- Giọng văn: Ấm áp, nhẹ nhàng, lịch thiệp, giàu cảm xúc thẩm mỹ của một thợ cắm hoa (Florist) lành nghề.
+- KHÔNG lặp lại các câu chào mẫu cứng nhắc ("Xin chào quý khách, tôi là...") ở các lượt trò chuyện tiếp theo. Nếu trong lịch sử đã chào rồi, hãy đi thẳng vào câu trả lời một cách tự nhiên ("Dạ vâng ạ...", "Dạ mẫu này...", "Về ngân sách 500k em gợi ý...").
+- Bắt đúng ý định (Intent):
+  + Khi khách hỏi hoa TỐT NGHIỆP: Nhiệt tình chúc mừng tân cử nhân, gợi ý ngay bó Hướng Dương Nắng Hạ (299k) tượng trưng cho tương lai rực sáng vươn cao, hoặc Bó Tulip Hà Lan (580k), Bó Baby Trắng (380k) để chụp ảnh kỷ yếu siêu xinh; kèm thông báo tặng banner chúc mừng tốt nghiệp viết tay miễn phí.
+  + Khi khách hỏi HOA HỒNG ĐỎ: Khẳng định shop có Bó Hoa Hồng Đỏ Tình Nồng (499k), hoa hồng nhung tươi nhập mới Đà Lạt, đóng gói sang trọng, rất hợp tặng người yêu hoặc kỷ niệm.
+  + Khi khách hỏi MÃ GIẢM GIÁ: Liệt kê rõ các mã FLOWER10, GIAM50K, FREESHIP kèm điều kiện đơn hàng, hướng dẫn nhập ở ô mã giảm giá tại Giỏ hàng.
+- Trình bày trực quan: Sử dụng gạch đầu dòng rõ ràng, in đậm tên hoa và giá tiền (VD: **Bó Hướng Dương Nắng Hạ** - **299.000đ**), dùng emoji hoa lá 🌸🌹🌻🌷 sinh động.
 
 ${productContext}
 ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
@@ -338,6 +349,18 @@ ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
       if (dynamicToolContext.includes('[KẾT QUẢ TRA CỨU ĐƠN HÀNG TỪ HỆ THỐNG]')) {
         aiResponseText = `🌸 **Thông tin tiến độ đơn hàng của bạn:**\n${dynamicToolContext.replace('[KẾT QUẢ TRA CỨU ĐƠN HÀNG TỪ HỆ THỐNG]:', '').trim()}\n\nBạn có thể vào mục **"Tra cứu đơn"** trên menu để xem trực tiếp mã VietQR và trạng thái đơn hàng bất kỳ lúc nào nhé!`;
         usedModel = 'Florist Order Tool';
+      } else if (lowerMsg.includes('tốt nghiệp') || lowerMsg.includes('tot nghiep') || lowerMsg.includes('kỷ yếu') || lowerMsg.includes('ky yeu') || lowerMsg.includes('cử nhân')) {
+        // FS-01: Xử lý chuyên sâu hoa chúc mừng tốt nghiệp
+        aiResponseText = `🎓 **Chúc mừng ngày lễ tốt nghiệp trọng đại!**\nFlowerShop xin gợi ý những mẫu hoa mang thông điệp rực rỡ và thành công nhất cho tân cử nhân:\n\n- 🌻 **Bó Hướng Dương Nắng Hạ** (**299.000đ**): Lựa chọn số 1 cho lễ tốt nghiệp! Tượng trưng cho ý chí kiên định, khát vọng vươn cao và tương lai tươi sáng.\n- 🌷 **Bó Tulip Hà Lan Pastel** (**580.000đ**): Duyên dáng, thanh lịch, lên hình kỷ yếu cực kỳ sang trọng và nổi bật.\n- 🌸 **Bó Hoa Baby Trắng Bồng Bềnh** (**380.000đ**): Trong trẻo như kỷ niệm thời sinh viên, phơi khô lưu giữ được 1-2 năm.\n\n🎁 **Đặc quyền tốt nghiệp:** FlowerShop tặng kèm **dải ruy băng banner chúc mừng tốt nghiệp** và thiệp viết tay miễn phí. Nhập mã \`FLOWER10\` để được giảm 10% bạn nhé!`;
+        usedModel = 'Florist Knowledge Engine';
+      } else if (lowerMsg.includes('hồng đỏ') || lowerMsg.includes('hong do')) {
+        // FS-02: Xác nhận chính xác sản phẩm hoa hồng đỏ
+        aiResponseText = `🌹 **Dạ FlowerShop có sẵn mẫu Hoa Hồng Đỏ tuyệt đẹp ạ!**\n- **Bó Hoa Hồng Đỏ Tình Nồng** (**499.000đ** - Giá gốc 580.000đ)\n- **Đặc điểm:** Từng bông hồng nhung Đà Lạt nhập mới sáng sớm, cánh dày, sắc đỏ rực rỡ nồng nàn, hương thơm dịu nhẹ, phối cùng giấy gói xám tro Hàn Quốc sang trọng.\n- **Phù hợp:** Tỏ tình, kỷ niệm ngày yêu, quà sinh nhật bất ngờ cho người thương.\n\nBạn muốn shop cắm hoa kèm thiệp ghi lời chúc gì không để bên em chuẩn bị chu đáo nhất nhé?`;
+        usedModel = 'Florist Knowledge Engine';
+      } else if (lowerMsg.includes('hoa sen') || lowerMsg.includes('hoa súng') || lowerMsg.includes('bánh kem') || lowerMsg.includes('bánh sinh nhật')) {
+        // Anti-hallucination: Không bịa loài hoa shop không bán
+        aiResponseText = `Dạ chào bạn! Hiện tại FlowerShop **chưa kinh doanh** sản phẩm này ạ 🌸.\nTiệm em chuyên sâu vào các dòng hoa tươi nghệ thuật thiết kế sẵn: **Hoa Hồng**, **Hoa Tulip Hà Lan**, **Hoa Hướng Dương**, **Lan Hồ Điệp**, **Cẩm Tú Cầu** và **Hoa Baby Trắng**.\n\nNếu bạn cần hoa tươi để chúc mừng, đi tiệc hay tặng người thân, mình có thể tư vấn các mẫu hoa sẵn có cực kỳ sang trọng với mức giá từ 299.000đ nhé!`;
+        usedModel = 'Florist Knowledge Engine';
       } else if (lowerMsg.includes('sinh nhật') || lowerMsg.includes('sn')) {
         aiResponseText = `🌸 **Gợi ý hoa Sinh Nhật rực rỡ từ FlowerShop:**\n- **Bó Hoa Hồng Đỏ Tình Nồng** (499.000đ): Nhung đỏ kiêu sa, lãng mạn cho người yêu.\n- **Bó Hướng Dương Nắng Hạ** (299.000đ): Rực rỡ, may mắn, mang lại năng lượng tích cực.\n- **Bó Tulip Hà Lan Pastel** (580.000đ): Tinh tế, thanh lịch dành cho các nàng thơ.\n- **Bó Hoa Baby Trắng Bồng Bềnh** (380.000đ): Dịu dàng như mây tuyết, giữ khô được 1-2 năm.\n\n🎁 **Ưu đãi hôm nay:** Nhập mã **FLOWER10** tại giỏ hàng để được giảm ngay 10% bạn nhé!`;
         usedModel = 'Florist Knowledge Engine';
@@ -350,14 +373,16 @@ ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
       } else if (lowerMsg.includes('thanh toán') || lowerMsg.includes('vietqr') || lowerMsg.includes('chuyển khoản')) {
         aiResponseText = `💳 **Các phương thức thanh toán an toàn tại shop:**\n- **Quét mã VietQR**: Hệ thống tự động sinh mã QR đúng số tiền và nội dung đơn. Mở app bất kỳ ngân hàng nào (MB, VCB, Tech, BIDV...) quét mã là xong ngay!\n- **Thanh toán khi nhận hoa (COD)**: Kiểm tra hoa tươi đúng mẫu mới thanh toán tiền mặt cho shipper.\n- **Ví điện tử MoMo**: Nhanh chóng và tiện lợi.`;
         usedModel = 'Florist Knowledge Engine';
-      } else if (lowerMsg.includes('mã') || lowerMsg.includes('coupon') || lowerMsg.includes('voucher') || lowerMsg.includes('khuyến mãi')) {
-        aiResponseText = `🎟️ **Mã giảm giá đang áp dụng tại FlowerShop hôm nay:**\n- \`FLOWER10\`: Giảm ngay 10% cho đơn từ 300.000đ.\n- \`GIAM50K\`: Giảm trực tiếp 50.000đ cho đơn từ 500.000đ.\n- \`FREESHIP\`: Miễn phí giao hàng hỏa tốc toàn quốc.\n\n💡 Bạn nhập mã này ở ô **Mã Giảm Giá** tại trang Giỏ Hàng nhé!`;
+      } else if (lowerMsg.includes('mã') || lowerMsg.includes('coupon') || lowerMsg.includes('voucher') || lowerMsg.includes('khuyến mãi') || lowerMsg.includes('giam gia')) {
+        // FS-03: Trả lời chuẩn xác thông tin mã giảm giá
+        aiResponseText = `🎟️ **Mã giảm giá đang áp dụng tại FlowerShop hôm nay:**\n- \`FLOWER10\`: Giảm ngay 10% cho đơn từ 300.000đ.\n- \`GIAM50K\`: Giảm trực tiếp 50.000đ cho đơn từ 500.000đ.\n- \`FREESHIP\`: Miễn phí giao hàng hỏa tốc toàn quốc.\n\n💡 Bạn chỉ cần nhập mã này ở ô **Mã Giảm Giá** tại trang Giỏ Hàng rồi bấm Áp dụng nhé!`;
         usedModel = 'Florist Knowledge Engine';
       } else if (lowerMsg.includes('địa chỉ') || lowerMsg.includes('ở đâu') || lowerMsg.includes('hotline') || lowerMsg.includes('liên hệ')) {
         aiResponseText = `📍 **Thông tin tiệm hoa FlowerShop:**\n- **Địa chỉ:** Trường Đại học Công Nghệ Thông Tin & Truyền Thông Thái Nguyên (ICTU) - Đường Z115, Xã Quyết Thắng, TP. Thái Nguyên.\n- **Hotline / Zalo:** **0362843621** (Phục vụ 8:00 - 21:00 hàng ngày).\n- **Giao hàng:** Hỏa tốc 2 giờ, cam kết hoa tươi nguyên vẹn đến tận tay!`;
         usedModel = 'Florist Knowledge Engine';
       } else {
-        aiResponseText = `Dạ chào bạn! FlowerShop luôn sẵn lòng lắng nghe và phục vụ bạn 🌸.\nHiện shop có đầy đủ các mẫu hoa tươi nhập mới trong ngày: **Hoa Hồng**, **Lan Hồ Điệp**, **Tulip**, **Hướng Dương**, **Cẩm Tú Cầu** và **Hoa Baby** với mức giá từ 299.000đ.\n\nBạn đang cần tìm hoa cho dịp đặc biệt nào (sinh nhật, tỏ tình, khai trương...) hoặc cần tư vấn ngân sách bao nhiêu để mình gợi ý mẫu hoa đẹp nhất nhé!`;
+        // FS-04: Đa dạng hóa câu trả lời tự nhiên
+        aiResponseText = `Dạ em chào anh/chị ạ! 🌸\nTiệm hoa FlowerShop Thái Nguyên luôn sẵn sàng tư vấn giúp mình chọn được bó hoa ưng ý nhất.\nHiện shop có các dòng hoa tươi nhập mới trong ngày: **Hoa Hồng Nhung**, **Lan Hồ Điệp**, **Tulip Hà Lan**, **Hướng Dương**, **Cẩm Tú Cầu** và **Baby Trắng** với mức giá từ 299.000đ.\n\nAnh/chị đang tìm hoa cho dịp nào (sinh nhật, tốt nghiệp, khai trương hay tỏ tình...) để em gửi mẫu đẹp nhất cho mình tham khảo nhé ạ!`;
         usedModel = 'Florist Smart Assistant';
       }
     }
