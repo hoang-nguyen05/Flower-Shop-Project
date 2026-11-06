@@ -52,7 +52,7 @@ async function logoutUser() {
   }, 500);
 }
 
-// 3. Wrapper cho hàm fetch với tự động gửi Header Session & Auth Token
+// 3. Wrapper cho hàm fetch với tự động gửi Header Session & Auth Token và Chống Cache Trình Duyệt
 async function apiRequest(endpoint, options = {}) {
   const sessionId = getSessionId();
   const authToken = getAuthToken();
@@ -60,12 +60,22 @@ async function apiRequest(endpoint, options = {}) {
   const headers = {
     'Content-Type': 'application/json',
     'x-session-id': sessionId,
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
     ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
     ...(options.headers || {})
   };
 
+  // Tránh triệt để việc trình duyệt (Chrome/Edge/Safari) cache lại dữ liệu GET cũ
+  let url = `${API_BASE}${endpoint}`;
+  if (!options.method || options.method.toUpperCase() === 'GET') {
+    const sep = url.includes('?') ? '&' : '?';
+    url += `${sep}_t=${Date.now()}`;
+  }
+
   try {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
+    const res = await fetch(url, {
+      cache: 'no-store',
       ...options,
       headers
     });

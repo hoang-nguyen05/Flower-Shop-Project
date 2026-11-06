@@ -19,6 +19,14 @@ app.use('*', cors({
   exposeHeaders: ['Set-Cookie', 'x-session-id']
 }));
 
+// 2. Chống Cache API: Đảm bảo dữ liệu hoa, giá, hình ảnh luôn cập nhật mới nhất Real-time
+app.use('/api/*', async (c, next) => {
+  await next();
+  c.res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  c.res.headers.set('Pragma', 'no-cache');
+  c.res.headers.set('Expires', '0');
+});
+
 // 2. Healthcheck & Thông tin hệ thống Cloudflare
 app.get('/api/health', async (c) => {
   let d1Status = 'ok';
