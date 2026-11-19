@@ -8,14 +8,29 @@ let chatHistory = [];
 let isChatbotBusy = false;
 let thinkingInterval = null;
 
-// 1. Bật / tắt cửa sổ Chatbot
-function toggleChatbot() {
+// 1. Bật / tắt cửa sổ Chatbot (Chống nhảy trang & Yêu cầu đăng nhập)
+function toggleChatbot(e) {
+  if (e && typeof e.preventDefault === 'function') {
+    e.preventDefault();
+  }
+
+  // Bảo vệ: Bắt buộc đăng nhập tài khoản theo yêu cầu người dùng
+  const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+  if (!user) {
+    showToast('Vui lòng đăng nhập tài khoản để được Trợ lý AI Florist tư vấn hoa tươi!', 'warning');
+    setTimeout(() => {
+      window.location.href = '/login.html';
+    }, 800);
+    return;
+  }
+
   const win = document.getElementById('chatbot-window');
   if (!win) return;
   const isFlex = win.style.display === 'flex';
   win.style.display = isFlex ? 'none' : 'flex';
   if (!isFlex) {
-    document.getElementById('chatbot-input')?.focus();
+    // preventScroll: true ngăn trình duyệt tự động scroll trang xuống đáy khi input được focus
+    document.getElementById('chatbot-input')?.focus({ preventScroll: true });
     scrollChatToBottom();
   }
 }

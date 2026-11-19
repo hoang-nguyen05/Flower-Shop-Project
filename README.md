@@ -57,3 +57,18 @@ Dự án website thương mại điện tử bán hoa tươi chuyên nghiệp đ
 
 Xem hướng dẫn chi tiết từng bước tạo D1, KV, R2 và đẩy dự án lên Cloudflare tại:
 👉 **[HUONG_DAN_TRIEN_KHAI_CLOUDFLARE.md](./HUONG_DAN_TRIEN_KHAI_CLOUDFLARE.md)**
+
+---
+
+## 👥 Nhóm Tác Giả Dự Án (7 Thành Viên)
+
+| STT | Họ và tên | Vai trò đảm nhiệm | Nhiệm vụ chính trong dự án |
+| :---: | :--- | :--- | :--- |
+| **1** | **Nguyễn Đắc Hoàng** | Nhóm Trưởng / Fullstack Developer | Kiến trúc Cloudflare Serverless, Hono Backend, Cloudflare D1 SQL, API VietQR & Điều phối tổng thể |
+| **2** | **Hoàng Bắc** | Frontend Developer & QA Tester | Giao diện tương tác đặt hoa, giỏ hàng động, thanh tiến độ tra cứu và kiểm thử toàn diện đa thiết bị |
+| **3** | **Lường Thị Hạnh** | UI/UX Designer & Content Creator | Thiết kế trải nghiệm người dùng, bộ nhận diện thương hiệu tiệm hoa, biên soạn ý nghĩa các loài hoa |
+| **4** | **Dương Tuấn Hoàng** | Frontend UI Developer | Phát triển thành phần giao diện, bộ chọn ngày giờ giao hoa, hiệu ứng tương tác mượt mà & Responsive |
+| **5** | **Nguyễn Huy Hoàng** | Backend & API Engineer | Xây dựng API nghiệp vụ giỏ hàng, tính toán mã giảm giá động, phân quyền tài khoản & xử lý đơn hàng |
+| **6** | **Nông Lâm Ngọc Sơn** | Backend & Storage Specialist | Cơ chế lưu trữ ảnh kép Dual-Engine R2/KV, tối ưu bộ nhớ đệm KV Cache & thiết kế lược đồ quan hệ D1 |
+| **7** | **Vi Anh Quân** | DevOps & Florist AI Engineer | Tích hợp Trợ lý AI Florist (Google Gemini), cấu hình Workers, pipeline CI/CD và giám sát hệ thống |
+

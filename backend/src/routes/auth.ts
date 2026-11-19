@@ -176,9 +176,9 @@ authRouter.post('/login', async (c) => {
 });
 
 // ==========================================
-// 3. LẤY THÔNG TIN HỒ SƠ HIỆN TẠI (ME)
+// 3. LẤY THÔNG TIN HỒ SƠ HIỆN TẠI (ME / PROFILE)
 // ==========================================
-authRouter.get('/me', async (c) => {
+async function handleGetMe(c: any) {
   try {
     const user = await getAuthenticatedUser(c);
     if (!user) {
@@ -205,7 +205,10 @@ authRouter.get('/me', async (c) => {
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
-});
+}
+
+authRouter.get('/me', handleGetMe);
+authRouter.get('/profile', handleGetMe);
 
 // ==========================================
 // 4. CẬP NHẬT THÔNG TIN HỒ SƠ

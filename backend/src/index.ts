@@ -8,6 +8,7 @@ import { chatbotRouter } from './routes/chatbot';
 import { storageRouter } from './routes/storage';
 import { adminRouter } from './routes/admin';
 import { authRouter } from './routes/auth';
+import { visitorsRouter } from './routes/visitors';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -202,9 +203,12 @@ app.route('/api', productsRouter);
 app.route('/api/cart', cartRouter);
 app.route('/api/orders', ordersRouter);
 app.route('/api/chatbot', chatbotRouter);
+app.route('/api/ai', chatbotRouter);
 app.route('/api/storage', storageRouter);
 app.route('/api/admin', adminRouter);
 app.route('/api/auth', authRouter);
+app.route('/api/visitors', visitorsRouter);
+app.route('/api/analytics', visitorsRouter);
 
 // 4. Fallback cho Static Frontend Assets
 // Khi truy cập /, /index.html, /css/style.css, v.v., Hono tự động chuyển tiếp sang Cloudflare Assets

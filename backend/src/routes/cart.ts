@@ -88,23 +88,32 @@ export async function calculateCart(db: D1Database, kv: KVNamespace, sessionId: 
         sessionData.couponCode = null;
         await saveCartToKV(kv, sessionId, sessionData);
       } else if (subtotal >= coupon.min_order_value) {
-        if (coupon.discount_percent > 0) {
-          discount = Math.round((subtotal * coupon.discount_percent) / 100);
-        } else if (coupon.discount_amount > 0) {
-          discount = coupon.discount_amount;
-        }
-
-        // Nếu mã FREESHIP
+        // Kiểm tra loại mã giảm giá và tính toán chính xác, chống trừ kép
         if (coupon.code === 'FREESHIP') {
+          // Mã miễn phí vận chuyển: Miễn phí phí giao hàng (30.000đ), không trừ thêm vào tiền hoa
           shippingFee = 0;
+          discount = 0;
+          couponInfo = {
+            code: coupon.code,
+            description: coupon.description,
+            discountAmount: 30000
+          };
+        } else if (coupon.discount_percent > 0) {
+          discount = Math.round((subtotal * coupon.discount_percent) / 100);
+          discount = Math.min(discount, subtotal);
+          couponInfo = {
+            code: coupon.code,
+            description: coupon.description,
+            discountAmount: discount
+          };
+        } else if (coupon.discount_amount > 0) {
+          discount = Math.min(coupon.discount_amount, subtotal);
+          couponInfo = {
+            code: coupon.code,
+            description: coupon.description,
+            discountAmount: discount
+          };
         }
-
-        discount = Math.min(discount, subtotal);
-        couponInfo = {
-          code: coupon.code,
-          description: coupon.description,
-          discountAmount: discount
-        };
       } else {
         // Không đủ giá trị đơn tối thiểu
         sessionData.couponCode = null;

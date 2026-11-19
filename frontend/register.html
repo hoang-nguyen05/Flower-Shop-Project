@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -155,13 +155,35 @@
           setAuthSession(res.token, res.user);
           showToast(res.message || 'Đăng ký thành công!');
 
+          // Kiểm tra và tự động thêm bó hoa đang chọn dở vào giỏ hàng
+          const pendingActionRaw = localStorage.getItem('pending_flower_action');
+          let targetUrl = redirectUrl;
+
+          if (pendingActionRaw) {
+            try {
+              const pending = JSON.parse(pendingActionRaw);
+              if (pending && pending.productId) {
+                await apiRequest('/cart/add', {
+                  method: 'POST',
+                  body: JSON.stringify({ productId: pending.productId, quantity: pending.quantity || 1 })
+                });
+                if (pending.action === 'buy_now') {
+                  targetUrl = '/checkout.html';
+                }
+              }
+              localStorage.removeItem('pending_flower_action');
+            } catch (err) {
+              console.warn('Lỗi xử lý pending flower action:', err);
+            }
+          }
+
           setTimeout(() => {
-            if (redirectUrl && redirectUrl.startsWith('/')) {
-              window.location.href = redirectUrl;
+            if (targetUrl && targetUrl.startsWith('/')) {
+              window.location.href = targetUrl;
             } else {
               window.location.href = '/profile.html';
             }
-          }, 800);
+          }, 600);
         } else {
           showToast(res.error || 'Đăng ký không thành công!', 'error');
           btn.disabled = false;
@@ -192,6 +214,8 @@
       }
     });
   </script>
+  <script src="/js/ui-effects.js"></script>
 </body>
 </html>
+
 

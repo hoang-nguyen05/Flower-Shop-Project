@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -44,10 +44,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/cart.js"></script>
+  <script src="/js/app.js"></script>
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderCode = urlParams.get('code');
-
     function getOrderStatusBadge(status) {
       switch (status) {
         case 'pending': return '<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Chờ xử lý</span>';
@@ -61,22 +59,54 @@
 
     async function loadSuccessOrder() {
       const container = document.getElementById('order-success-container');
-      if (!orderCode) {
-        container.innerHTML = '<div class="alert alert-danger text-center">Không tìm thấy mã đơn hàng. <a href="/">Về trang chủ</a></div>';
-        return;
-      }
+      if (!container) return;
 
-      const res = await apiRequest(`/orders/${orderCode}`);
-      if (!res.success || !res.order) {
-        container.innerHTML = '<div class="alert alert-danger text-center">Không tìm thấy thông tin đơn hàng. <a href="/">Về trang chủ</a></div>';
-        return;
-      }
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderCode = urlParams.get('code') || urlParams.get('order') || urlParams.get('id');
 
-      const order = res.order;
-      const isVietQr = order.payment_method === 'vietqr' || order.payment_method === 'bank_transfer';
-      const isMomo = order.payment_method === 'momo';
-      const isCod = order.payment_method === 'cod';
-      const isPaid = order.payment_status === 'paid';
+        if (!orderCode) {
+          container.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+              <i class="fas fa-search text-muted mb-3" style="font-size: 3rem;"></i>
+              <h5 class="fw-bold">Không tìm thấy mã đơn hàng</h5>
+              <p class="text-muted small">Vui lòng kiểm tra lại liên kết hoặc tra cứu đơn hàng bằng số điện thoại.</p>
+              <div class="mt-3">
+                <a href="/orders.html" class="btn btn-danger rounded-pill px-4 me-2">Tra Cứu Đơn Hàng</a>
+                <a href="/" class="btn btn-outline-secondary rounded-pill px-4">Về Trang Chủ</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        const res = await apiRequest(`/orders/${encodeURIComponent(orderCode)}`);
+        if (!res.success || !res.order) {
+          container.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+              <i class="fas fa-exclamation-circle text-danger mb-3" style="font-size: 3rem;"></i>
+              <h5 class="fw-bold text-danger">Không tìm thấy thông tin đơn hàng</h5>
+              <p class="text-muted small">${res.error || 'Đơn hàng không tồn tại hoặc đã bị xóa.'}</p>
+              <div class="mt-3">
+                <button onclick="loadSuccessOrder()" class="btn btn-outline-danger rounded-pill px-4 me-2">
+                  <i class="fas fa-sync-alt me-1"></i>Thử Tải Lại
+                </button>
+                <a href="/orders.html" class="btn btn-outline-dark rounded-pill px-4 me-2">Tra Cứu Bằng SĐT</a>
+                <a href="/" class="btn btn-secondary rounded-pill px-4">Về Trang Chủ</a>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        const order = res.order;
+        const isVietQr = order.payment_method === 'vietqr' || order.payment_method === 'bank_transfer';
+        const isMomo = order.payment_method === 'momo';
+        const isCod = order.payment_method === 'cod';
+        const isPaid = order.payment_status === 'paid';
+        const fallbackQr = `https://img.vietqr.io/image/970422-0362843621-compact2.png?amount=${order.total_amount}&addInfo=THANHTOAN%20${encodeURIComponent(order.order_code)}&accountName=NGUYEN%20DAC%20HOANG`;
+        const qrUrl = order.vietQrUrl || fallbackQr;
+      const paidStatus = isPaid;
 
       let paymentBadge = '';
       if (isCod) {
@@ -90,7 +120,6 @@
       }
 
       let paymentSection = '';
-      const isPaid = order.payment_status === 'paid';
 
       if (isPaid) {
         paymentSection = `
@@ -116,7 +145,7 @@
             <h5 class="fw-bold mt-2 font-serif">Quét Mã Hoặc Chuyển Ví MoMo</h5>
             <p class="text-muted small">Đơn hàng của bạn đã được lưu và shop <strong>đang giữ hoa trong 2 giờ</strong>. Vui lòng mở Ví MoMo hoặc App Ngân hàng quét mã bên dưới:</p>
             
-            <img src="${order.vietQrUrl}" alt="MoMo QR Thanh toán" class="vietqr-img shadow-sm rounded-3">
+            <img src="${qrUrl}" alt="MoMo QR Thanh toán" class="vietqr-img shadow-sm rounded-3">
 
             <div class="bg-light p-3 rounded-3 text-start mt-3 small">
               <div class="d-flex justify-content-between py-1 border-bottom">
@@ -167,7 +196,7 @@
               Mở App Ngân hàng bất kỳ (MB, Vietcombank, Techcombank, BIDV, VPBank,...) và quét mã bên dưới:
             </p>
             
-            <img src="${order.vietQrUrl}" alt="VietQR Thanh toán" class="vietqr-img shadow-sm rounded-3">
+            <img src="${qrUrl}" alt="VietQR Thanh toán" class="vietqr-img shadow-sm rounded-3">
 
             <div class="bg-light p-3 rounded-3 text-start mt-3 small">
               <div class="d-flex justify-content-between py-1 border-bottom">
@@ -262,6 +291,9 @@
           </div>
 
           <div class="d-flex flex-wrap justify-content-center gap-3">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="window.print()">
+              <i class="fas fa-print me-1"></i>In Hóa Đơn
+            </button>
             <a href="/orders.html?phone=${encodeURIComponent(order.customer_phone)}" class="btn btn-outline-dark rounded-pill px-4">
               <i class="fas fa-receipt me-1"></i>Xem Lịch Sử Đơn Hàng
             </a>
@@ -271,9 +303,25 @@
           </div>
         </div>
       `;
+      } catch (err) {
+        console.error('Lỗi khi tải chi tiết đơn hàng:', err);
+        container.innerHTML = `
+          <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+            <i class="fas fa-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
+            <h5 class="fw-bold text-danger">Có lỗi khi hiển thị đơn hàng</h5>
+            <p class="text-muted small">Hệ thống không thể tải chi tiết đơn hàng vào lúc này (${err.message || 'Lỗi kết nối'}).</p>
+            <div class="mt-3">
+              <button onclick="loadSuccessOrder()" class="btn btn-danger rounded-pill px-4 me-2">
+                <i class="fas fa-sync-alt me-1"></i>Thử Tải Lại
+              </button>
+              <a href="/orders.html" class="btn btn-outline-dark rounded-pill px-4">Tra Cứu Bằng SĐT</a>
+            </div>
+          </div>
+        `;
+      }
     }
 
-    function confirmCustomerPaid(orderCode) {
+    async function confirmCustomerPaid(orderCode) {
       const confirmBox = document.getElementById('payment-confirm-box');
       if (confirmBox) {
         confirmBox.innerHTML = `
@@ -285,6 +333,9 @@
         `;
       }
       showToast('Đã gửi thông báo xác nhận chuyển khoản cho FlowerShop!');
+      try {
+        await apiRequest(`/orders/${orderCode}/confirm-paid`, { method: 'POST' });
+      } catch (e) {}
     }
 
     function copyText(text) {
@@ -294,6 +345,8 @@
 
     document.addEventListener('DOMContentLoaded', loadSuccessOrder);
   </script>
+  <script src="/js/ui-effects.js"></script>
 </body>
 </html>
+
 

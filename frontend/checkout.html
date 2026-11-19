@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -33,7 +33,7 @@
   <div class="container my-4">
     <h2 class="font-serif mb-4">Thông Tin Giao Hoa & Thanh Toán</h2>
 
-    <form id="checkout-form" onsubmit="handlePlaceOrder(event)">
+    <form id="checkout-form" novalidate onsubmit="handlePlaceOrder(event)">
       <div class="row g-4">
         <!-- Cột thông tin khách hàng (Bên trái) -->
         <div class="col-lg-7">
@@ -71,6 +71,49 @@
               <div class="col-md-6">
                 <label class="form-label small fw-bold">Địa chỉ chi tiết (Số nhà, tên đường, phường) *</label>
                 <input type="text" class="form-control rounded-pill" id="shipping-address" placeholder="123 Nguyễn Thị Minh Khai, P. Bến Nghé" required>
+              </div>
+
+              <!-- Ngày & Khung giờ giao hoa chuyên nghiệp cho tiệm hoa -->
+              <div class="col-md-6">
+                <label class="form-label small fw-bold"><i class="fas fa-calendar-alt text-danger me-1"></i>Ngày giao hoa mong muốn</label>
+                <input type="date" class="form-control rounded-pill" id="delivery-date">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-bold"><i class="fas fa-clock text-danger me-1"></i>Khung giờ giao hoa</label>
+                <select class="form-select rounded-pill" id="delivery-time">
+                  <option value="Hỏa tốc 2 giờ">⚡ Giao hỏa tốc trong 2 giờ</option>
+                  <option value="Sáng (08:00 - 11:30)" selected>Buổi sáng: 08:00 - 11:30</option>
+                  <option value="Chiều (13:30 - 17:30)">Buổi chiều: 13:30 - 17:30</option>
+                  <option value="Tối (18:00 - 21:00)">Buổi tối: 18:00 - 21:00</option>
+                </select>
+              </div>
+
+              <!-- Quà tặng & dịch vụ kèm theo miễn phí -->
+              <div class="col-12">
+                <div class="bg-light p-3 rounded-3 border">
+                  <div class="small fw-bold text-dark mb-2"><i class="fas fa-gift text-danger me-1"></i>Dịch vụ & Quà tặng kèm theo (Miễn phí 100%):</div>
+                  <div class="row g-2 small text-muted">
+                    <div class="col-sm-6">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gift-card" checked>
+                        <label class="form-check-label" for="gift-card">Thiệp chúc mừng viết tay cao cấp</label>
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gift-banner" checked>
+                        <label class="form-check-label" for="gift-banner">Banner in chữ ruy băng sang trọng</label>
+                      </div>
+                    </div>
+                    <div class="col-sm-12">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gift-photo" checked>
+                        <label class="form-check-label" for="gift-photo">Chụp ảnh hoa thực tế gửi Zalo trước khi giao</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="col-12">
@@ -120,6 +163,20 @@
 
             <div id="checkout-summary-body" class="mb-3">
               <!-- Loaded via JS -->
+            </div>
+
+            <!-- Khung Mã Giảm Giá Trên Checkout -->
+            <div class="mb-3 pt-2 border-top">
+              <label class="form-label small fw-bold text-dark"><i class="fas fa-ticket-alt text-danger me-1"></i>Mã Ưu Đãi / Giảm Giá</label>
+              <div id="checkout-coupon-box">
+                <div class="input-group">
+                  <input type="text" id="checkout-coupon-input" class="form-control form-control-sm rounded-pill-start text-uppercase" placeholder="Nhập mã (VD: FLOWER10, GIAM50K)">
+                  <button type="button" class="btn btn-danger btn-sm rounded-pill-end fw-bold px-3" onclick="applyCheckoutCoupon()">Áp Dụng</button>
+                </div>
+              </div>
+              <div id="checkout-coupons-suggest" class="d-flex flex-wrap gap-1 mt-2">
+                <!-- Loaded via JS -->
+              </div>
             </div>
 
             <hr>
@@ -175,8 +232,35 @@
       if (!container) return;
 
       if (!currentCart.items || currentCart.items.length === 0) {
-        container.innerHTML = '<div class="alert alert-warning small">Giỏ hàng của bạn đang trống. <a href="/products.html">Chọn hoa ngay</a></div>';
+        container.innerHTML = `
+          <div class="alert alert-warning small p-3 rounded-3 mb-3">
+            <i class="fas fa-shopping-basket text-warning me-2"></i>
+            Giỏ hàng của bạn đang trống! Vui lòng chọn hoa trước khi tiến hành thanh toán.
+            <div class="mt-2">
+              <a href="/products.html" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">
+                <i class="fas fa-store me-1"></i>Xem Cửa Hàng Hoa
+              </a>
+            </div>
+          </div>
+        `;
+        if (subtotalEl) subtotalEl.textContent = '0₫';
+        if (shippingEl) shippingEl.textContent = '0₫';
+        if (totalEl) totalEl.textContent = '0₫';
+        if (discountRow) discountRow.style.setProperty('display', 'none', 'important');
+        const submitBtn = document.getElementById('btn-submit-order');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.classList.add('opacity-50');
+          submitBtn.innerHTML = '<i class="fas fa-ban me-2"></i>Giỏ Hàng Trống';
+        }
         return;
+      }
+
+      const submitBtn = document.getElementById('btn-submit-order');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50');
+        submitBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Xác Nhận Đặt Hoa Ngay';
       }
 
       container.innerHTML = currentCart.items.map(item => `
@@ -199,9 +283,71 @@
       if (currentCart.coupon) {
         discountRow.style.setProperty('display', 'flex', 'important');
         discountEl.textContent = `-${formatVND(currentCart.coupon.discountAmount)}`;
+        const cpBox = document.getElementById('checkout-coupon-box');
+        if (cpBox) {
+          cpBox.innerHTML = `
+            <div class="alert alert-success d-flex justify-content-between align-items-center mb-0 p-2 rounded-3 small">
+              <div>
+                <span class="badge bg-success me-1">${currentCart.coupon.code}</span>
+                <span>${currentCart.coupon.description || 'Đã áp dụng mã'}</span>
+              </div>
+              <button type="button" class="btn btn-sm btn-link text-danger p-0 fw-bold" onclick="removeCheckoutCoupon()">Hủy</button>
+            </div>
+          `;
+        }
       } else {
         discountRow.style.setProperty('display', 'none', 'important');
+        const cpBox = document.getElementById('checkout-coupon-box');
+        if (cpBox) {
+          cpBox.innerHTML = `
+            <div class="input-group">
+              <input type="text" id="checkout-coupon-input" class="form-control form-control-sm rounded-pill-start text-uppercase" placeholder="Nhập mã (VD: FLOWER10, GIAM50K)">
+              <button type="button" class="btn btn-danger btn-sm rounded-pill-end fw-bold px-3" onclick="applyCheckoutCoupon()">Áp Dụng</button>
+            </div>
+          `;
+        }
+        loadCheckoutCouponSuggestions();
       }
+    }
+
+    async function applyCheckoutCoupon() {
+      const input = document.getElementById('checkout-coupon-input');
+      const code = input ? input.value.trim() : '';
+      if (!code) {
+        showToast('Vui lòng nhập mã giảm giá', 'warning');
+        return;
+      }
+      await applyCoupon(code);
+      renderCheckoutSummary();
+    }
+
+    async function removeCheckoutCoupon() {
+      await removeCoupon();
+      renderCheckoutSummary();
+    }
+
+    async function loadCheckoutCouponSuggestions() {
+      const suggestBox = document.getElementById('checkout-coupons-suggest');
+      if (!suggestBox) return;
+
+      try {
+        const res = await apiRequest('/cart/coupons');
+        if (res.success && res.coupons) {
+          suggestBox.innerHTML = `
+            <div class="small text-muted w-100 mb-1" style="font-size: 0.72rem;">💡 Gợi ý mã có thể dùng (bấm để áp dụng):</div>
+            ${res.coupons.slice(0, 5).map(c => `
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2" style="font-size: 0.72rem;" onclick="quickApplyCoupon('${c.code}')">
+                <strong>${c.code}</strong> ${c.discount_percent ? '-' + c.discount_percent + '%' : '-' + formatVND(c.discount_amount)}
+              </button>
+            `).join('')}
+          `;
+        }
+      } catch (e) {}
+    }
+
+    async function quickApplyCoupon(code) {
+      await applyCoupon(code);
+      renderCheckoutSummary();
     }
 
     async function handlePlaceOrder(e) {
@@ -215,9 +361,10 @@
         return;
       }
 
-      const submitBtn = document.getElementById('btn-submit-order');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý đơn hàng...';
+      if (!currentCart.items || currentCart.items.length === 0) {
+        showToast('Giỏ hàng của bạn đang trống! Vui lòng chọn mẫu hoa trước khi thanh toán.', 'warning');
+        return;
+      }
 
       const customer_name = document.getElementById('customer-name').value.trim();
       const customer_phone = document.getElementById('customer-phone').value.trim();
@@ -227,6 +374,46 @@
       const notes = document.getElementById('order-notes').value.trim();
       const payment_method = document.querySelector('input[name="payment_method"]:checked')?.value || 'vietqr';
 
+      const deliveryDate = document.getElementById('delivery-date')?.value || '';
+      const deliveryTime = document.getElementById('delivery-time')?.value || '';
+      const giftCard = document.getElementById('gift-card')?.checked ? 'Thiệp viết tay' : '';
+      const giftBanner = document.getElementById('gift-banner')?.checked ? 'Banner in chữ' : '';
+      const giftPhoto = document.getElementById('gift-photo')?.checked ? 'Gửi ảnh hoa trước khi giao' : '';
+      const giftsList = [giftCard, giftBanner, giftPhoto].filter(Boolean).join(', ');
+
+      let finalNotes = notes;
+      const metaParts = [];
+      if (deliveryDate) metaParts.push(`Ngày giao: ${deliveryDate}`);
+      if (deliveryTime) metaParts.push(`Khung giờ: ${deliveryTime}`);
+      if (giftsList) metaParts.push(`Kèm theo: ${giftsList}`);
+      if (metaParts.length > 0) {
+        finalNotes = `[${metaParts.join(' | ')}] ${finalNotes}`.trim();
+      }
+
+      // Validation thân thiện tiếng Việt, không làm mất dữ liệu đã nhập
+      if (!customer_name || customer_name.length < 2) {
+        showToast('Vui lòng nhập họ và tên thật của người nhận hoa (ít nhất 2 ký tự)!', 'warning');
+        document.getElementById('customer-name').focus();
+        return;
+      }
+
+      const vnPhoneRegex = /^(0[35789]\d{8})$/;
+      if (!vnPhoneRegex.test(customer_phone)) {
+        showToast('Số điện thoại không hợp lệ. Vui lòng nhập số di động 10 chữ số (VD: 0362843621, 0912345678)!', 'warning');
+        document.getElementById('customer-phone').focus();
+        return;
+      }
+
+      if (!shipping_address || shipping_address.length < 5) {
+        showToast('Vui lòng nhập địa chỉ giao hoa chi tiết (số nhà, tên đường, phường/xã)!', 'warning');
+        document.getElementById('shipping-address').focus();
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-submit-order');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý đơn hàng...';
+
       const res = await apiRequest('/orders', {
         method: 'POST',
         body: JSON.stringify({
@@ -235,12 +422,14 @@
           customer_email,
           city,
           shipping_address,
-          notes,
+          notes: finalNotes,
           payment_method
         })
       });
 
       if (res.success && res.orderCode) {
+        // Đặt hàng thành công -> Xóa draft lưu tạm
+        sessionStorage.removeItem('checkout_draft_form');
         showToast('Đặt hoa thành công! Đang chuyển hướng...');
         setTimeout(() => {
           window.location.href = `/order-success.html?code=${res.orderCode}`;
@@ -252,9 +441,41 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      loadCart();
+    // Tự động lưu bản nháp form để khi quay lại trang thanh toán KHÔNG BỊ XÓA DỮ LIỆU
+    function saveCheckoutDraft() {
+      const draft = {
+        name: document.getElementById('customer-name')?.value || '',
+        phone: document.getElementById('customer-phone')?.value || '',
+        email: document.getElementById('customer-email')?.value || '',
+        city: document.getElementById('shipping-city')?.value || 'Hồ Chí Minh',
+        address: document.getElementById('shipping-address')?.value || '',
+        deliveryDate: document.getElementById('delivery-date')?.value || '',
+        deliveryTime: document.getElementById('delivery-time')?.value || '',
+        notes: document.getElementById('order-notes')?.value || ''
+      };
+      sessionStorage.setItem('checkout_draft_form', JSON.stringify(draft));
+    }
 
+    function restoreCheckoutDraft() {
+      try {
+        const raw = sessionStorage.getItem('checkout_draft_form');
+        if (!raw) return false;
+        const d = JSON.parse(raw);
+        if (d.name) document.getElementById('customer-name').value = d.name;
+        if (d.phone) document.getElementById('customer-phone').value = d.phone;
+        if (d.email) document.getElementById('customer-email').value = d.email;
+        if (d.city) document.getElementById('shipping-city').value = d.city;
+        if (d.address) document.getElementById('shipping-address').value = d.address;
+        if (d.deliveryDate && document.getElementById('delivery-date')) document.getElementById('delivery-date').value = d.deliveryDate;
+        if (d.deliveryTime && document.getElementById('delivery-time')) document.getElementById('delivery-time').value = d.deliveryTime;
+        if (d.notes) document.getElementById('order-notes').value = d.notes;
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
       // Kiểm tra đăng nhập bắt buộc để bảo vệ đơn hàng và lưu vào "Đơn hàng của tôi"
       const user = getCurrentUser();
       if (!user) {
@@ -265,15 +486,41 @@
         return;
       }
 
-      // Tự động điền thông tin nếu đã đăng nhập tài khoản
-      if (user.full_name) document.getElementById('customer-name').value = user.full_name;
-      if (user.phone) document.getElementById('customer-phone').value = user.phone;
-      if (user.email) document.getElementById('customer-email').value = user.email;
-      if (user.address) document.getElementById('shipping-address').value = user.address;
-      if (user.city) document.getElementById('shipping-city').value = user.city;
+      // Khôi phục từ bản nháp trước nếu có (khi người dùng quay lại trang thanh toán)
+      const hasDraft = restoreCheckoutDraft();
+
+      // Cài đặt ngày tối thiểu là hôm nay cho khung chọn ngày giao hoa
+      const dateInput = document.getElementById('delivery-date');
+      if (dateInput) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        dateInput.min = todayStr;
+        if (!dateInput.value) dateInput.value = todayStr;
       }
+
+      // Nếu chưa có nháp, tự động điền thông tin từ tài khoản user
+      if (!hasDraft && user) {
+        if (user.full_name) document.getElementById('customer-name').value = user.full_name;
+        if (user.phone) document.getElementById('customer-phone').value = user.phone;
+        if (user.email) document.getElementById('customer-email').value = user.email;
+        if (user.address) document.getElementById('shipping-address').value = user.address;
+        if (user.city) document.getElementById('shipping-city').value = user.city;
+      }
+
+      // Lắng nghe thay đổi để tự động lưu draft
+      const form = document.getElementById('checkout-form');
+      if (form) {
+        form.addEventListener('input', saveCheckoutDraft);
+        form.addEventListener('change', saveCheckoutDraft);
+      }
+
+      // Tải giỏ hàng VÀ SAU ĐÓ render checkout summary
+      loadCart().then(() => {
+        renderCheckoutSummary();
+      });
     });
   </script>
+  <script src="/js/ui-effects.js"></script>
 </body>
 </html>
+
 

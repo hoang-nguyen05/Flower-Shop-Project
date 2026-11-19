@@ -197,14 +197,14 @@ function renderUserNav() {
       </div>
     `;
   } else {
-    // Chưa đăng nhập
+    // Chưa đăng nhập: Nút Đăng nhập & Đăng ký pill ngang chuẩn UI/UX, chống rớt dòng tuyệt đối
     container.innerHTML = `
-      <div class="d-flex align-items-center gap-2">
-        <a href="/login.html" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">
-          <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
+      <div class="d-flex align-items-center gap-2 flex-nowrap" style="white-space: nowrap !important; flex-shrink: 0 !important;">
+        <a href="/login.html" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold d-inline-flex align-items-center" style="white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+          <i class="fas fa-sign-in-alt me-1"></i><span>Đăng nhập</span>
         </a>
-        <a href="/register.html" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold d-none d-sm-inline-block">
-          <i class="fas fa-user-plus me-1"></i>Đăng ký
+        <a href="/register.html" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold d-none d-sm-inline-flex align-items-center" style="white-space: nowrap !important; flex-shrink: 0 !important; text-decoration: none;">
+          <i class="fas fa-user-plus me-1"></i><span>Đăng ký</span>
         </a>
       </div>
     `;

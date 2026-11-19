@@ -10,6 +10,15 @@ export interface Env {
   VIETQR_ACCOUNT_NO?: string;
   VIETQR_ACCOUNT_NAME?: string;
   APP_NAME?: string;
+  BASIN_ACCOUNT_ID?: string;
+  BASIN_INGEST_ENDPOINT?: string;
+  BASIN_BUCKET?: string;
+  BASIN_NAMESPACE?: string;
+  BASIN_TABLE?: string;
+  R2_ACCOUNT_ID?: string;
+  R2_BUCKET?: string;
+  R2_ACCESS_KEY_ID?: string;
+  R2_SECRET_ACCESS_KEY?: string;
 }
 
 export interface Policy {

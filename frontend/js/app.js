@@ -26,6 +26,17 @@ function isProductWishlisted(productId) {
 }
 
 async function toggleWishlist(productId, btn) {
+  // Bảo vệ: Bắt buộc đăng nhập theo yêu cầu người dùng
+  const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+  if (!user) {
+    showToast('Vui lòng đăng nhập để lưu hoa vào danh sách yêu thích của bạn!', 'warning');
+    setTimeout(() => {
+      const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.href = `/login.html?redirect=${redirectUrl}`;
+    }, 800);
+    return;
+  }
+
   productId = Number(productId);
   const key = getWishlistStorageKey();
   let list = getWishlist();
@@ -166,3 +177,34 @@ function handleNewsletter(e) {
 }
 
 
+
+
+// 5. Tự động ghi nhận lượt truy cập và đẩy lên Cloudflare Basin Catalog (Nhóm 07 CNTTK22L)
+(function trackBasinVisitor() {
+  try {
+    const sessionKey = 'fs_visited_session';
+    if (!sessionStorage.getItem(sessionKey)) {
+      sessionStorage.setItem(sessionKey, Date.now().toString());
+      const ua = (navigator.userAgent || '').toLowerCase();
+      let device = 'desktop';
+      if (/ipad|tablet|(android(?!.*mobile))/i.test(ua)) {
+        device = 'tablet';
+      } else if (/mobile|iphone|ipod|android/i.test(ua)) {
+        device = 'mobile';
+      }
+
+      fetch('/api/visitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          device: device,
+          path: window.location.pathname || '/',
+          meta: {
+            event_code: 'PAGE_VIEW',
+            path: window.location.pathname || '/'
+          }
+        })
+      }).catch(function() {});
+    }
+  } catch (e) {}
+})();

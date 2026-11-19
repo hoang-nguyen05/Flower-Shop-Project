@@ -141,6 +141,31 @@ productsRouter.get('/products/:id', async (c) => {
   }
 });
 
+// 3.1 POST /api/reviews: Khách hàng gửi đánh giá sản phẩm hoa
+productsRouter.post('/reviews', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { product_id, customer_name, rating, comment } = body;
+
+    if (!product_id || !comment) {
+      return c.json({ success: false, error: 'Vui lòng nhập nội dung đánh giá!' }, 400);
+    }
+
+    const cleanName = (customer_name || 'Khách hàng').trim();
+    const cleanComment = (comment || '').trim();
+    const cleanRating = Math.max(1, Math.min(5, Number(rating) || 5));
+
+    await c.env.DB.prepare(`
+      INSERT INTO reviews (product_id, customer_name, rating, comment, created_at)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `).bind(Number(product_id), cleanName, cleanRating, cleanComment).run();
+
+    return c.json({ success: true, message: 'Cảm ơn bạn đã gửi đánh giá cho mẫu hoa này! 🌸' });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // 4. THÊM SẢN PHẨM MỚI (DÀNH CHO ADMIN)
 productsRouter.post('/products', async (c) => {
   try {

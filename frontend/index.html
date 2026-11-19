@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -13,21 +13,37 @@
 </head>
 <body>
 
-  <!-- ==================== TOP ANNOUNCEMENT ==================== -->
-  <div class="bg-dark text-white py-2 text-center small fw-semibold">
-    <span>🌸 Chào mừng bạn đến FlowerShop! Nhập mã <span class="badge bg-danger text-white">FLOWER10</span> giảm ngay 10% đơn từ 300K • Freeship đơn từ 500K</span>
+  <!-- ==================== TOP ANNOUNCEMENT & VOUCHER TICKER ==================== -->
+  <div class="voucher-ticker">
+    <div class="voucher-ticker-track">
+      <span class="ticker-badge" onclick="copyVoucher('CHAOBANMOI')"><i class="fas fa-ticket-alt"></i> CHAOBANMOI: Giảm 15% bạn mới</span>
+      <span class="ticker-badge" onclick="copyVoucher('FLOWER10')"><i class="fas fa-tag"></i> FLOWER10: Giảm 10% từ 300K</span>
+      <span class="ticker-badge" onclick="copyVoucher('GIAM50K')"><i class="fas fa-fire"></i> GIAM50K: Giảm 50.000đ từ 500K</span>
+      <span class="ticker-badge" onclick="copyVoucher('FREESHIP')"><i class="fas fa-truck"></i> FREESHIP: Miễn phí giao hoa toàn quốc</span>
+      <span class="ticker-badge" onclick="copyVoucher('VALENTINE')"><i class="fas fa-heart"></i> VALENTINE: Giảm 70.000đ mùa yêu thương</span>
+      <span class="ticker-badge" onclick="copyVoucher('HOATUOI20')"><i class="fas fa-percentage"></i> HOATUOI20: Giảm 20% đơn từ 600K</span>
+      <span class="ticker-badge" onclick="copyVoucher('VIPMEMBER')"><i class="fas fa-crown"></i> VIPMEMBER: Giảm 80.000đ độc quyền</span>
+      <!-- Duplicate track for seamless infinite marquee -->
+      <span class="ticker-badge" onclick="copyVoucher('CHAOBANMOI')"><i class="fas fa-ticket-alt"></i> CHAOBANMOI: Giảm 15% bạn mới</span>
+      <span class="ticker-badge" onclick="copyVoucher('FLOWER10')"><i class="fas fa-tag"></i> FLOWER10: Giảm 10% từ 300K</span>
+      <span class="ticker-badge" onclick="copyVoucher('GIAM50K')"><i class="fas fa-fire"></i> GIAM50K: Giảm 50.000đ từ 500K</span>
+      <span class="ticker-badge" onclick="copyVoucher('FREESHIP')"><i class="fas fa-truck"></i> FREESHIP: Miễn phí giao hoa toàn quốc</span>
+      <span class="ticker-badge" onclick="copyVoucher('VALENTINE')"><i class="fas fa-heart"></i> VALENTINE: Giảm 70.000đ mùa yêu thương</span>
+      <span class="ticker-badge" onclick="copyVoucher('HOATUOI20')"><i class="fas fa-percentage"></i> HOATUOI20: Giảm 20% đơn từ 600K</span>
+      <span class="ticker-badge" onclick="copyVoucher('VIPMEMBER')"><i class="fas fa-crown"></i> VIPMEMBER: Giảm 80.000đ độc quyền</span>
+    </div>
   </div>
 
   <!-- ==================== HEADER NAVBAR ==================== -->
-  <nav class="navbar navbar-expand-lg navbar-floral sticky-top">
+  <nav class="navbar navbar-expand-xxl navbar-floral sticky-top">
     <div class="container">
       <a class="navbar-brand" href="/">
         <i class="fas fa-seedling"></i>
         <span>FlowerShop</span>
       </a>
 
-      <!-- Search on desktop -->
-      <form class="d-none d-lg-flex ms-4 me-auto" id="global-search-form" style="max-width: 380px; width: 100%;">
+      <!-- Search on large desktop (>= 1400px) -->
+      <form class="d-none d-xxl-flex ms-3 me-auto" id="global-search-form" style="max-width: 320px; min-width: 220px; width: 100%; flex-shrink: 0;">
         <div class="input-group">
           <input type="text" class="form-control rounded-pill-start border-end-0 ps-3 bg-light" id="global-search-input" placeholder="Tìm hoa hồng, tulip, hướng dương...">
           <button class="btn btn-light rounded-pill-end border-start-0 text-muted px-3" type="submit">
@@ -38,7 +54,17 @@
 
       <!-- Nav Links -->
       <div class="collapse navbar-collapse flex-grow-0" id="mainNav">
-        <ul class="navbar-nav me-2 align-items-lg-center">
+        <!-- Search bar inside collapsed menu on screens < 1400px (Laptop collapsed & Mobile) -->
+        <form class="d-xxl-none my-3" onsubmit="event.preventDefault(); const q = this.querySelector('input').value.trim(); if(q) window.location.href='/products.html?q=' + encodeURIComponent(q);">
+          <div class="input-group">
+            <input type="text" class="form-control rounded-pill-start border-end-0 ps-3 bg-light" placeholder="Tìm hoa hồng, tulip, hướng dương...">
+            <button class="btn btn-danger rounded-pill-end px-3 text-white" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </form>
+
+        <ul class="navbar-nav me-2 align-items-xxl-center">
           <li class="nav-item"><a class="nav-link active" href="/"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
           <li class="nav-item"><a class="nav-link" href="/products.html"><i class="fas fa-store me-1"></i>Cửa hàng</a></li>
           <li class="nav-item dropdown">
@@ -49,8 +75,8 @@
           </li>
           <li class="nav-item"><a class="nav-link text-danger fw-bold" href="/products.html?on_sale=1"><i class="fas fa-fire me-1"></i>Khuyến mãi</a></li>
           <li class="nav-item"><a class="nav-link" href="/orders.html"><i class="fas fa-receipt me-1"></i>Tra cứu đơn</a></li>
-          <li class="nav-item d-none d-xxl-block"><a class="nav-link" href="/about.html"><i class="fas fa-heart me-1"></i>Về chúng tôi</a></li>
-          <li class="nav-item d-none d-xl-block"><a class="nav-link" href="/contact.html"><i class="fas fa-phone-alt me-1"></i>Liên hệ</a></li>
+          <li class="nav-item"><a class="nav-link" href="/about.html"><i class="fas fa-heart me-1"></i>Về chúng tôi</a></li>
+          <li class="nav-item"><a class="nav-link" href="/contact.html"><i class="fas fa-phone-alt me-1"></i>Liên hệ</a></li>
         </ul>
       </div>
 
@@ -77,9 +103,15 @@
 
   <!-- ==================== HERO SECTION ==================== -->
   <div class="container">
-    <div class="hero-section">
+    <div class="hero-section" style="position: relative; overflow: hidden;">
+      <!-- Floating Petals -->
+      <div class="petal" style="left: 10%; top: 20%;"></div>
+      <div class="petal" style="left: 25%; top: 70%;"></div>
+      <div class="petal" style="left: 55%; top: 15%;"></div>
+      <div class="petal" style="left: 75%; top: 55%;"></div>
+      <div class="petal" style="left: 90%; top: 30%;"></div>
       <div class="row align-items-center g-4">
-        <div class="col-lg-7">
+        <div class="col-lg-7 reveal-left">
           <span class="hero-tag">
             <i class="fas fa-sparkles"></i> Hoa tươi thiết kế cao cấp
           </span>
@@ -94,12 +126,12 @@
             <a href="/products.html" class="btn btn-danger btn-lg rounded-pill px-4 py-2 fw-bold shadow-sm">
               <i class="fas fa-shopping-basket me-2"></i>Mua Hoa Ngay
             </a>
-            <button class="btn btn-outline-dark btn-lg rounded-pill px-4 py-2 fw-bold" onclick="toggleChatbot()">
+            <button class="btn btn-outline-dark btn-lg rounded-pill px-4 py-2 fw-bold" onclick="toggleChatbot(event)">
               <i class="fas fa-robot text-danger me-2"></i>Tư Vấn Chọn Hoa (AI)
             </button>
           </div>
         </div>
-        <div class="col-lg-5">
+        <div class="col-lg-5 reveal-right">
           <div class="hero-img-box">
             <img src="https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=800&auto=format&fit=crop&q=80" alt="Hoa tươi FlowerShop">
           </div>
@@ -108,7 +140,7 @@
     </div>
 
     <!-- ==================== STORE ADVANTAGES ==================== -->
-    <div class="features-grid">
+    <div class="features-grid reveal">
       <div class="feature-card">
         <div class="feature-icon"><i class="fas fa-shipping-fast"></i></div>
         <div>
@@ -135,6 +167,104 @@
         <div>
           <h6 class="mb-0 fw-bold">Thanh Toán VietQR</h6>
           <small class="text-muted">Quét mã nhận hàng an tâm</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== KHO VOUCHER ƯU ĐÃI (VOUCHER HUB NĂNG ĐỘNG) ==================== -->
+    <div class="mt-5 reveal">
+      <div class="d-flex flex-wrap justify-content-between align-items-end mb-3 gap-2">
+        <div>
+          <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-bold mb-1">
+            <i class="fas fa-gift me-1"></i>Săn Mã Giảm Giá Hôm Nay
+          </span>
+          <h2 class="font-serif fw-bold mb-0">Kho Voucher Ưu Đãi Độc Quyền 🔥</h2>
+          <p class="text-muted small mb-0">Bấm "Sao chép mã" hoặc áp dụng trực tiếp khi thanh toán để nhận giá tốt nhất!</p>
+        </div>
+        <span class="badge bg-light text-danger border border-danger-subtle px-3 py-2 rounded-pill small fw-bold">
+          <i class="fas fa-clock me-1"></i>Cập nhật mỗi ngày
+        </span>
+      </div>
+
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3" id="home-vouchers-container">
+        <!-- Voucher 1 -->
+        <div class="col">
+          <div class="voucher-card jiggle-hover">
+            <div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-danger text-white rounded-pill px-2 py-1 small fw-bold">HOT NEW</span>
+                <span class="voucher-code-tag">CHAOBANMOI</span>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">Giảm 15% Đơn Đầu Tiên</h6>
+              <p class="text-muted small mb-2">Áp dụng cho khách hàng mới, đơn từ 200.000đ.</p>
+            </div>
+            <div class="pt-2 border-top d-flex justify-content-between align-items-center">
+              <small class="text-muted"><i class="fas fa-bolt text-warning me-1"></i>Còn 995 lượt</small>
+              <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold btn-ripple" onclick="copyVoucher('CHAOBANMOI')">
+                <i class="fas fa-copy me-1"></i>Sao chép
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voucher 2 -->
+        <div class="col">
+          <div class="voucher-card jiggle-hover">
+            <div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary text-white rounded-pill px-2 py-1 small fw-bold">FREESHIP</span>
+                <span class="voucher-code-tag">FREESHIP</span>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">Miễn Phí Giao Hoa</h6>
+              <p class="text-muted small mb-2">Tặng 30.000đ phí giao hàng cho đơn hoa từ 250.000đ.</p>
+            </div>
+            <div class="pt-2 border-top d-flex justify-content-between align-items-center">
+              <small class="text-muted"><i class="fas fa-shipping-fast text-primary me-1"></i>Toàn quốc</small>
+              <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold btn-ripple" onclick="copyVoucher('FREESHIP')">
+                <i class="fas fa-copy me-1"></i>Sao chép
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voucher 3 -->
+        <div class="col">
+          <div class="voucher-card jiggle-hover">
+            <div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-warning text-dark rounded-pill px-2 py-1 small fw-bold">GIẢM 50K</span>
+                <span class="voucher-code-tag">GIAM50K</span>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">Giảm Thẳng 50.000đ</h6>
+              <p class="text-muted small mb-2">Áp dụng cho mọi đơn hoa tươi trị giá từ 500.000đ.</p>
+            </div>
+            <div class="pt-2 border-top d-flex justify-content-between align-items-center">
+              <small class="text-muted"><i class="fas fa-fire text-danger me-1"></i>Bán chạy</small>
+              <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold btn-ripple" onclick="copyVoucher('GIAM50K')">
+                <i class="fas fa-copy me-1"></i>Sao chép
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voucher 4 -->
+        <div class="col">
+          <div class="voucher-card jiggle-hover">
+            <div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-success text-white rounded-pill px-2 py-1 small fw-bold">YÊU THƯƠNG</span>
+                <span class="voucher-code-tag">VALENTINE</span>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">Giảm 70.000đ Quà Tặng</h6>
+              <p class="text-muted small mb-2">Áp dụng cho hoa hồng và tulip cao cấp từ 500.000đ.</p>
+            </div>
+            <div class="pt-2 border-top d-flex justify-content-between align-items-center">
+              <small class="text-muted"><i class="fas fa-heart text-danger me-1"></i>Dịp lễ</small>
+              <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold btn-ripple" onclick="copyVoucher('VALENTINE')">
+                <i class="fas fa-copy me-1"></i>Sao chép
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -172,7 +302,14 @@
       <div class="card-body p-4 p-md-5">
         <div class="row align-items-center">
           <div class="col-md-8">
-            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">Ưu Đãi Đặc Biệt Trong Tuần</span>
+            <div class="d-flex align-items-center gap-3 flex-wrap mb-3">
+              <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">Ưu Đãi Đặc Biệt Trong Tuần</span>
+              <div class="d-inline-flex align-items-center gap-2 bg-black bg-opacity-25 px-3 py-1 rounded-pill small">
+                <i class="fas fa-clock text-warning"></i>
+                <span class="text-white-50">Kết thúc sau:</span>
+                <span class="font-monospace fw-bold text-warning" id="flash-sale-countdown">08:45:20</span>
+              </div>
+            </div>
             <h2 class="text-white mb-2 font-serif display-6">Giảm Giá Lên Đến 30% Tất Cả Các Mẫu Hoa Khai Trương</h2>
             <p class="mb-3 text-white-50">Áp dụng mã <strong>GIAM50K</strong> khi thanh toán cho đơn hàng từ 500.000đ. Tặng kèm chậu sứ sang trọng.</p>
             <a href="/products.html?on_sale=1" class="btn btn-light text-danger fw-bold rounded-pill px-4 py-2">
@@ -268,69 +405,173 @@
       </div>
     </div>
 
-    <!-- ==================== CUSTOMER REVIEWS / TESTIMONIALS ==================== -->
-    <div class="my-5">
-      <div class="text-center mb-5">
-        <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 fw-bold mb-2">
-          <i class="fas fa-star me-1"></i>Đánh Giá Từ Khách Hàng
-        </span>
-        <h2 class="font-serif fw-bold">Hơn 10.000+ Khách Hàng Hài Lòng</h2>
-        <p class="text-muted small">Cảm nhận thực tế từ những khách hàng đã trao gửi yêu thương cùng FlowerShop</p>
+    <!-- ==================== CUSTOMER REVIEWS / TESTIMONIALS (CAROUSEL TRƯỢT MƯỢT MÀ) ==================== -->
+    <div class="my-5 reveal">
+      <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-3">
+        <div>
+          <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 fw-bold mb-2">
+            <i class="fas fa-star me-1"></i>Đánh Giá Thực Tế Từ Khách Hàng
+          </span>
+          <h2 class="font-serif fw-bold mb-0">Hơn 10.000+ Khách Hàng Hài Lòng</h2>
+          <p class="text-muted small mb-0">Cảm nhận thực tế từ những khách hàng đã trao gửi yêu thương cùng FlowerShop</p>
+        </div>
+        <!-- Nút điều hướng Carousel Sang Trái / Sang Phải -->
+        <div class="d-flex gap-2">
+          <button class="carousel-control-btn" type="button" data-bs-target="#customerReviewsCarousel" data-bs-slide="prev" title="Đánh giá trước">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="carousel-control-btn" type="button" data-bs-target="#customerReviewsCarousel" data-bs-slide="next" title="Đánh giá tiếp theo">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
 
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="testimonial-card">
-            <div class="d-flex align-items-center text-warning mb-3">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-            </div>
-            <p class="text-muted small fst-italic mb-4">
-              "Đặt hoa tặng sinh nhật bạn gái học tại ICTU Thái Nguyên, shipper giao đúng hẹn sau 40 phút. Hoa hồng Ohara cắm rất khéo và thơm ngát, còn có thiệp viết tay nắn nót rất chu đáo!"
-            </p>
-            <div class="d-flex align-items-center gap-3">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
-                   alt="Khách hàng" class="rounded-circle object-fit-cover" width="46" height="46">
-              <div>
-                <h6 class="mb-0 fw-bold fs-6">Nguyễn Thùy Linh</h6>
-                <small class="text-muted">Khách hàng tại Thái Nguyên</small>
+      <div id="customerReviewsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
+        <!-- Indicators -->
+        <div class="carousel-indicators position-relative mt-3 mb-0" style="bottom: 0;">
+          <button type="button" data-bs-target="#customerReviewsCarousel" data-bs-slide-to="0" class="active bg-danger" aria-current="true" style="width: 28px; height: 6px; border-radius: 4px;"></button>
+          <button type="button" data-bs-target="#customerReviewsCarousel" data-bs-slide-to="1" class="bg-danger" style="width: 28px; height: 6px; border-radius: 4px;"></button>
+        </div>
+
+        <div class="carousel-inner pb-3">
+          <!-- Slide 1 -->
+          <div class="carousel-item active">
+            <div class="row g-4">
+              <div class="col-md-4">
+                <div class="testimonial-card">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="text-warning">
+                      <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success small px-2 py-1 rounded-pill"><i class="fas fa-check-circle me-1"></i>Đã mua hàng</span>
+                  </div>
+                  <p class="text-muted small fst-italic mb-4">
+                    "Đặt hoa tặng sinh nhật bạn gái học tại ICTU Thái Nguyên, shipper giao đúng hẹn sau 40 phút. Hoa hồng Ohara cắm rất khéo và thơm ngát, còn có thiệp viết tay nắn nót rất chu đáo!"
+                  </p>
+                  <div class="d-flex align-items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
+                         alt="Khách hàng" class="rounded-circle object-fit-cover shadow-sm border" width="46" height="46">
+                    <div>
+                      <h6 class="mb-0 fw-bold fs-6">Nguyễn Thùy Linh</h6>
+                      <small class="text-muted">Khách hàng tại Thái Nguyên</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="testimonial-card">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="text-warning">
+                      <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success small px-2 py-1 rounded-pill"><i class="fas fa-check-circle me-1"></i>Đã mua hàng</span>
+                  </div>
+                  <p class="text-muted small fst-italic mb-4">
+                    "Trải nghiệm đặt hoa trực tuyến mượt mà nhất mình từng dùng. Quét mã VietQR chuyển khoản xong web tự cập nhật, trợ lý AI tư vấn chọn hoa khai trương rất hợp tuổi sếp!"
+                  </p>
+                  <div class="d-flex align-items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" 
+                         alt="Khách hàng" class="rounded-circle object-fit-cover shadow-sm border" width="46" height="46">
+                    <div>
+                      <h6 class="mb-0 fw-bold fs-6">Trần Anh Tuấn</h6>
+                      <small class="text-muted">Khách hàng Doanh Nghiệp (Hà Nội)</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="testimonial-card">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="text-warning">
+                      <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success small px-2 py-1 rounded-pill"><i class="fas fa-check-circle me-1"></i>Đã mua hàng</span>
+                  </div>
+                  <p class="text-muted small fst-italic mb-4">
+                    "Chậu Lan Hồ Điệp nhận được to và rực rỡ hơn cả trên ảnh web. Cảm ơn shop đã đóng bọc chống sốc kỹ càng. Sẽ tiếp tục ủng hộ FlowerShop trong các dịp lễ tới."
+                  </p>
+                  <div class="d-flex align-items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80" 
+                         alt="Khách hàng" class="rounded-circle object-fit-cover shadow-sm border" width="46" height="46">
+                    <div>
+                      <h6 class="mb-0 fw-bold fs-6">Lê Hải Yến</h6>
+                      <small class="text-muted">Khách hàng thân thiết (TP.HCM)</small>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-md-4">
-          <div class="testimonial-card">
-            <div class="d-flex align-items-center text-warning mb-3">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-            </div>
-            <p class="text-muted small fst-italic mb-4">
-              "Trải nghiệm đặt hoa trực tuyến mượt mà nhất mình từng dùng. Quét mã VietQR chuyển khoản xong web tự cập nhật, trợ lý AI tư vấn chọn hoa khai trương rất hợp tuổi sếp!"
-            </p>
-            <div class="d-flex align-items-center gap-3">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" 
-                   alt="Khách hàng" class="rounded-circle object-fit-cover" width="46" height="46">
-              <div>
-                <h6 class="mb-0 fw-bold fs-6">Trần Anh Tuấn</h6>
-                <small class="text-muted">Khách hàng Doanh Nghiệp</small>
+          <!-- Slide 2 -->
+          <div class="carousel-item">
+            <div class="row g-4">
+              <div class="col-md-4">
+                <div class="testimonial-card">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="text-warning">
+                      <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success small px-2 py-1 rounded-pill"><i class="fas fa-check-circle me-1"></i>Đã mua hàng</span>
+                  </div>
+                  <p class="text-muted small fst-italic mb-4">
+                    "Bó Hướng Dương Nắng Hạ đặt mừng em gái tốt nghiệp đại học rất rực rỡ và tươi lâu. Hoa giao đúng 8h sáng theo yêu cầu, đóng gói cẩn thận có túi nước giữ ẩm chân hoa!"
+                  </p>
+                  <div class="d-flex align-items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" 
+                         alt="Khách hàng" class="rounded-circle object-fit-cover shadow-sm border" width="46" height="46">
+                    <div>
+                      <h6 class="mb-0 fw-bold fs-6">Đỗ Minh Khang</h6>
+                      <small class="text-muted">Khách hàng tại Đà Nẵng</small>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <div class="col-md-4">
-          <div class="testimonial-card">
-            <div class="d-flex align-items-center text-warning mb-3">
-              <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-            </div>
-            <p class="text-muted small fst-italic mb-4">
-              "Chậu Lan Hồ Điệp nhận được to và rực rỡ hơn cả trên ảnh web. Cảm ơn shop đã đóng bọc chống sốc kỹ càng. Sẽ tiếp tục ủng hộ FlowerShop trong các dịp lễ tới."
-            </p>
-            <div class="d-flex align-items-center gap-3">
-              <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80" 
-                   alt="Khách hàng" class="rounded-circle object-fit-cover" width="46" height="46">
-              <div>
-                <h6 class="mb-0 fw-bold fs-6">Lê Hải Yến</h6>
-                <small class="text-muted">Khách hàng thân thiết</small>
+              <div class="col-md-4">
+                <div class="testimonial-card">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="text-warning">
+                      <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success small px-2 py-1 rounded-pill"><i class="fas fa-check-circle me-1"></i>Đã mua hàng</span>
+                  </div>
+                  <p class="text-muted small fst-italic mb-4">
+                    "Bó Tulip Hà Lan Pastel màu pastel siêu ngọt ngào. Mẹ mình nhận được khen nức nở. Áp mã FLOWER10 giảm được 10% và được miễn phí ship nữa, cực kỳ ưng ý!"
+                  </p>
+                  <div class="d-flex align-items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80" 
+                         alt="Khách hàng" class="rounded-circle object-fit-cover shadow-sm border" width="46" height="46">
+                    <div>
+                      <h6 class="mb-0 fw-bold fs-6">Phạm Quỳnh Anh</h6>
+                      <small class="text-muted">Khách hàng tại Hà Nội</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="testimonial-card">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="text-warning">
+                      <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success small px-2 py-1 rounded-pill"><i class="fas fa-check-circle me-1"></i>Đã mua hàng</span>
+                  </div>
+                  <p class="text-muted small fst-italic mb-4">
+                    "Bó hoa Baby khổng lồ bồng bềnh nhìn như kẹo bông gòn. Mình để khô trong phòng trang trí đến giờ đã hơn 3 tháng mà vẫn giữ màu rất đẹp. 10 điểm cho chất lượng!"
+                  </p>
+                  <div class="d-flex align-items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&auto=format&fit=crop&q=80" 
+                         alt="Khách hàng" class="rounded-circle object-fit-cover shadow-sm border" width="46" height="46">
+                    <div>
+                      <h6 class="mb-0 fw-bold fs-6">Vũ Đình Trọng</h6>
+                      <small class="text-muted">Khách hàng tại Thái Nguyên</small>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -435,7 +676,7 @@
 
   <!-- ==================== FLORIST AI CHATBOT ==================== -->
   <div class="chatbot-bubble">
-    <button class="chatbot-btn" onclick="toggleChatbot()" title="Trợ lý Florist AI tư vấn hoa tươi 24/7">
+    <button class="chatbot-btn" onclick="toggleChatbot(event)" title="Trợ lý Florist AI tư vấn hoa tươi 24/7">
       <div class="chatbot-pulse"></div>
       <i class="fas fa-robot"></i>
     </button>
@@ -450,7 +691,7 @@
           <div style="font-size: 0.72rem; opacity: 0.9; font-weight: 400;">Trợ lý tư vấn hoa trực tuyến 24/7</div>
         </div>
       </div>
-      <button class="btn btn-sm text-white" onclick="toggleChatbot()"><i class="fas fa-times fs-5"></i></button>
+      <button class="btn btn-sm text-white" onclick="toggleChatbot(event)"><i class="fas fa-times fs-5"></i></button>
     </div>
 
     <div class="chatbot-messages" id="chatbot-messages">
@@ -500,7 +741,7 @@
       <i class="fas fa-user"></i>
       <span>Tài khoản</span>
     </a>
-    <a href="javascript:void(0)" onclick="toggleChatbot()" class="mobile-nav-item text-danger">
+    <a href="javascript:void(0)" onclick="toggleChatbot(event)" class="mobile-nav-item text-danger">
       <i class="fas fa-robot"></i>
       <span>AI Chat</span>
     </a>
@@ -535,6 +776,7 @@
       const saleRes = await apiRequest('/products?on_sale=1');
       if (saleRes.success && saleRes.products) {
         renderProductGrid(saleRes.products.slice(0, 4), 'onsale-products-container');
+        if (window.reinitReveal) reinitReveal();
       }
     });
 
@@ -581,7 +823,99 @@
         `;
       }).join('');
     }
+    // Copy mã voucher nhanh & toast
+    function copyVoucher(code) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          showToast(`Đã sao chép mã ưu đãi "${code}"! Áp dụng ngay khi thanh toán. 🎟️`, 'success');
+        }).catch(() => {
+          showToast(`Mã ưu đãi của bạn: ${code}`, 'info');
+        });
+      } else {
+        showToast(`Mã ưu đãi của bạn: ${code}`, 'info');
+      }
+    }
+
+    // Social Proof Notification (Đơn hàng vừa đặt trực tiếp)
+    (function initSocialProof() {
+      const demoOrders = [
+        { name: 'Chị Mai Linh', city: 'Thái Nguyên', product: 'Bó Hoa Hồng Đỏ Tình Nồng', time: '2 phút trước', img: 'https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=100' },
+        { name: 'Anh Hoàng Nam', city: 'Hà Nội', product: 'Chậu Lan Hồ Điệp Hoàng Gia', time: '5 phút trước', img: 'https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=100' },
+        { name: 'Chị Thu Thảo', city: 'Đà Nẵng', product: 'Bó Tulip Hà Lan Pastel', time: '3 phút trước', img: 'https://images.unsplash.com/photo-1520763185298-1b434c919102?w=100' },
+        { name: 'Anh Tuấn Kiệt', city: 'TP. Hồ Chí Minh', product: 'Bó Hướng Dương Nắng Hạ', time: '7 phút trước', img: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=100' }
+      ];
+
+      const toastEl = document.createElement('div');
+      toastEl.id = 'social-proof-toast';
+      document.body.appendChild(toastEl);
+
+      let orderIdx = 0;
+      function showNextSocialProof() {
+        const item = demoOrders[orderIdx % demoOrders.length];
+        orderIdx++;
+
+        toastEl.innerHTML = `
+          <img src="${item.img}" width="42" height="42" class="rounded-3 object-fit-cover shadow-sm" alt="Hoa vừa đặt">
+          <div style="line-height: 1.3;">
+            <div class="small fw-bold text-dark"><i class="fas fa-check-circle text-success me-1"></i>${item.name} (${item.city})</div>
+            <div class="small text-danger fw-semibold text-truncate" style="max-width: 220px;">Vừa đặt: ${item.product}</div>
+            <div class="text-muted" style="font-size: 0.7rem;"><i class="fas fa-clock me-1"></i>${item.time}</div>
+          </div>
+        `;
+        toastEl.classList.add('show');
+
+        setTimeout(() => {
+          toastEl.classList.remove('show');
+        }, 4500);
+      }
+
+      // Hiện sau 3.5s kể từ khi vào web, lặp lại mỗi 14s
+      setTimeout(() => {
+        showNextSocialProof();
+        setInterval(showNextSocialProof, 14000);
+      }, 3500);
+    })();
+
+    // Đếm ngược Flash Sale thời gian thực
+    (function initFlashSaleCountdown() {
+      const el = document.getElementById('flash-sale-countdown');
+      if (!el) return;
+      let remaining = 8 * 3600 + 45 * 60 + 20;
+      setInterval(() => {
+        remaining = Math.max(0, remaining - 1);
+        const h = String(Math.floor(remaining / 3600)).padStart(2, '0');
+        const m = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+        const s = String(remaining % 60).padStart(2, '0');
+        el.textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    })();
   </script>
+
+  <!-- ==================== FLOATING QUICK CONTACT (ZALO & HOTLINE) ==================== -->
+  <div class="floating-contact-group">
+    <a href="https://zalo.me/0362843621" target="_blank" rel="noopener noreferrer" class="contact-pill zalo-pill" title="Chat Zalo Tư Vấn Nhanh">
+      <span class="pulse-ring"></span>
+      <i class="fas fa-comment-dots fs-5"></i>
+      <span class="pill-label">Zalo Tư Vấn</span>
+    </a>
+    <a href="tel:0362843621" class="contact-pill hotline-pill" title="Gọi Hotline Đặt Hoa 24/7">
+      <span class="pulse-ring"></span>
+      <i class="fas fa-phone-alt fs-5"></i>
+      <span class="pill-label">0362.843.621</span>
+    </a>
+  </div>
+
+  <!-- Scroll To Top -->
+  <button id="scroll-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Lên đầu trang">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <script src="/js/ui-effects.js"></script>
 </body>
 </html>
+
+
+
+
+
 

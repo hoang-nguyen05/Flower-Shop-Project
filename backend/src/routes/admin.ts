@@ -30,8 +30,8 @@ adminRouter.use('*', async (c, next) => {
   await next();
 });
 
-// 1. GET /api/admin/dashboard: Thống kê số liệu doanh thu và hệ thống
-adminRouter.get('/dashboard', async (c) => {
+// 1. GET /api/admin/dashboard & /api/admin/stats: Thống kê số liệu doanh thu và hệ thống
+const handleAdminDashboard = async (c: any) => {
   try {
     // 1. Tổng doanh thu & số đơn hàng
     const orderStats: any = await c.env.DB.prepare(`
@@ -78,12 +78,17 @@ adminRouter.get('/dashboard', async (c) => {
       stats: {
         totalRevenue: orderStats?.total_revenue || 0,
         totalOrders: orderStats?.total_orders || 0,
+        total_revenue: orderStats?.total_revenue || 0,
+        total_orders: orderStats?.total_orders || 0,
         completedOrders: orderStats?.completed_orders || 0,
         pendingOrders: orderStats?.pending_orders || 0,
         totalCustomers: orderStats?.total_customers || 0,
+        total_customers: orderStats?.total_customers || 0,
         totalProducts: productStats?.total_products || 0,
+        total_products: productStats?.total_products || 0,
         lowStockCount: productStats?.low_stock_count || 0,
-        totalUsers: (userStats as any)?.total_users || 0
+        totalUsers: (userStats as any)?.total_users || 0,
+        total_users: (userStats as any)?.total_users || 0
       },
       recentOrders,
       cloudflareStatus
@@ -91,7 +96,10 @@ adminRouter.get('/dashboard', async (c) => {
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
-});
+};
+
+adminRouter.get('/dashboard', handleAdminDashboard);
+adminRouter.get('/stats', handleAdminDashboard);
 
 // 2. GET /api/admin/products: Quản lý danh sách sản phẩm trong D1
 adminRouter.get('/products', async (c) => {
@@ -129,7 +137,7 @@ adminRouter.post('/products', async (c) => {
 
     const defaultImg = image_url || 'https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=600&auto=format&fit=crop&q=80';
 
-    await c.env.DB.prepare(`
+    const insertRes = await c.env.DB.prepare(`
       INSERT INTO products (name, slug, category_id, price, original_price, stock, image_url, description, is_featured, available)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
     `).bind(
@@ -144,7 +152,13 @@ adminRouter.post('/products', async (c) => {
       is_featured ? 1 : 0
     ).run();
 
-    return c.json({ success: true, message: `Đã thêm mẫu hoa "${name}" vào CSDL D1 thành công!` });
+    const newProdId = insertRes.meta?.last_row_id;
+    return c.json({
+      success: true,
+      id: newProdId,
+      product: { id: newProdId, name, price },
+      message: `Đã thêm mẫu hoa "${name}" vào CSDL D1 thành công!`
+    });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
@@ -215,8 +229,8 @@ adminRouter.get('/orders', async (c) => {
   }
 });
 
-// 7. PUT /api/admin/orders/:id/status: Cập nhật trạng thái đơn hàng
-adminRouter.put('/orders/:id/status', async (c) => {
+// 7. PUT & PATCH /api/admin/orders/:id/status: Cập nhật trạng thái đơn hàng
+const handleUpdateOrderStatus = async (c: any) => {
   try {
     const id = Number(c.req.param('id'));
     const body = await c.req.json();
@@ -234,10 +248,12 @@ adminRouter.put('/orders/:id/status', async (c) => {
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
-});
+};
+adminRouter.put('/orders/:id/status', handleUpdateOrderStatus);
+adminRouter.patch('/orders/:id/status', handleUpdateOrderStatus);
 
-// 8. GET /api/admin/users: Danh sách người dùng
-adminRouter.get('/users', async (c) => {
+// 8. GET /api/admin/users & /api/admin/customers: Danh sách người dùng
+const handleAdminUsers = async (c: any) => {
   try {
     const { results } = await c.env.DB.prepare(`
       SELECT id, username, email, full_name, phone, address, city, role, created_at
@@ -245,11 +261,13 @@ adminRouter.get('/users', async (c) => {
       ORDER BY id DESC
     `).all();
 
-    return c.json({ success: true, users: results });
+    return c.json({ success: true, users: results, customers: results });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
-});
+};
+adminRouter.get('/users', handleAdminUsers);
+adminRouter.get('/customers', handleAdminUsers);
 
 // 9. GET /api/admin/coupons: Lấy danh sách mã giảm giá
 adminRouter.get('/coupons', async (c) => {
@@ -267,25 +285,150 @@ adminRouter.get('/coupons', async (c) => {
 adminRouter.post('/coupons', async (c) => {
   try {
     const body = await c.req.json();
-    const { code, description, discount_percent, discount_amount, min_order_value, max_uses } = body;
+    const { code, description, discount_percent, discount_amount, min_order_value, max_uses, is_member_only } = body;
 
     if (!code) {
       return c.json({ success: false, error: 'Thiếu mã giảm giá' }, 400);
     }
 
-    await c.env.DB.prepare(`
-      INSERT INTO coupons (code, description, discount_percent, discount_amount, min_order_value, max_uses, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, 1)
+    const runRes = await c.env.DB.prepare(`
+      INSERT INTO coupons (code, description, discount_percent, discount_amount, min_order_value, max_uses, is_member_only, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1)
     `).bind(
       code.toUpperCase().trim(),
       description || '',
-      discount_percent || 0,
-      discount_amount || 0,
-      min_order_value || 0,
-      max_uses || 100
+      Number(discount_percent || 0),
+      Number(discount_amount || 0),
+      Number(min_order_value || 0),
+      Number(max_uses || 100),
+      is_member_only ? 1 : 0
     ).run();
 
-    return c.json({ success: true, message: `Tạo mã giảm giá ${code} thành công` });
+    const newCouponId = runRes.meta?.last_row_id;
+    return c.json({
+      success: true,
+      id: newCouponId,
+      coupon: { id: newCouponId, code: code.toUpperCase().trim() },
+      message: `Tạo mã giảm giá ${code} thành công`
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// 11. DELETE /api/admin/coupons/:id: Xóa mã giảm giá
+adminRouter.delete('/coupons/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'), 10);
+    if (isNaN(id)) return c.json({ success: false, error: 'ID không hợp lệ' }, 400);
+
+    await c.env.DB.prepare('DELETE FROM coupons WHERE id = ?').bind(id).run();
+    return c.json({ success: true, message: 'Đã xóa mã giảm giá thành công' });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// 12. PATCH /api/admin/coupons/:id/toggle: Bật / tắt mã giảm giá
+adminRouter.patch('/coupons/:id/toggle', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'), 10);
+    if (isNaN(id)) return c.json({ success: false, error: 'ID không hợp lệ' }, 400);
+
+    await c.env.DB.prepare('UPDATE coupons SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?').bind(id).run();
+    return c.json({ success: true, message: 'Đã cập nhật trạng thái mã giảm giá' });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// 13. GET /api/admin/categories: Lấy danh sách danh mục kèm số lượng sản phẩm
+adminRouter.get('/categories', async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare(`
+      SELECT c.*, COUNT(p.id) as product_count
+      FROM categories c
+      LEFT JOIN products p ON c.id = p.category_id
+      GROUP BY c.id
+      ORDER BY c.id ASC
+    `).all();
+    return c.json({ success: true, categories: results });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// 14. POST /api/admin/categories: Thêm danh mục hoa mới
+adminRouter.post('/categories', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { name, slug, description, image_url } = body;
+
+    if (!name || !name.trim()) {
+      return c.json({ success: false, error: 'Tên danh mục không được để trống' }, 400);
+    }
+
+    const cleanSlug = (slug || name)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const runRes = await c.env.DB.prepare(`
+      INSERT INTO categories (name, slug, description, image_url)
+      VALUES (?, ?, ?, ?)
+    `).bind(
+      name.trim(),
+      cleanSlug,
+      description || '',
+      image_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600'
+    ).run();
+
+    // Xóa cache danh mục trong KV
+    try {
+      await c.env.KV.delete('cache:categories');
+    } catch (e) {}
+
+    const newCatId = runRes.meta?.last_row_id;
+    return c.json({
+      success: true,
+      id: newCatId,
+      category: { id: newCatId, name: name.trim(), slug: cleanSlug },
+      message: `Thêm danh mục "${name}" thành công`
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// 15. DELETE /api/admin/categories/:id: Xóa danh mục hoa (chặn nếu đang có sản phẩm)
+adminRouter.delete('/categories/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'), 10);
+    if (isNaN(id)) return c.json({ success: false, error: 'ID không hợp lệ' }, 400);
+
+    // Kiểm tra xem danh mục có sản phẩm không
+    const countCheck = await c.env.DB.prepare(
+      'SELECT COUNT(*) as total FROM products WHERE category_id = ?'
+    ).bind(id).first<{ total: number }>();
+
+    if (countCheck && countCheck.total > 0) {
+      return c.json({
+        success: false,
+        error: `Không thể xóa danh mục này vì đang có ${countCheck.total} sản phẩm hoa thuộc danh mục. Vui lòng chuyển hoặc xóa sản phẩm trước!`
+      }, 400);
+    }
+
+    await c.env.DB.prepare('DELETE FROM categories WHERE id = ?').bind(id).run();
+
+    // Xóa cache danh mục trong KV
+    try {
+      await c.env.KV.delete('cache:categories');
+    } catch (e) {}
+
+    return c.json({ success: true, message: 'Đã xóa danh mục thành công' });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }

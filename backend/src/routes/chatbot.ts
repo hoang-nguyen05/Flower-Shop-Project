@@ -62,9 +62,9 @@ function maskSensitiveInfo(text: string): string {
 }
 
 // =========================================================================
-// ROUTE: POST /api/chatbot
+// ROUTE: POST /api/chatbot & POST /api/chatbot/chat
 // =========================================================================
-chatbotRouter.post('/', async (c) => {
+const handleChatbotMessage = async (c: any) => {
   const startTime = Date.now();
 
   try {
@@ -600,4 +600,7 @@ ${dynamicToolContext ? `\n${dynamicToolContext}\n` : ''}
       reply: 'Xin lỗi bạn, trợ lý Florist AI đang bận xử lý dữ liệu một chút. Bạn có thể hỏi lại hoặc gọi hotline 0362843621 để được thợ cắm hoa hỗ trợ ngay nhé! 🌸'
     }, 500);
   }
-});
+};
+
+chatbotRouter.post('/', handleChatbotMessage);
+chatbotRouter.post('/chat', handleChatbotMessage);

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -170,11 +170,20 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+      if (!user) {
+        showToast('Vui lòng đăng nhập để xem danh sách hoa yêu thích của bạn!', 'warning');
+        setTimeout(() => {
+          window.location.href = '/login.html?redirect=/wishlist.html';
+        }, 800);
+        return;
+      }
       renderUserNav();
       loadWishlist();
     });
   </script>
-  </script>
+  <script src="/js/ui-effects.js"></script>
 </body>
 </html>
+
 

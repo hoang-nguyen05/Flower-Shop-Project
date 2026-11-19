@@ -195,15 +195,21 @@ ordersRouter.get('/', async (c) => {
     const rawPhone = c.req.query('phone')?.trim() || '';
     const status = c.req.query('status')?.trim() || '';
     const isAdmin = await checkIsAdmin(c);
+    const user = await getAuthenticatedUser(c);
 
-    // Nếu không phải Admin, BẮT BUỘC phải nhập chính xác số điện thoại đặt hàng 10 chữ số
-    if (!isAdmin) {
-      if (!rawPhone || !/^(0[35789]\d{8})$/.test(rawPhone)) {
-        return c.json({
-          success: false,
-          error: 'Vui lòng nhập chính xác số điện thoại đặt hàng 10 chữ số (VD: 0362843621) để tra cứu đơn'
-        }, 400);
+    // Nếu không phải Admin và không nhập SĐT, cho phép lấy danh sách đơn của chính tài khoản đã đăng nhập
+    if (!isAdmin && !rawPhone) {
+      if (user) {
+        const { results } = await c.env.DB.prepare(
+          'SELECT * FROM orders WHERE user_id = ? OR customer_phone = ? ORDER BY id DESC LIMIT 50'
+        ).bind(user.id, user.phone || '').all<Order>();
+        return c.json({ success: true, total: results.length, orders: results });
       }
+
+      return c.json({
+        success: false,
+        error: 'Vui lòng đăng nhập hoặc nhập chính xác số điện thoại đặt hàng 10 chữ số (VD: 0362843621) để tra cứu đơn'
+      }, 400);
     }
 
     let sql = 'SELECT * FROM orders WHERE 1=1';
@@ -227,6 +233,37 @@ ordersRouter.get('/', async (c) => {
     const returnedOrders = isAdmin ? results : results.map(o => maskOrderPII(o));
 
     return c.json({ success: true, total: returnedOrders.length, orders: returnedOrders });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// 2.1 POST /api/orders/:code/confirm-paid: Khách hàng thông báo đã chuyển khoản thành công
+ordersRouter.post('/:code/confirm-paid', async (c) => {
+  try {
+    const code = (c.req.param('code') || '').trim();
+    if (!code) {
+      return c.json({ success: false, error: 'Thiếu mã đơn hàng' }, 400);
+    }
+
+    const order = await c.env.DB.prepare('SELECT * FROM orders WHERE order_code = ?').bind(code).first<Order>();
+    if (!order) {
+      return c.json({ success: false, error: 'Không tìm thấy đơn hàng' }, 404);
+    }
+
+    // Nếu chưa thanh toán, cập nhật trạng thái chờ thủ quỹ đối soát
+    if (order.payment_status !== 'paid') {
+      const appendNote = order.notes ? `${order.notes} [Khách báo đã chuyển khoản]` : '[Khách báo đã chuyển khoản]';
+      await c.env.DB.prepare(
+        "UPDATE orders SET payment_status = 'awaiting_confirmation', notes = ? WHERE id = ?"
+      ).bind(appendNote, order.id).run();
+    }
+
+    return c.json({
+      success: true,
+      status: 'customer_reported_paid',
+      message: 'Đã ghi nhận yêu cầu đối soát thanh toán'
+    });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
   }
