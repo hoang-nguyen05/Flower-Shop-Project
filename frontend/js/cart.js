@@ -39,41 +39,30 @@ async function loadCart() {
   return currentCart;
 }
 
-// 2. Thêm vào giỏ hàng (Bảo vệ: Bắt buộc đăng nhập theo yêu cầu người dùng, bảo toàn đơn hoa khi chuyển hướng)
+// 2. Thêm vào giỏ hàng (Hỗ trợ cả khách vãng lai và thành viên)
 async function addToCart(productId, quantity = 1, showFeedback = true, isBuyNow = false) {
-  const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
-  if (!user) {
-    try {
-      localStorage.setItem('pending_flower_action', JSON.stringify({
-        action: isBuyNow ? 'buy_now' : 'add_to_cart',
-        productId,
-        quantity,
-        timestamp: Date.now()
-      }));
-    } catch (e) {}
+  try {
+    const res = await apiRequest('/cart/add', {
+      method: 'POST',
+      body: JSON.stringify({ productId, quantity })
+    });
 
-    showToast(isBuyNow ? 'Vui lòng đăng nhập để tiến hành đặt bó hoa này!' : 'Vui lòng đăng nhập tài khoản để lưu hoa vào giỏ hàng!', 'warning');
-    setTimeout(() => {
-      const redirectUrl = encodeURIComponent(isBuyNow ? '/checkout.html' : (window.location.pathname + window.location.search));
-      window.location.href = `/login.html?redirect=${redirectUrl}`;
-    }, 800);
-    return;
-  }
-
-  const res = await apiRequest('/cart/add', {
-    method: 'POST',
-    body: JSON.stringify({ productId, quantity })
-  });
-
-  if (res.success && res.cart) {
-    currentCart = res.cart;
-    updateCartUI();
-    if (showFeedback) {
-      showToast(res.message || 'Đã thêm hoa vào giỏ hàng thành công! 🌸');
-      openCartDrawer();
+    if (res.success && res.cart) {
+      currentCart = res.cart;
+      updateCartUI();
+      if (showFeedback) {
+        showToast(res.message || 'Đã thêm hoa vào giỏ hàng thành công! 🌸', 'success');
+        openCartDrawer();
+      }
+      if (isBuyNow) {
+        window.location.href = '/checkout.html';
+      }
+    } else {
+      showToast(res.error || 'Không thể thêm vào giỏ hàng', 'error');
     }
-  } else {
-    showToast(res.error || 'Không thể thêm vào giỏ hàng', 'error');
+  } catch (err) {
+    console.error('Error adding to cart:', err);
+    showToast('Lỗi kết nối khi thêm vào giỏ hàng', 'error');
   }
 }
 
@@ -230,17 +219,8 @@ function renderCartDrawer() {
   `).join('');
 }
 
-// Mở Cart Drawer (Bảo vệ: Bắt buộc đăng nhập tài khoản)
+// Mở Cart Drawer
 function openCartDrawer() {
-  const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
-  if (!user) {
-    showToast('Vui lòng đăng nhập để xem và quản lý giỏ hàng của bạn!', 'warning');
-    setTimeout(() => {
-      window.location.href = '/login.html?redirect=/cart.html';
-    }, 800);
-    return;
-  }
-
   const drawerEl = document.getElementById('cartDrawer');
   if (drawerEl && window.bootstrap) {
     const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawerEl);
