@@ -209,14 +209,14 @@ function handleNewsletter(e) {
   } catch (e) {}
 })();
 
-// 6. Cloudflare Web Analytics Official Beacon Snippet (Token: 671254c0f1f441d7a4d989463a8d6b3a)
+// 6. Cloudflare Web Analytics Official Beacon Snippet (Token: e79a77d6e38c449eb5da54da33edb008)
 (function initCloudflareWebAnalytics() {
   try {
     if (!document.querySelector('script[src*="cloudflareinsights.com/beacon.min.js"]')) {
       const s = document.createElement('script');
-      s.defer = true;
+      s.type = 'module';
       s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
-      s.setAttribute('data-cf-beacon', '{"token": "671254c0f1f441d7a4d989463a8d6b3a"}');
+      s.setAttribute('data-cf-beacon', '{"token": "e79a77d6e38c449eb5da54da33edb008"}');
       document.head.appendChild(s);
     }
   } catch (e) {}
