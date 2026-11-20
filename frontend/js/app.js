@@ -208,3 +208,16 @@ function handleNewsletter(e) {
     }
   } catch (e) {}
 })();
+
+// 6. Cloudflare Web Analytics Official Beacon Snippet (Token: 671254c0f1f441d7a4d989463a8d6b3a)
+(function initCloudflareWebAnalytics() {
+  try {
+    if (!document.querySelector('script[src*="cloudflareinsights.com/beacon.min.js"]')) {
+      const s = document.createElement('script');
+      s.defer = true;
+      s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      s.setAttribute('data-cf-beacon', '{"token": "671254c0f1f441d7a4d989463a8d6b3a"}');
+      document.head.appendChild(s);
+    }
+  } catch (e) {}
+})();
