@@ -612,14 +612,26 @@
               <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3 py-1"><i class="fas fa-lock me-1"></i>Endpoint & Keys Bảo Mật tại Worker</span>
             </div>
             <h4 class="fw-bold font-serif text-dark mb-1">
-              <i class="fas fa-chart-line text-danger me-2"></i>Thống Kê Lượt Truy Cập Website (24 Giờ Qua)
+              <i class="fas fa-chart-line text-danger me-2"></i>Thống Kê Lượt Truy Cập Website (Basin Catalog)
             </h4>
             <p class="text-muted small mb-0">
-              Ghi nhận lượt truy cập thời gian thực, tự động stream dữ liệu lên <strong>Cloudflare Basin Catalog (Apache Iceberg)</strong>.
+              Ghi nhận lượt truy cập thời gian thực của <strong>Nhóm 07 CNTTK22L</strong>, tự động stream lên <strong>Cloudflare Basin Catalog (Apache Iceberg)</strong>.
             </p>
           </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary rounded-pill btn-sm fw-bold px-3" onclick="loadVisitorStats()">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <!-- BỘ CHỌN KHOẢNG THỜI GIAN (YÊU CẦU 2) -->
+            <div class="btn-group rounded-pill p-1 bg-light border shadow-sm" role="group">
+              <button type="button" class="btn btn-sm rounded-pill fw-bold px-3 btn-period btn-danger text-white" id="btn-period-24h" onclick="changePeriod('24h')">
+                <i class="fas fa-clock me-1"></i>24 giờ qua
+              </button>
+              <button type="button" class="btn btn-sm rounded-pill fw-bold px-3 btn-period text-muted" id="btn-period-7d" onclick="changePeriod('7d')">
+                <i class="fas fa-calendar-week me-1"></i>Tuần qua (7 ngày)
+              </button>
+              <button type="button" class="btn btn-sm rounded-pill fw-bold px-3 btn-period text-muted" id="btn-period-30d" onclick="changePeriod('30d')">
+                <i class="fas fa-calendar-alt me-1"></i>Tháng qua (30 ngày)
+              </button>
+            </div>
+            <button class="btn btn-outline-secondary rounded-pill btn-sm fw-bold px-3" onclick="loadVisitorStats(currentPeriod)">
               <i class="fas fa-sync-alt me-1"></i>Làm mới
             </button>
             <button class="btn btn-danger rounded-pill btn-sm fw-bold px-3" id="btn-test-ping" onclick="sendTestVisitorPing()">
@@ -628,11 +640,29 @@
           </div>
         </div>
 
+        <!-- YÊU CẦU 3: BIỂU ĐỒ ĐƯỜNG (LINE CHART) THỂ HIỆN SỰ BIẾN ĐỘNG THEO THỜI GIAN -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h6 class="fw-bold text-dark mb-1">
+                <i class="fas fa-chart-line text-danger me-2"></i>Biểu Đồ Đường (Line Chart): Biến Động Lượt Truy Cập Theo Thời Gian
+              </h6>
+              <p class="text-muted small mb-0">Thể hiện sự biến động số lượt truy cập của Nhóm 07 theo thời gian thực (được nhóm theo giờ / ngày).</p>
+            </div>
+            <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-bold" id="badge-current-period">
+              <i class="fas fa-filter me-1"></i>Khoảng thời gian: 24 giờ qua
+            </span>
+          </div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="visitorLineChart"></canvas>
+          </div>
+        </div>
+
         <!-- 4 KPI SUMMARY CARDS -->
         <div class="row g-3 mb-4">
           <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
-              <div class="text-muted small fw-bold text-uppercase">Tổng lượt truy cập (24h)</div>
+              <div class="text-muted small fw-bold text-uppercase" id="stat-kpi-period-title">Tổng lượt truy cập</div>
               <div class="d-flex align-items-baseline gap-2 mt-2">
                 <h2 class="fw-bold text-dark mb-0" id="stat-total-visits">--</h2>
                 <span class="badge bg-success-subtle text-success small">+100% Realtime</span>
@@ -913,6 +943,7 @@ GROUP BY device ORDER BY visits DESC;</code></pre>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="/js/api.js"></script>
   <script>
     // 1. KIỂM TRA PHÂN QUYỀN TRUY CẬP ADMIN
@@ -1629,12 +1660,41 @@ GROUP BY device ORDER BY visits DESC;</code></pre>
       }
     }
 
-    // 11. THỐNG KÊ TRUY CẬP 24H (BASIN CATALOG)
-    async function loadVisitorStats() {
+    // 11. THỐNG KÊ TRUY CẬP BASIN CATALOG (ĐÁP ỨNG 3 YÊU CẦU CỦA THẦY)
+    let currentPeriod = '24h';
+    let visitorChartInstance = null;
+
+    function changePeriod(period) {
+      currentPeriod = period;
+      ['24h', '7d', '30d'].forEach(p => {
+        const btn = document.getElementById(`btn-period-${p}`);
+        if (btn) {
+          if (p === period) {
+            btn.className = 'btn btn-sm rounded-pill fw-bold px-3 btn-period btn-danger text-white';
+          } else {
+            btn.className = 'btn btn-sm rounded-pill fw-bold px-3 btn-period text-muted';
+          }
+        }
+      });
+      loadVisitorStats(period);
+    }
+
+    async function loadVisitorStats(period = currentPeriod) {
       try {
-        const res = await apiRequest('/visitors/summary');
+        const res = await apiRequest(`/visitors/summary?period=${period}`);
         if (res.success && res.data) {
           const d = res.data;
+
+          // 0. Cập nhật Badge & Title khoảng thời gian
+          const badgePeriod = document.getElementById('badge-current-period');
+          if (badgePeriod) {
+            badgePeriod.innerHTML = `<i class="fas fa-filter me-1"></i>Khoảng thời gian: ${d.period_label || period}`;
+          }
+          const kpiTitle = document.getElementById('stat-kpi-period-title');
+          if (kpiTitle) {
+            kpiTitle.textContent = `Tổng lượt (${d.period_label || period})`;
+          }
+
           // 1. KPI
           document.getElementById('stat-total-visits').textContent = d.total_visits.toLocaleString('vi-VN');
           if (d.devices && d.devices.length > 0) {
@@ -1648,7 +1708,101 @@ GROUP BY device ORDER BY visits DESC;</code></pre>
             document.getElementById('stat-top-country-pct').textContent = `${topCountry.percentage}%`;
           }
 
-          // 2. Bảng Quốc gia
+          // 2. YÊU CẦU 3: Vẽ Biểu Đồ Đường (Line Chart) Biến Động Theo Thời Gian
+          if (d.time_series && d.time_series.length > 0) {
+            const ctx = document.getElementById('visitorLineChart');
+            if (ctx) {
+              const labels = d.time_series.map(pt => pt.label);
+              const dataTotal = d.time_series.map(pt => pt.count);
+              const dataMobile = d.time_series.map(pt => pt.mobile || 0);
+              const dataDesktop = d.time_series.map(pt => pt.desktop || 0);
+
+              if (visitorChartInstance) {
+                visitorChartInstance.destroy();
+              }
+
+              visitorChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels: labels,
+                  datasets: [
+                    {
+                      label: 'Tổng lượt truy cập',
+                      data: dataTotal,
+                      borderColor: '#dc3545',
+                      backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                      borderWidth: 3,
+                      tension: 0.35,
+                      fill: true,
+                      pointRadius: 4,
+                      pointBackgroundColor: '#dc3545'
+                    },
+                    {
+                      label: 'Mobile',
+                      data: dataMobile,
+                      borderColor: '#fd7e14',
+                      borderDash: [5, 5],
+                      borderWidth: 2,
+                      tension: 0.35,
+                      fill: false,
+                      pointRadius: 2,
+                      pointBackgroundColor: '#fd7e14'
+                    },
+                    {
+                      label: 'Desktop',
+                      data: dataDesktop,
+                      borderColor: '#0d6efd',
+                      borderDash: [3, 3],
+                      borderWidth: 2,
+                      tension: 0.35,
+                      fill: false,
+                      pointRadius: 2,
+                      pointBackgroundColor: '#0d6efd'
+                    }
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  interaction: {
+                    mode: 'index',
+                    intersect: false
+                  },
+                  plugins: {
+                    legend: {
+                      position: 'top',
+                      labels: {
+                        boxWidth: 12,
+                        font: { size: 12, weight: 'bold' }
+                      }
+                    },
+                    tooltip: {
+                      padding: 10,
+                      boxPadding: 4
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        precision: 0
+                      },
+                      grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                      }
+                    },
+                    x: {
+                      grid: {
+                        display: false
+                      }
+                    }
+                  }
+                }
+              });
+            }
+          }
+
+          // 3. Bảng Quốc gia
           const countryTbody = document.getElementById('stat-countries-tbody');
           if (countryTbody && d.countries) {
             countryTbody.innerHTML = d.countries.map(c => `
@@ -1661,7 +1815,7 @@ GROUP BY device ORDER BY visits DESC;</code></pre>
             `).join('');
           }
 
-          // 3. Thiết bị (Bars & Table)
+          // 4. Thiết bị (Bars & Table)
           const deviceBars = document.getElementById('stat-devices-bars');
           const deviceTbody = document.getElementById('stat-devices-tbody');
           if (deviceBars && d.devices) {
@@ -1687,7 +1841,7 @@ GROUP BY device ORDER BY visits DESC;</code></pre>
             `).join('');
           }
 
-          showToast('Đã cập nhật dữ liệu thống kê Basin Catalog 24h!');
+          showToast(`Đã cập nhật thống kê Basin Catalog (${d.period_label || period})!`);
         }
       } catch (err) {
         console.error('Error loading visitor stats:', err);
